@@ -284,8 +284,8 @@ for url in card_urls:
             # print(output)
   
         
-#     except requests.exceptions.RequestException as e:
-#             print(e)
+    except requests.exceptions.RequestException as e:
+            print(e)
 
 
 ####buying options parsing
