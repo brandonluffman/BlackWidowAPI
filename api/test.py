@@ -293,31 +293,20 @@ for url in card_urls:
 # print(buying_links)
 
 buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
-
+buying_link_to_buying_options = {}
 for url in buying_links:
-    try:
+    if url:
         session = HTMLSession()
         response = session.get(url)
-        # print(url, response.status_code)
-
 
         css_identifier_result = ".sg-product__dpdp-c"
         result = response.html.find(css_identifier_result,first=True)
         table = result.find("#sh-osd__online-sellers-cont",first=True)
         rows = table.find("tr div.kPMwsc a")
         buying_options = list(set([a_tag.attrs['href'].replace('/url?q=','') for a_tag in rows]))
-        print(buying_options)
-        # print("RESULTS:",buying_option_rows)
-        # for result in results:
-        #     reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
-        #     output = {
-        #         'review_count' : result.find(css_product_review_count, first=True).text,
-        #         'all_reviews_link': reviews_link,
-        #     } 
-
-
-    except requests.exceptions.RequestException as e:
-            print(e)
+        buying_link_to_buying_options[url] = buying_options     
+    else:
+        continue
      
 
 
@@ -330,7 +319,7 @@ for url in review_links:
     try:
         session = HTMLSession()
         response = session.get(url)
-        print(url, response.status_code)
+        # print(url, response.status_code)
 
         css_identifier_result = ".z6XoBf"
         results = response.html.find(css_identifier_result)
@@ -351,7 +340,7 @@ for url in review_links:
                     'content' : content[:200],
                     # 'source' : source,
             } 
-            print(output)
+            # print(output)
 
 
             ## CODE BELOW IS FOR GRABBING ALL REVIEWS FOR A PRODUCT
