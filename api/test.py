@@ -212,76 +212,76 @@ from tld import get_tld
             
 
 
-#     except requests.exceptions.RequestException as e:
-#         print(e)
+    # except requests.exceptions.RequestException as e:
+    #     print(e)
 
 
-# card_urls = ['https://www.google.com/shopping/product/6222956906177139429?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwiAjYmZ25_-AhVJEFkFHbLnA68Q8wII1ws', 'https://www.google.com/shopping/product/127770160929837065?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwj-4fyX25_-AhXVD1kFHbvUAYQQ8wIIuQ4']
+card_urls = ['https://www.google.com/shopping/product/6222956906177139429?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwiAjYmZ25_-AhVJEFkFHbLnA68Q8wII1ws', 'https://www.google.com/shopping/product/127770160929837065?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwj-4fyX25_-AhXVD1kFHbvUAYQQ8wIIuQ4']
 
-# buying_links = []
-# review_links = []
-# for url in card_urls:
-#     try:
-#         session = HTMLSession()
-#         response = session.get(url)
-#         # print(url, response.status_code)
-#         css_identifier_result = ".sg-product__dpdp-c"
-#         css_product_img = ".wTvWSc img"
-#         css_product_title = ".YVQvvd .BvQan"
-#         css_product_description = ".Zh8lCd p .sh-ds__full .sh-ds__full-txt"
-#         css_product_specs = ".lW5xPd .crbkUb"
-#         css_product_rating = ".QKs7ff .uYNZm"
-#         css_all_reviews_link = ".k0e9E a"
-#         css_product_reviews = "#-9110982622418926094-full"
-#         css_product_reviews_title = ".XBANlb .P3O8Ne"
-#         css_product_reviews_rating = ".nMkOOb div"
-#         css_product_review_count = ".QKs7ff .qIEPib"
-#         css_product_purchasing = ".kPMwsc"
-#         css_product_specifications = ".lW5xPd"
-#         css_buying_link = ".dOwBOc a"
+buying_links = []
+review_links = []
+for url in card_urls:
+    try:
+        session = HTMLSession()
+        response = session.get(url)
+        # print(url, response.status_code)
+        css_identifier_result = ".sg-product__dpdp-c"
+        css_product_img = ".wTvWSc img"
+        css_product_title = ".YVQvvd .BvQan"
+        css_product_description = ".Zh8lCd p .sh-ds__full .sh-ds__full-txt"
+        css_product_specs = ".lW5xPd .crbkUb"
+        css_product_rating = ".QKs7ff .uYNZm"
+        css_all_reviews_link = ".k0e9E a"
+        css_product_reviews = "#-9110982622418926094-full"
+        css_product_reviews_title = ".XBANlb .P3O8Ne"
+        css_product_reviews_rating = ".nMkOOb div"
+        css_product_review_count = ".QKs7ff .qIEPib"
+        css_product_purchasing = ".kPMwsc"
+        css_product_specifications = ".lW5xPd"
+        css_buying_link = ".dOwBOc a"
 
 
-#         product_purchasing = ".dOwBOc tbody"
-#         product_purchase = "a"
-#         product_desc = "td:nth-of-type(1)"
-#         product_spec = "td:nth-of-type(2)"
+        product_purchasing = ".dOwBOc tbody"
+        product_purchase = "a"
+        product_desc = "td:nth-of-type(1)"
+        product_spec = "td:nth-of-type(2)"
 
-#         results = response.html.find(css_identifier_result)
-#         purchasing = response.html.find(css_product_purchasing)
-#         specifications = response.html.find(css_product_specifications)
+        results = response.html.find(css_identifier_result)
+        purchasing = response.html.find(css_product_purchasing)
+        specifications = response.html.find(css_product_specifications)
 
-#         purchase_links = []
-#         for purchase in purchasing:
-#             link = (purchase.find(product_purchase, first=True).text).replace('Opens in a new window', '')
-#             purchase_links.append(link)
+        purchase_links = []
+        for purchase in purchasing:
+            link = (purchase.find(product_purchase, first=True).text).replace('Opens in a new window', '')
+            purchase_links.append(link)
 
-#         product_specifications_list = []
-#         for specification in specifications:
-#             descs = specification.find(product_desc)
-#             specs = specification.find(product_spec)
-#             for spec, desc in zip(specs,descs[1:]):
-#                 specs_object = {
-#                     desc.text : spec.text,
-#                 }
-#                 product_specifications_list.append(specs_object)
-#         for result in results:
-#             reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
-#             buying_link = 'https://google.com' + result.find(css_buying_link, first=True).attrs['href']
-#             product_title = result.find(css_product_title, first=True).text
-#             buying_links.append(buying_link)
-#             review_links.append(reviews_link)
-#             output = {
-#                 'product_title' : result.find(css_product_title, first=True),
-#                 'product_description' : result.find(css_product_description, first=True),
-#                 'product_rating' : result.find(css_product_rating, first=True).text,
-#                 'review_count' : result.find(css_product_review_count, first=True).text,
-#                 'product_img' : result.find(css_product_img, first=True).attrs['src'],
-#                 'product_specs' : product_specifications_list,
-#                 'all_reviews_link': reviews_link,
-#                 'product_purchasing' : buying_link
-#             } 
+        product_specifications_list = []
+        for specification in specifications:
+            descs = specification.find(product_desc)
+            specs = specification.find(product_spec)
+            for spec, desc in zip(specs,descs[1:]):
+                specs_object = {
+                    desc.text : spec.text,
+                }
+                product_specifications_list.append(specs_object)
+        for result in results:
+            reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
+            buying_link = 'https://google.com' + result.find(css_buying_link, first=True).attrs['href'] if result.find(css_buying_link, first=True).attrs['href'] else ''
+            product_title = result.find(css_product_title, first=True).text
+            buying_links.append(buying_link)
+            review_links.append(reviews_link)
+            output = {
+                'product_title' : result.find(css_product_title, first=True),
+                'product_description' : result.find(css_product_description, first=True),
+                'product_rating' : result.find(css_product_rating, first=True).text,
+                'review_count' : result.find(css_product_review_count, first=True).text,
+                'product_img' : result.find(css_product_img, first=True).attrs['src'],
+                'product_specs' : product_specifications_list,
+                'all_reviews_link': reviews_link,
+                'product_purchasing' : buying_link
+            } 
 
-#             # print(output)
+            # print(output)
   
         
 #     except requests.exceptions.RequestException as e:
