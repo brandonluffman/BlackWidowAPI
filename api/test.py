@@ -320,26 +320,48 @@ from praw.models import MoreComments
 
 
 review_links = ['https://www.google.com/shopping/product/6222956906177139429/reviews?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rate:5,rnum:10,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwiGjJrjr6D-AhWRFlkFHZ9SCFEQn08IWCgA', 'https://www.google.com/shopping/product/127770160929837065/reviews?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rate:5,rnum:10,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwiUtcXjr6D-AhWSMlkFHeU-DzIQn08ITSgA']
-# for url in buying_links:
-#     try:
-#         session = HTMLSession()
-#         response = session.get(url)
-#         print(url, response.status_code)
+for url in review_links:
+    try:
+        session = HTMLSession()
+        response = session.get(url)
+        print(url, response.status_code)
+
+        css_identifier_result = ".z6XoBf"
+        results = response.html.find(css_identifier_result)
+
+        for result in results[:2]:
+            # reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
+            title = result.find('.P3O8Ne', first=True).text
+            date = result.find('.ff3bE', first=True).text
+            # rating = int(result.find('.UzThIf::attr(aria-label)'))
+            content = result.find('.g1lvWe div:nth-of-type(2)', first=True).text.replace('\xa0Less', '')
+            # source = result.find('.sPPcBf').xpath('normalize-space()')
+            output = {
+                    # 'review_count' : result.find(css_product_review_count, first=True).text,
+                    'review_link': response.url,
+                    'title' : title,
+                    # 'rating' : rating,
+                    'date' : date,
+                    'content' : content[:200],
+                    # 'source' : source,
+            } 
+            print(output)
 
 
-#         css_identifier_result = ".sg-product__dpdp-c"
-#         results = response.html.find(css_identifier_result)
+            ## CODE BELOW IS FOR GRABBING ALL REVIEWS FOR A PRODUCT
 
-#         for result in results:
-#             reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
-#             output = {
-#                 'review_count' : result.find(css_product_review_count, first=True).text,
-#                 'all_reviews_link': reviews_link,
-#             } 
+            # next_page = response.css('.sh-fp__pagination-button::attr(data-url)').get()
+
+            # if next_page is not None:
+            #     # re-assigns requests.get url to a new page url
+            #     next_page_url = 'https://www.google.com' + next_page
+            #     yield response.follow(next_page_url, callback=self.parse_reviews)
 
 
-#     except requests.exceptions.RequestException as e:
-#             print(e)
+    except requests.exceptions.RequestException as e:
+            print(e)
+
+
 
 
 
