@@ -266,7 +266,7 @@ for url in card_urls:
                 product_specifications_list.append(specs_object)
         for result in results:
             reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
-            buying_link = 'https://google.com' + result.find(css_buying_link, first=True).attrs['href']
+            buying_link = 'https://google.com' + result.find(css_buying_link, first=True).attrs['href'] if result.find(css_buying_link, first=True).attrs['href'] else ''
             product_title = result.find(css_product_title, first=True).text
             buying_links.append(buying_link)
             review_links.append(reviews_link)
