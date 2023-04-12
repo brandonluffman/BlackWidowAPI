@@ -16,6 +16,7 @@ from tld import get_tld
 import time
 from collections import Counter
 from pydantic import BaseModel
+from returner import returner
 
 app = FastAPI()
 # nlp = spacy.load('./output/model-last')
@@ -32,10 +33,15 @@ app.add_middleware(
 class QueryInput(BaseModel):
     query: str
 
+@app.post('/')
+def home():
+    return 'hello'
+
 
 @app.post('/blackwidow')
-# async def blackwidow(query_input: QueryInput):
-def blackwidow(query_input): #REMOVE THIS    
+async def blackwidow(query_input: QueryInput):
+    return returner
+# def blackwidow(query_input): #FOR TESTING    
     import re
     headers={
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36",
@@ -43,28 +49,40 @@ def blackwidow(query_input): #REMOVE THIS
         "Accept-Encoding": "br,gzip,deflate",
         "Accept": "test/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     }
-    query = query_input #REMOVE THIS
-    # query = query_input.query
+    # query = query_input #FOR TESTING
+    query = query_input.query
     today = datetime.date.today()
     year = today.year
     match = re.search(f'{year}', query)
 
-    if 'best' not in query.lower() and match is None:
-        query = 'best+' + query + '+2023'
-    elif match is None:
-        query = query + '+2023'
-    elif 'best' not in query.lower():
-        query = 'best+' + query
-    else:
-        pass
-    # print(query)
+    # import re
+    # headers={
+    #     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36",
+    #     "Accept-Language": "en-gb",
+    #     "Accept-Encoding": "br,gzip,deflate",
+    #     "Accept": "test/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    # }
+    # query = query_input.query
+    # today = datetime.date.today()
+    # year = today.year
+    # match = re.search(f'{year}', query)
 
-    remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
-    domain = "http://google.com/search?q="
-    google_query = query
-    reddit_query = (remove + '+reddit')
-    youtube_query = (query + '+youtube') 
-    queries = [google_query, reddit_query, youtube_query]
+    # if 'best' not in query.lower() and match is None:
+    #     query = 'best+' + query + '+2023'
+    # elif match is None:
+    #     query = query + '+2023'
+    # elif 'best' not in query.lower():
+    #     query = 'best+' + query
+    # else:
+    #     pass
+    # # print(query)
+
+    # remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
+    # domain = "http://google.com/search?q="
+    # google_query = query
+    # reddit_query = (remove + '+reddit')
+    # youtube_query = (query + '+youtube') 
+    # queries = [google_query, reddit_query, youtube_query]
 
 
     result_of_query = {
@@ -89,7 +107,7 @@ def blackwidow(query_input): #REMOVE THIS
     #         }
     #         session = HTMLSession()
     #         response = session.get(url)
-    #         # print(url, response.status_code)
+    #         print(url, response.status_code)
 
     #         css_identifier_result = ".tF2Cxc"
     #         css_identifier_result_youtube = ".dFd2Tb"
@@ -104,12 +122,12 @@ def blackwidow(query_input): #REMOVE THIS
 
             
     #         if results: 
-    #             for result in results:
+    #             for result in results[:1]:
     #                 serp_link = result.find(css_identifier_link, first=True).attrs['href']
     #                 serp_links.append(serp_link)
 
     #         else:
-    #             for youtube_result in youtube_results:
+    #             for youtube_result in youtube_results[:1]:
     #                 serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
     #                 serp_links.append(serp_link)
 
@@ -120,7 +138,7 @@ def blackwidow(query_input): #REMOVE THIS
     # transcripts = []
 
     # for serp_link in serp_links:
-    #     # print(serp_link)
+    #     print(serp_link)
 
     #     if 'youtube.com' in serp_link:
     #         id = serp_link.replace('https://www.youtube.com/watch?v=', '')
@@ -192,7 +210,7 @@ def blackwidow(query_input): #REMOVE THIS
 
     #         joined_content = " ".join(lister)
 
-    #         final_text.append(joined_content)
+    #         final_text.append(joined_content[:2000])
 
     #         final_content = {f'Google Link : {url}':joined_content[:100]}
 
@@ -206,10 +224,10 @@ def blackwidow(query_input): #REMOVE THIS
     # print(json_object)
 
 
-    # # doc = nlp(json_object)
-    # # entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
-    # # items = [x.text for x in doc.ents]
-    # # Counter(items).most_common(10)
+    # doc = nlp(json_object)
+    # entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
+    # items = [x.text for x in doc.ents]
+    # Counter(items).most_common(10)
     # # docs = []
     # # docs.append(doc)
 
@@ -237,25 +255,25 @@ def blackwidow(query_input): #REMOVE THIS
                 product_link = 'https://www.google.com' + product_result.find(css_identifier_link, first=True).attrs['href']
                 product_compare = product_result.find(css_identifier_test_2, first=True)
                 product_review_count = product_result.find(css_product_reviews, first=True).text
-        
+    
                 if product_compare:
                     product_compare = product_compare.text
 
                     if product_compare.endswith('+'):
                         product_compare = product_compare[:-1]  
 
-                    # print(int(product_review_count.split()[5].replace(',','')))
-                    # print(product_review_count.split())
+                        # print(int(product_review_count.split()[5].replace(',','')))
+                        # print(product_review_count.split())
 
-                    if link_count < 3 and len(product_review_count) > 3:
-                        cards = {
-                        'Data' : product_link, 
-                        'Count' : int(product_compare),
-                        'Review Count' : int(product_review_count.split()[5].replace(',','')),
-                        'entity': entities[entity_links.index(url)]
-                        }
-                        output.append(cards)
-                        link_count += 1
+                        if link_count < 3 and len(product_review_count) > 3:
+                            cards = {
+                            'Data' : product_link, 
+                            'Count' : int(product_compare),
+                            'Review Count' : int(product_review_count.split()[5].replace(',','')),
+                            'entity': entities[entity_links.index(url)]
+                            }
+                            output.append(cards)
+                            link_count += 1
 
             counts = []
             for out in output:
@@ -300,7 +318,9 @@ def blackwidow(query_input): #REMOVE THIS
 
     buying_links = []
     review_links = []
+    card_counter = 0
     for url in card_urls:
+        card_counter+=1
         try:
             session = HTMLSession()
             response = session.get(url[0])
@@ -344,6 +364,7 @@ def blackwidow(query_input): #REMOVE THIS
                         desc.text : spec.text,
                     }
                     product_specifications_list.append(specs_object)
+
             for result in results:
                 reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
                 buying_link = 'https://google.com' + result.find(css_buying_link, first=True).attrs['href'] if result.find(css_buying_link, first=True).attrs['href'] else ''
@@ -351,7 +372,8 @@ def blackwidow(query_input): #REMOVE THIS
                 buying_links.append(buying_link)
                 review_links.append(reviews_link)
                 output = {
-                    'product_link': url[0],
+                    'id': card_counter,
+                    'product_url': url[0],
                     'entity': url[1],
                     'product_title' : result.find(css_product_title, first=True).text,
                     'product_description' : result.find(css_product_description, first=True).text,
@@ -362,68 +384,67 @@ def blackwidow(query_input): #REMOVE THIS
                     'all_reviews_link': reviews_link,
                     'product_purchasing' : buying_link
                 } 
+
                 result_of_query['cards'].append(output)
-  
-        
+            
         except requests.exceptions.RequestException as e:
                 print(e)
-  
 
 
 
-    # # buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
+    # buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
     # iland = []
-    # for url in buying_links:
-    #     try:
-    #         session = HTMLSession()
-    #         response = session.get(url)
-    #         # print(url, response.status_code)
+    for url in buying_links:
+        try:
+            session = HTMLSession()
+            response = session.get(url)
+            # print(url, response.status_code)
 
-    #         css_identifier_result = ".sg-product__dpdp-c"
-    #         result = response.html.find(css_identifier_result,first=True)
-    #         table = result.find("#sh-osd__online-sellers-cont",first=True)
-    #         rows = table.find("tr div.kPMwsc a")
-    #         buying_options = list(set([a_tag.attrs['href'].replace('/url?q=','') for a_tag in rows]))
-    #         # for card in result_of_query['cards']:
-    #         #     if card['product_purchasing'] == url:
-    #         #         card['buying_options'] = buying_options
-    #         #     else:
-    #         #         continue
+            css_identifier_result = ".sg-product__dpdp-c"
+            result = response.html.find(css_identifier_result,first=True)
+            table = result.find("#sh-osd__online-sellers-cont",first=True)
+            rows = table.find("tr div.kPMwsc a")
+            buying_options = list(set([a_tag.attrs['href'].replace('/url?q=','') for a_tag in rows]))
+            for card in result_of_query['cards']:
+                if card['product_purchasing'] == url:
+                    card['buying_options'] = buying_options
+                else:
+                    continue
            
-    #         # print(buying_options[:5])
+            # print(buying_options[:5])
 
-    #         hello = []
-    #         for test in buying_options:    
-    #             try:
-    #                 test_response = requests.get(test, timeout=2) 
-    #             except requests.exceptions.Timeout as e:
-    #                 print(e)
-    #                 continue
-    #             # print(test_response.status_code)          
-    #             if test[0:5] == 'https' and test_response.status_code == 200:
-    #                 hello.append(test)
-    #             else:
-    #                 pass
+            # hello = []
+            # for test in buying_options:    
+            #     # try:
+            #     #     test_response = requests.get(test, timeout=2) 
+            #     # except requests.exceptions.Timeout as e:
+            #     #     print(e)
+            #     #     continue
+            #     # print(test_response.status_code)          
+            #     if test[0:5] == 'https':
+            #         hello.append(test)
+            #     else:
+            #         pass
 
-    #         resers = []
-    #         for url in hello:
-    #             res = get_tld(url,as_object=True)
-    #             reser = res.fld
-    #             resers.append(reser)
+            # resers = []
+            # for url in hello:
+            #     res = get_tld(url,as_object=True)
+            #     reser = res.fld
+            #     resers.append(reser)
 
-    #         i=0
-    #         newy = []
-    #         for re in resers:
-    #             if re not in newy:
-    #                 newy.append(re)
-    #                 iland.append(hello[i])
-    #             i +=1
+            # i=0
+            # newy = []
+            # for re in resers:
+            #     if re not in newy:
+            #         newy.append(re)
+            #         iland.append(hello[i])
+            #     i +=1
 
 
            
 
-    #     except requests.exceptions.RequestException as e:
-    #             print(e)
+        except requests.exceptions.RequestException as e:
+                print(e)
 
 
     # # review_links = iland
@@ -473,8 +494,7 @@ def blackwidow(query_input): #REMOVE THIS
 
         except requests.exceptions.RequestException as e:
                 print(e)
-    print(result_of_query)
-blackwidow('headphones')
+    return result_of_query
 
 
 
