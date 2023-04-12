@@ -7,7 +7,6 @@ from bs4 import BeautifulSoup
 import praw
 from praw.models import MoreComments
 from tld import get_tld
-import time
 
 headers={
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36",
@@ -29,8 +28,14 @@ elif 'best' not in query.lower():
     query = 'best+' + query
 else:
     pass
-print(query)
-
+# print(query)
+result_of_query = {
+    'query' : query,
+    'affiliate': [],
+    'reddit': [],
+    'youtube': [],
+    'cards': [],
+}
 remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
 domain = "http://google.com/search?q="
 google_query = query
@@ -43,7 +48,7 @@ for url in urls:
     try:
         session = HTMLSession()
         response = session.get(url)
-        print(url, response.status_code)
+        # print(url, response.status_code)
 
         css_identifier_result = ".tF2Cxc"
         css_identifier_result_youtube = ".dFd2Tb"
@@ -65,18 +70,13 @@ for url in urls:
             for youtube_result in youtube_results[:1]:
                 serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
                 serp_links.append(serp_link)
-            
-        time.sleep(1)
 
     except requests.exceptions.RequestException as e:
         print(e)
 
-print(serp_links)
-
-transcripts = []
+# print(serp_links)
 
 for serp_link in serp_links:
-    print(serp_link)
 
     if 'youtube.com' in serp_link:
         # print('Youtube Link')
@@ -85,17 +85,14 @@ for serp_link in serp_links:
         text = ''
         for i in transcript:
             text = text + i['text'] + ' '
-        transcript = text[:100]
+        transcript = text
+        result_of_query['youtube'].append({'link': serp_link,'text': transcript})
         # print(transcript[:100])
-
-        final_content = {f'Youtube Link : {url}': transcript}
-
-        transcripts.append(final_content)
 
     elif 'reddit.com' in serp_link:
         reddit_read_only = praw.Reddit(client_id="6ziqexypJDMGiHf8tYfERA",         # your client id
-                                        client_secret="gBa1uvr2syOEbjxKbD8yzPsPo_fAbA",      # your client secret
-                                        user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36") 
+                client_secret="gBa1uvr2syOEbjxKbD8yzPsPo_fAbA",      # your client secret
+                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36") 
         submission = reddit_read_only.submission(url=serp_link)
             
         post_comments = []
@@ -107,11 +104,8 @@ for serp_link in serp_links:
                 pass
             else:
                 post_comments.append(comment.body.replace('\n', '').replace('\r', ''))
+        result_of_query['reddit'].append({'link':serp_link,'comments':post_comments})
         # print(post_comments)
-
-        final_content = {f'Reddit Link : {url}': post_comments}
-
-        transcripts.append(final_content)
 
     else:
         # print('Google Link')
@@ -139,20 +133,10 @@ for serp_link in serp_links:
                 new_sentence = sentence
                 lister.append(new_sentence)
 
-        joined_content = " ".join(lister)
+        final_content = " ".join(lister)
+        result_of_query['affiliate'].append({'link':serp_link,'text':final_content})
 
-        final_content = {f'Google Link : {url}':joined_content[:100]}
-
-        transcripts.append(final_content)
-
-
-print(transcripts)
-
-
-
-### Pass to NER Model ------------> ###
-
-
+        # print(final_content)
 
 
 # ## Render all data, then pass to spaCy endpoint [Pass Entities]
@@ -168,7 +152,7 @@ entities = ['apple airpods max', 'bose quietcomfort 45']
 domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
 
 entity_links = [domain + entity.replace(' ', '+') for entity in entities]
-final_card_links = []
+final_card_per_entity = []
 for url in entity_links:
     try: 
         session = HTMLSession()
@@ -233,25 +217,24 @@ for url in entity_links:
 
         indexer = counts.index(max_card)
         final_card = output[indexer]
-        final_card_links.append(final_card['Data'])
-        print(final_card)
+        final_card_per_entity.append(final_card)
+        
             
 
 
     except requests.exceptions.RequestException as e:
         print(e)
 
-print(final_card_links)
+card_urls = [card['Data'] for card in final_card_per_entity]
 
-# card_urls = ['https://www.google.com/shopping/product/6222956906177139429?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwiAjYmZ25_-AhVJEFkFHbLnA68Q8wII1ws', 'https://www.google.com/shopping/product/127770160929837065?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwj-4fyX25_-AhXVD1kFHbvUAYQQ8wIIuQ4']
 
 buying_links = []
 review_links = []
-for url in final_card_links:
+for url in card_urls:
     try:
         session = HTMLSession()
         response = session.get(url)
-        print(url, response.status_code)
+        # print(url, response.status_code)
         css_identifier_result = ".sg-product__dpdp-c"
         css_product_img = ".wTvWSc img"
         css_product_title = ".YVQvvd .BvQan"
@@ -298,8 +281,9 @@ for url in final_card_links:
             buying_links.append(buying_link)
             review_links.append(reviews_link)
             output = {
-                'product_title' : result.find(css_product_title, first=True),
-                'product_description' : result.find(css_product_description, first=True),
+                'product_link': url,
+                'product_title' : result.find(css_product_title, first=True).text,
+                'product_description' : result.find(css_product_description, first=True).text,
                 'product_rating' : result.find(css_product_rating, first=True).text,
                 'review_count' : result.find(css_product_review_count, first=True).text,
                 'product_img' : result.find(css_product_img, first=True).attrs['src'],
@@ -307,20 +291,17 @@ for url in final_card_links:
                 'all_reviews_link': reviews_link,
                 'product_purchasing' : buying_link
             } 
-
-            print(output)
+            result_of_query['cards'].append(output)
   
         
     except requests.exceptions.RequestException as e:
             print(e)
 
+# ####buying options parsing
 
-####buying options parsing
+# # print(buying_links)
 
-print(buying_links)
-
-buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
-buying_link_to_buying_options = {}
+# buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
 for url in buying_links:
     if url:
         session = HTMLSession()
@@ -331,23 +312,26 @@ for url in buying_links:
         table = result.find("#sh-osd__online-sellers-cont",first=True)
         rows = table.find("tr div.kPMwsc a")
         buying_options = list(set([a_tag.attrs['href'].replace('/url?q=','') for a_tag in rows]))
-        buying_link_to_buying_options[url] = buying_options     
+        for card in result_of_query['cards']:
+            if card['product_purchasing'] == url:
+                card['buying_options'] = buying_options
+            else:
+                continue
     else:
         continue
      
-### INSERT YOUR REVIEW PARSER BELOW BELOW ###
-
+# ### INSERT YOUR REVIEW PARSER BELOW BELOW ###
 
 # review_links = ['https://www.google.com/shopping/product/6222956906177139429/reviews?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rate:5,rnum:10,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwiGjJrjr6D-AhWRFlkFHZ9SCFEQn08IWCgA', 'https://www.google.com/shopping/product/127770160929837065/reviews?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rate:5,rnum:10,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwiUtcXjr6D-AhWSMlkFHeU-DzIQn08ITSgA']
 for url in review_links:
     try:
         session = HTMLSession()
         response = session.get(url)
-        print(url, response.status_code)
+        # print(url, response.status_code)
 
         css_identifier_result = ".z6XoBf"
         results = response.html.find(css_identifier_result)
-
+        reviews = []
         for result in results[:2]:
             # reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
             title = result.find('.P3O8Ne', first=True).text
@@ -364,10 +348,15 @@ for url in review_links:
                     'content' : content[:200],
                     # 'source' : source,
             } 
-            print(output)
+            reviews.append(output)
+        for card in result_of_query['cards']:
+            if card['all_reviews_link'] == url:
+                card['reviews'] = reviews
+            else:
+                continue
 
 
-            ## CODE BELOW IS FOR GRABBING ALL REVIEWS FOR A PRODUCT
+            # CODE BELOW IS FOR GRABBING ALL REVIEWS FOR A PRODUCT
 
             # next_page = response.css('.sh-fp__pagination-button::attr(data-url)').get()
 
@@ -379,6 +368,8 @@ for url in review_links:
 
     except requests.exceptions.RequestException as e:
             print(e)
+
+print(result_of_query)
 
 
 
