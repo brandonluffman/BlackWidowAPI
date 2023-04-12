@@ -39,9 +39,9 @@ def home():
 
 
 @app.post('/blackwidow')
-async def blackwidow(query_input: QueryInput):
-    return returner
-# def blackwidow(query_input): #FOR TESTING    
+# async def blackwidow(query_input: QueryInput):
+    # return returner
+def blackwidow(query_input): #FOR TESTING    
     import re
     headers={
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36",
@@ -49,41 +49,29 @@ async def blackwidow(query_input: QueryInput):
         "Accept-Encoding": "br,gzip,deflate",
         "Accept": "test/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     }
-    # query = query_input #FOR TESTING
-    query = query_input.query
+    query = query_input #FOR TESTING
+    # query = query_input.query
     today = datetime.date.today()
     year = today.year
     match = re.search(f'{year}', query)
 
-    # import re
-    # headers={
-    #     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36",
-    #     "Accept-Language": "en-gb",
-    #     "Accept-Encoding": "br,gzip,deflate",
-    #     "Accept": "test/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    # }
-    # query = query_input.query
-    # today = datetime.date.today()
-    # year = today.year
-    # match = re.search(f'{year}', query)
+    import re
+    headers={
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36",
+        "Accept-Language": "en-gb",
+        "Accept-Encoding": "br,gzip,deflate",
+        "Accept": "test/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    }
 
-    # if 'best' not in query.lower() and match is None:
-    #     query = 'best+' + query + '+2023'
-    # elif match is None:
-    #     query = query + '+2023'
-    # elif 'best' not in query.lower():
-    #     query = 'best+' + query
-    # else:
-    #     pass
-    # # print(query)
-
-    # remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
-    # domain = "http://google.com/search?q="
-    # google_query = query
-    # reddit_query = (remove + '+reddit')
-    # youtube_query = (query + '+youtube') 
-    # queries = [google_query, reddit_query, youtube_query]
-
+    if 'best' not in query.lower() and match is None:
+        query = 'best+' + query + '+2023'
+    elif match is None:
+        query = query + '+2023'
+    elif 'best' not in query.lower():
+        query = 'best+' + query
+    else:
+        pass
+    # print(query)
 
     result_of_query = {
         'query' : query,
@@ -92,147 +80,121 @@ async def blackwidow(query_input: QueryInput):
         'youtube': [],
         'cards': [],
     }
-    # serp_links = []
-    # final_text = []
+    remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
+    domain = "http://google.com/search?q="
+    google_query = query
+    reddit_query = (remove + '+reddit')
+    youtube_query = (query + '+youtube') 
+    queries = [google_query, reddit_query, youtube_query]
+    urls = [domain + query for query in queries]
+    serp_links = []
+    for url in urls:
+        try:
+            session = HTMLSession()
+            response = session.get(url)
+            # print(url, response.status_code)
 
-    # urls = [domain + query for query in queries]
+            css_identifier_result = ".tF2Cxc"
+            css_identifier_result_youtube = ".dFd2Tb"
+            css_identifier_result = ".tF2Cxc"
+            css_identifier_title = "h3"
+            css_identifier_link = ".yuRUbf a"
+            css_identifier_link_youtube = '.DhN8Cf a'
+            css_identifier_text = ".VwiC3b"
 
-    # for url in urls:
-    #     try:
-    #         headers={
-    #         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36",
-    #         "Accept-Language": "en-gb",
-    #         "Accept-Encoding": "br,gzip,deflate",
-    #         "Accept": "test/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    #         }
-    #         session = HTMLSession()
-    #         response = session.get(url)
-    #         print(url, response.status_code)
-
-    #         css_identifier_result = ".tF2Cxc"
-    #         css_identifier_result_youtube = ".dFd2Tb"
-    #         css_identifier_result = ".tF2Cxc"
-    #         css_identifier_title = "h3"
-    #         css_identifier_link = ".yuRUbf a"
-    #         css_identifier_link_youtube = '.DhN8Cf a'
-    #         css_identifier_text = ".VwiC3b"
-
-    #         results = response.html.find(css_identifier_result)
-    #         youtube_results = response.html.find(css_identifier_result_youtube)
+            results = response.html.find(css_identifier_result)
+            youtube_results = response.html.find(css_identifier_result_youtube)
 
             
-    #         if results: 
-    #             for result in results[:1]:
-    #                 serp_link = result.find(css_identifier_link, first=True).attrs['href']
-    #                 serp_links.append(serp_link)
+            if results: 
+                for result in results[:1]:
+                    serp_link = result.find(css_identifier_link, first=True).attrs['href']
+                    serp_links.append(serp_link)
+            else:
+                for youtube_result in youtube_results[:1]:
+                    serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
+                    serp_links.append(serp_link)
 
-    #         else:
-    #             for youtube_result in youtube_results[:1]:
-    #                 serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
-    #                 serp_links.append(serp_link)
+        except requests.exceptions.RequestException as e:
+            print(e)
 
-    #     except requests.exceptions.RequestException as e:
-    #         print(e)
+    # print(serp_links)
 
+    for serp_link in serp_links:
 
-    # transcripts = []
+        if 'youtube.com' in serp_link:
+            # print('Youtube Link')
+            id = serp_link.replace('https://www.youtube.com/watch?v=', '')
+            transcript = YouTubeTranscriptApi.get_transcript(id)
+            text = ''
+            for i in transcript:
+                text = text + i['text'] + ' '
+            transcript = text
+            result_of_query['youtube'].append({'link': serp_link,'text': transcript})
+            # print(transcript[:100])
 
-    # for serp_link in serp_links:
-    #     print(serp_link)
-
-    #     if 'youtube.com' in serp_link:
-    #         id = serp_link.replace('https://www.youtube.com/watch?v=', '')
-    #         transcript = YouTubeTranscriptApi.get_transcript(id)
-    #         text = ''
-    #         for i in transcript:
-    #             text = text + i['text'] + ' '
-    #         transcript = text[:100]
-    #         # print(transcript[:100])
-
-    #         final_text.append(transcript)
-
-    #         final_content = {f'Youtube Link : {url}': transcript}
-
-    #         transcripts.append(final_content)
-
-    #         result_of_query['youtube'].append({'link': serp_link,'text': transcript})
-
-    #     elif 'reddit.com' in serp_link:
-    #         reddit_read_only = praw.Reddit(client_id="6ziqexypJDMGiHf8tYfERA",         # your client id
-    #                                         client_secret="gBa1uvr2syOEbjxKbD8yzPsPo_fAbA",      # your client secret
-    #                                         user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36") 
-    #         submission = reddit_read_only.submission(url=serp_link)
+        elif 'reddit.com' in serp_link:
+            reddit_read_only = praw.Reddit(client_id="6ziqexypJDMGiHf8tYfERA",         # your client id
+                    client_secret="gBa1uvr2syOEbjxKbD8yzPsPo_fAbA",      # your client secret
+                    user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36") 
+            submission = reddit_read_only.submission(url=serp_link)
                 
-    #         post_comments = []
+            post_comments = []
 
-    #         for comment in submission.comments[:10]:
-    #             if type(comment) == MoreComments:
-    #                 continue
-    #             elif comment.body == '[removed]' or comment.body == '[deleted]' or comment.body[:6] == "Thanks":
-    #                 pass
-    #             else:
-    #                 comment_text = comment.body.replace('\n', '').replace('\r', '').strip()
-    #                 post_comments.append(comment_text)
+            for comment in submission.comments[:10]:
+                if type(comment) == MoreComments:
+                    continue
+                elif comment.body == '[removed]' or comment.body == '[deleted]' or comment.body[:6] == "Thanks":
+                    pass
+                else:
+                    post_comments.append(comment.body.replace('\n', '').replace('\r', ''))
+            result_of_query['reddit'].append({'link':serp_link,'comments':post_comments})
+            # print(post_comments)
 
-    #         final_content = {f'Reddit Link : {url}': post_comments}
+        else:
+            # print('Google Link')
+            headers = {
+                        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                        "Accept-Language": "en",
+                        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+            } 
+            r = requests.get(serp_link, headers=headers)
+            soup = BeautifulSoup(r.text, 'html.parser')
+            affiliate_content = []
+            for heading in soup.find_all(["p"]):
+                if len(heading.text.strip()) > 20:
+                    affiliate_content.append(heading.text.strip())
+                else:
+                    pass
 
-    #         final_text.append(" ".join(post_comments))
+            lister = []
 
-    #         transcripts.append(final_content)
+            for sentence in affiliate_content:
+                if sentence[-1] != '.' and sentence[-1] != '!' and sentence[-1] != '?':
+                    new_sentence = sentence + '.'
+                    lister.append(new_sentence)
+                else:
+                    new_sentence = sentence
+                    lister.append(new_sentence)
 
-    #         result_of_query['reddit'].append({'link':serp_link,'comments':post_comments})
+            final_content = " ".join(lister)
+            result_of_query['affiliate'].append({'link':serp_link,'text':final_content})
 
+        # model_text = " ".join(final_text)
 
-    #     else:
-    #         headers = {
-    #                     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    #                     "Accept-Language": "en",
-    #                     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
-    #         } 
-    #         r = requests.get(serp_link, headers=headers)
-    #         soup = BeautifulSoup(r.text, 'html.parser')
-    #         affiliate_content = []
-    #         for heading in soup.find_all(["p"]):
-    #             if len(heading.text.strip()) > 20:
-    #                 affiliate_content.append(heading.text.strip())
-    #             else:
-    #                 pass
-
-    #         lister = []
-
-    #         for sentence in affiliate_content:
-    #             if sentence[-1] != '.' and sentence[-1] != '!' and sentence[-1] != '?':
-    #                 new_sentence = sentence + '.'
-    #                 lister.append(new_sentence)
-    #             else:
-    #                 new_sentence = sentence
-    #                 lister.append(new_sentence)
-
-    #         joined_content = " ".join(lister)
-
-    #         final_text.append(joined_content[:2000])
-
-    #         final_content = {f'Google Link : {url}':joined_content[:100]}
-
-    #         transcripts.append(final_content)
-
-    #         result_of_query['affiliate'].append({'link':serp_link,'text':final_content})
-
-    # model_text = " ".join(final_text)
-
-    # json_object = json.dumps(model_text)
-    # print(json_object)
+        # json_object = json.dumps(model_text)
+        # print(json_object)
 
 
-    # doc = nlp(json_object)
-    # entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
-    # items = [x.text for x in doc.ents]
-    # Counter(items).most_common(10)
-    # # docs = []
-    # # docs.append(doc)
+        # doc = nlp(json_object)
+        # entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
+        # items = [x.text for x in doc.ents]
+        # Counter(items).most_common(10)
+        # # docs = []
+        # # docs.append(doc)
 
-    # entities = [entity for entity in items]
-    # entity_links = [domain + entity.replace(' ', '+') for entity in entities[:4]]
+        # entities = [entity for entity in items]
+        # entity_links = [domain + entity.replace(' ', '+') for entity in entities[:4]]
     entities = ['apple airpods max', 'bose quietcomfort 45']
     domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
 
@@ -393,7 +355,7 @@ async def blackwidow(query_input: QueryInput):
 
 
     # buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
-    # iland = []
+    iland = []
     for url in buying_links:
         try:
             session = HTMLSession()
@@ -405,21 +367,15 @@ async def blackwidow(query_input: QueryInput):
             table = result.find("#sh-osd__online-sellers-cont",first=True)
             rows = table.find("tr div.kPMwsc a")
             buying_options = list(set([a_tag.attrs['href'].replace('/url?q=','') for a_tag in rows]))
-            for card in result_of_query['cards']:
-                if card['product_purchasing'] == url:
-                    card['buying_options'] = buying_options
-                else:
-                    continue
-           
-            # print(buying_options[:5])
+          # print(buying_options[:5])
 
             # hello = []
             # for test in buying_options:    
-            #     # try:
-            #     #     test_response = requests.get(test, timeout=2) 
-            #     # except requests.exceptions.Timeout as e:
-            #     #     print(e)
-            #     #     continue
+            #     try:
+            #         test_response = requests.get(test, timeout=2) 
+            #     except requests.exceptions.Timeout as e:
+            #         print(e)
+            #         continue
             #     # print(test_response.status_code)          
             #     if test[0:5] == 'https':
             #         hello.append(test)
@@ -439,6 +395,14 @@ async def blackwidow(query_input: QueryInput):
             #         newy.append(re)
             #         iland.append(hello[i])
             #     i +=1
+
+
+            for card in result_of_query['cards']:
+                if card['product_purchasing'] == url:
+                    card['buying_options'] = buying_options
+               
+           
+  
 
 
            
@@ -494,7 +458,9 @@ async def blackwidow(query_input: QueryInput):
 
         except requests.exceptions.RequestException as e:
                 print(e)
-    return result_of_query
+    # return result_of_query
+    print(result_of_query)
+blackwidow('headphones')
 
 
 

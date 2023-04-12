@@ -17,17 +17,17 @@ headers={
 
 query = 'headphones'
 
-# today = datetime.date.today()
-# year = today.year
-# match = re.search(f'{year}', query)
-# if 'best' not in query.lower() and match is None:
-#     query = 'best+' + query + '+2023'
-# elif match is None:
-#     query = query + '+2023'
-# elif 'best' not in query.lower():
-#     query = 'best+' + query
-# else:
-#     pass
+today = datetime.date.today()
+year = today.year
+match = re.search(f'{year}', query)
+if 'best' not in query.lower() and match is None:
+    query = 'best+' + query + '+2023'
+elif match is None:
+    query = query + '+2023'
+elif 'best' not in query.lower():
+    query = 'best+' + query
+else:
+    pass
 # # print(query)
 result_of_query = {
     'query' : query,
@@ -36,105 +36,105 @@ result_of_query = {
     'youtube': [],
     'cards': [],
 }
-# remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
-# domain = "http://google.com/search?q="
-# google_query = query
-# reddit_query = (remove + '+reddit')
-# youtube_query = (query + '+youtube') 
-# queries = [google_query, reddit_query, youtube_query]
-# urls = [domain + query for query in queries]
-# serp_links = []
-# for url in urls:
-#     try:
-#         session = HTMLSession()
-#         response = session.get(url)
-#         # print(url, response.status_code)
+remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
+domain = "http://google.com/search?q="
+google_query = query
+reddit_query = (remove + '+reddit')
+youtube_query = (query + '+youtube') 
+queries = [google_query, reddit_query, youtube_query]
+urls = [domain + query for query in queries]
+serp_links = []
+for url in urls:
+    try:
+        session = HTMLSession()
+        response = session.get(url)
+        # print(url, response.status_code)
 
-#         css_identifier_result = ".tF2Cxc"
-#         css_identifier_result_youtube = ".dFd2Tb"
-#         css_identifier_result = ".tF2Cxc"
-#         css_identifier_title = "h3"
-#         css_identifier_link = ".yuRUbf a"
-#         css_identifier_link_youtube = '.DhN8Cf a'
-#         css_identifier_text = ".VwiC3b"
+        css_identifier_result = ".tF2Cxc"
+        css_identifier_result_youtube = ".dFd2Tb"
+        css_identifier_result = ".tF2Cxc"
+        css_identifier_title = "h3"
+        css_identifier_link = ".yuRUbf a"
+        css_identifier_link_youtube = '.DhN8Cf a'
+        css_identifier_text = ".VwiC3b"
 
-#         results = response.html.find(css_identifier_result)
-#         youtube_results = response.html.find(css_identifier_result_youtube)
+        results = response.html.find(css_identifier_result)
+        youtube_results = response.html.find(css_identifier_result_youtube)
 
         
-#         if results: 
-#             for result in results[:1]:
-#                 serp_link = result.find(css_identifier_link, first=True).attrs['href']
-#                 serp_links.append(serp_link)
-#         else:
-#             for youtube_result in youtube_results[:1]:
-#                 serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
-#                 serp_links.append(serp_link)
+        if results: 
+            for result in results[:1]:
+                serp_link = result.find(css_identifier_link, first=True).attrs['href']
+                serp_links.append(serp_link)
+        else:
+            for youtube_result in youtube_results[:1]:
+                serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
+                serp_links.append(serp_link)
 
-#     except requests.exceptions.RequestException as e:
-#         print(e)
+    except requests.exceptions.RequestException as e:
+        print(e)
 
-# # print(serp_links)
+# print(serp_links)
 
-# for serp_link in serp_links:
+for serp_link in serp_links:
 
-#     if 'youtube.com' in serp_link:
-#         # print('Youtube Link')
-#         id = serp_link.replace('https://www.youtube.com/watch?v=', '')
-#         transcript = YouTubeTranscriptApi.get_transcript(id)
-#         text = ''
-#         for i in transcript:
-#             text = text + i['text'] + ' '
-#         transcript = text
-#         result_of_query['youtube'].append({'link': serp_link,'text': transcript})
-#         # print(transcript[:100])
+    if 'youtube.com' in serp_link:
+        # print('Youtube Link')
+        id = serp_link.replace('https://www.youtube.com/watch?v=', '')
+        transcript = YouTubeTranscriptApi.get_transcript(id)
+        text = ''
+        for i in transcript:
+            text = text + i['text'] + ' '
+        transcript = text
+        result_of_query['youtube'].append({'link': serp_link,'text': transcript})
+        # print(transcript[:100])
 
-#     elif 'reddit.com' in serp_link:
-#         reddit_read_only = praw.Reddit(client_id="6ziqexypJDMGiHf8tYfERA",         # your client id
-#                 client_secret="gBa1uvr2syOEbjxKbD8yzPsPo_fAbA",      # your client secret
-#                 user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36") 
-#         submission = reddit_read_only.submission(url=serp_link)
+    elif 'reddit.com' in serp_link:
+        reddit_read_only = praw.Reddit(client_id="6ziqexypJDMGiHf8tYfERA",         # your client id
+                client_secret="gBa1uvr2syOEbjxKbD8yzPsPo_fAbA",      # your client secret
+                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36") 
+        submission = reddit_read_only.submission(url=serp_link)
             
-#         post_comments = []
+        post_comments = []
 
-#         for comment in submission.comments[:10]:
-#             if type(comment) == MoreComments:
-#                 continue
-#             elif comment.body == '[removed]' or comment.body == '[deleted]' or comment.body[:6] == "Thanks":
-#                 pass
-#             else:
-#                 post_comments.append(comment.body.replace('\n', '').replace('\r', ''))
-#         result_of_query['reddit'].append({'link':serp_link,'comments':post_comments})
-#         # print(post_comments)
+        for comment in submission.comments[:10]:
+            if type(comment) == MoreComments:
+                continue
+            elif comment.body == '[removed]' or comment.body == '[deleted]' or comment.body[:6] == "Thanks":
+                pass
+            else:
+                post_comments.append(comment.body.replace('\n', '').replace('\r', ''))
+        result_of_query['reddit'].append({'link':serp_link,'comments':post_comments})
+        # print(post_comments)
 
-#     else:
-#         # print('Google Link')
-#         headers = {
-#                     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-#                     "Accept-Language": "en",
-#                     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
-#         } 
-#         r = requests.get(serp_link, headers=headers)
-#         soup = BeautifulSoup(r.text, 'html.parser')
-#         affiliate_content = []
-#         for heading in soup.find_all(["p"]):
-#             if len(heading.text.strip()) > 20:
-#                 affiliate_content.append(heading.text.strip())
-#             else:
-#                 pass
+    else:
+        # print('Google Link')
+        headers = {
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "Accept-Language": "en",
+                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+        } 
+        r = requests.get(serp_link, headers=headers)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        affiliate_content = []
+        for heading in soup.find_all(["p"]):
+            if len(heading.text.strip()) > 20:
+                affiliate_content.append(heading.text.strip())
+            else:
+                pass
 
-#         lister = []
+        lister = []
 
-#         for sentence in affiliate_content:
-#             if sentence[-1] != '.' and sentence[-1] != '!' and sentence[-1] != '?':
-#                 new_sentence = sentence + '.'
-#                 lister.append(new_sentence)
-#             else:
-#                 new_sentence = sentence
-#                 lister.append(new_sentence)
+        for sentence in affiliate_content:
+            if sentence[-1] != '.' and sentence[-1] != '!' and sentence[-1] != '?':
+                new_sentence = sentence + '.'
+                lister.append(new_sentence)
+            else:
+                new_sentence = sentence
+                lister.append(new_sentence)
 
-#         final_content = " ".join(lister)
-#         result_of_query['affiliate'].append({'link':serp_link,'text':final_content})
+        final_content = " ".join(lister)
+        result_of_query['affiliate'].append({'link':serp_link,'text':final_content})
 
         # print(final_content)
 
@@ -306,24 +306,24 @@ for url in card_urls:
 
 # # print(buying_links)
 
-# buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
-# for url in buying_links:
-#     if url:
-#         session = HTMLSession()
-#         response = session.get(url)
+#buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
+for url in buying_links:
+    if url:
+        session = HTMLSession()
+        response = session.get(url)
 
-#         css_identifier_result = ".sg-product__dpdp-c"
-#         result = response.html.find(css_identifier_result,first=True)
-#         table = result.find("#sh-osd__online-sellers-cont",first=True)
-#         rows = table.find("tr div.kPMwsc a")
-#         buying_options = list(set([a_tag.attrs['href'].replace('/url?q=','') for a_tag in rows]))
-#         for card in result_of_query['cards']:
-#             if card['product_purchasing'] == url:
-#                 card['buying_options'] = buying_options
-#             else:
-#                 continue
-#     else:
-#         continue
+        css_identifier_result = ".sg-product__dpdp-c"
+        result = response.html.find(css_identifier_result,first=True)
+        table = result.find("#sh-osd__online-sellers-cont",first=True)
+        rows = table.find("tr div.kPMwsc a")
+        buying_options = list(set([a_tag.attrs['href'].replace('/url?q=','') for a_tag in rows]))
+        for card in result_of_query['cards']:
+            if card['product_purchasing'] == url:
+                card['buying_options'] = buying_options
+            else:
+                continue
+    else:
+        continue
      
 # # ### INSERT YOUR REVIEW PARSER BELOW BELOW ###
 
