@@ -8,14 +8,14 @@ import praw
 from praw.models import MoreComments
 from tld import get_tld
 
-# headers={
-#     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36",
-#     "Accept-Language": "en-gb",
-#     "Accept-Encoding": "br,gzip,deflate",
-#     "Accept": "test/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-# }
+headers={
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36",
+    "Accept-Language": "en-gb",
+    "Accept-Encoding": "br,gzip,deflate",
+    "Accept": "test/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+}
 
-# query = 'headphones'
+query = 'headphones'
 
 # today = datetime.date.today()
 # year = today.year
@@ -29,13 +29,13 @@ from tld import get_tld
 # else:
 #     pass
 # # print(query)
-# result_of_query = {
-#     'query' : query,
-#     'affiliate': [],
-#     'reddit': [],
-#     'youtube': [],
-#     'cards': [],
-# }
+result_of_query = {
+    'query' : query,
+    'affiliate': [],
+    'reddit': [],
+    'youtube': [],
+    'cards': [],
+}
 # remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
 # domain = "http://google.com/search?q="
 # google_query = query
@@ -136,175 +136,177 @@ from tld import get_tld
 #         final_content = " ".join(lister)
 #         result_of_query['affiliate'].append({'link':serp_link,'text':final_content})
 
-#         # print(final_content)
+        # print(final_content)
 
 
-# # ## Render all data, then pass to spaCy endpoint [Pass Entities]
-
-
-
+# ## Render all data, then pass to spaCy endpoint [Pass Entities]
 
 
 
 
 
-# entities = ['apple airpods max', 'bose quietcomfort 45']
-# domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
 
-# entity_links = [domain + entity.replace(' ', '+') for entity in entities]
-# final_card_per_entity = []
-# for url in entity_links:
-#     try: 
-#         session = HTMLSession()
-#         response = session.get(url)
-#         # print(url, response.status_code)
-#         css_identifier_results = ".i0X6df"
-#         css_identifier_link = "span a"
-#         css_identifier_test_2 = ".Ldx8hd a span"
-#         css_product_reviews = ".QIrs8"
-#         product_results = response.html.find(css_identifier_results)
-#         output = []
-#         link_count = 0
-#         ### For Loop Below loops through queries to find Shopping Link and Integer Representing Amounnt of Stores that are linked to that product ###
-#         for product_result in product_results:
-#             product_link = 'https://www.google.com' + product_result.find(css_identifier_link, first=True).attrs['href']
-#             product_compare = product_result.find(css_identifier_test_2, first=True)
-#             product_review_count = product_result.find(css_product_reviews, first=True).text
+
+
+entities = ['apple airpods max', 'bose quietcomfort 45']
+domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
+
+entity_links = [domain + entity.replace(' ', '+') for entity in entities]
+final_card_links = []
+for url in entity_links:
+    try: 
+        session = HTMLSession()
+        response = session.get(url)
+        # print(url, response.status_code)
+        css_identifier_results = ".i0X6df"
+        css_identifier_link = "span a"
+        css_identifier_test_2 = ".Ldx8hd a span"
+        css_product_reviews = ".QIrs8"
+        product_results = response.html.find(css_identifier_results)
+        output = []
+        link_count = 0
+        ### For Loop Below loops through queries to find Shopping Link and Integer Representing Amounnt of Stores that are linked to that product ###
+        for product_result in product_results:
+            product_link = 'https://www.google.com' + product_result.find(css_identifier_link, first=True).attrs['href']
+            product_compare = product_result.find(css_identifier_test_2, first=True)
+            product_review_count = product_result.find(css_product_reviews, first=True).text
      
-#             if product_compare:
-#                 product_compare = product_compare.text
+            if product_compare:
+                product_compare = product_compare.text
 
-#                 if product_compare.endswith('+'):
-#                     product_compare = product_compare[:-1]  
+                if product_compare.endswith('+'):
+                    product_compare = product_compare[:-1]  
 
-#                 # print(int(product_review_count.split()[5].replace(',','')))
-#                 print(product_review_count.split())
+                # print(int(product_review_count.split()[5].replace(',','')))
+                # print(product_review_count.split())
 
-#                 if link_count < 3 and len(product_review_count) > 3:
-#                     cards = {
-#                     'Data' : product_link, 
-#                     'Count' : int(product_compare),
-#                     'Review Count' : int(product_review_count.split()[5].replace(',',''))
-#                     }
-#                     output.append(cards)
-#                     link_count += 1
+                if link_count < 3 and len(product_review_count) > 3:
+                    cards = {
+                    'Data' : product_link, 
+                    'Count' : int(product_compare),
+                    'Review Count' : int(product_review_count.split()[5].replace(',','')),
+                    'entity': entities[entity_links.index(url)]
+                    }
+                    output.append(cards)
+                    link_count += 1
 
-#         counts = []
-#         for out in output:
-#            data = [out['Count'], out['Review Count']]
-#            counts.append(data) 
-#         # print(counts)
+        counts = []
+        for out in output:
+           data = [out['Count'], out['Review Count']]
+           counts.append(data) 
+        # print(counts)
 
-#         count_list = []
-#         for c in counts:
-#             count_list.append(c[0])
+        count_list = []
+        for c in counts:
+            count_list.append(c[0])
        
-#         max_count = max(count_list)
-#         max_indexes = [i for i in range(len(count_list)) if count_list[i] == max_count]         
-#         index_len = len(max_indexes)
-#         if index_len == 1:
-#             max_index = max_indexes[0]
+        max_count = max(count_list)
+        max_indexes = [i for i in range(len(count_list)) if count_list[i] == max_count]         
+        index_len = len(max_indexes)
+        if index_len == 1:
+            max_index = max_indexes[0]
 
-#         max_review_count = []
-#         if index_len > 1:
-#             for max_index in max_indexes:
-#                 max_review_count.append(counts[max_index][1])
-#             max_review = max(max_review_count)
-#             max_review_index = max_review_count.index(max_review)
+        max_review_count = []
+        if index_len > 1:
+            for max_index in max_indexes:
+                max_review_count.append(counts[max_index][1])
+            max_review = max(max_review_count)
+            max_review_index = max_review_count.index(max_review)
 
-#             for count in counts:
-#                if max_review in count:
-#                    max_card = count     
-#         else:
-#             max_card = counts[max_index]
+            for count in counts:
+               if max_review in count:
+                   max_card = count     
+        else:
+            max_card = counts[max_index]
 
-#         indexer = counts.index(max_card)
-#         final_card = output[indexer]
-#         final_card_per_entity.append(final_card)
+        indexer = counts.index(max_card)
+        final_card = output[indexer]
+        final_card_links.append(final_card)
         
             
 
 
-#     except requests.exceptions.RequestException as e:
-#         print(e)
+    except requests.exceptions.RequestException as e:
+        print(e)
 
-# card_urls = [card['Data'] for card in final_card_per_entity]
-
-
-# buying_links = []
-# review_links = []
-# for url in card_urls:
-#     try:
-#         session = HTMLSession()
-#         response = session.get(url)
-#         # print(url, response.status_code)
-#         css_identifier_result = ".sg-product__dpdp-c"
-#         css_product_img = ".wTvWSc img"
-#         css_product_title = ".YVQvvd .BvQan"
-#         css_product_description = ".Zh8lCd p .sh-ds__full .sh-ds__full-txt"
-#         css_product_specs = ".lW5xPd .crbkUb"
-#         css_product_rating = ".QKs7ff .uYNZm"
-#         css_all_reviews_link = ".k0e9E a"
-#         css_product_reviews = "#-9110982622418926094-full"
-#         css_product_reviews_title = ".XBANlb .P3O8Ne"
-#         css_product_reviews_rating = ".nMkOOb div"
-#         css_product_review_count = ".QKs7ff .qIEPib"
-#         css_product_purchasing = ".kPMwsc"
-#         css_product_specifications = ".lW5xPd"
-#         css_buying_link = ".dOwBOc a"
+card_urls = [[card['Data'],card['entity']] for card in final_card_links]
 
 
-#         product_purchasing = ".dOwBOc tbody"
-#         product_purchase = "a"
-#         product_desc = "td:nth-of-type(1)"
-#         product_spec = "td:nth-of-type(2)"
+buying_links = []
+review_links = []
+for url in card_urls:
+    try:
+        session = HTMLSession()
+        response = session.get(url[0])
+        # print(url, response.status_code)
+        css_identifier_result = ".sg-product__dpdp-c"
+        css_product_img = ".wTvWSc img"
+        css_product_title = ".YVQvvd .BvQan"
+        css_product_description = ".Zh8lCd p .sh-ds__full .sh-ds__full-txt"
+        css_product_specs = ".lW5xPd .crbkUb"
+        css_product_rating = ".QKs7ff .uYNZm"
+        css_all_reviews_link = ".k0e9E a"
+        css_product_reviews = "#-9110982622418926094-full"
+        css_product_reviews_title = ".XBANlb .P3O8Ne"
+        css_product_reviews_rating = ".nMkOOb div"
+        css_product_review_count = ".QKs7ff .qIEPib"
+        css_product_purchasing = ".kPMwsc"
+        css_product_specifications = ".lW5xPd"
+        css_buying_link = ".dOwBOc a"
 
-#         results = response.html.find(css_identifier_result)
-#         purchasing = response.html.find(css_product_purchasing)
-#         specifications = response.html.find(css_product_specifications)
 
-#         purchase_links = []
-#         for purchase in purchasing:
-#             link = (purchase.find(product_purchase, first=True).text).replace('Opens in a new window', '')
-#             purchase_links.append(link)
+        product_purchasing = ".dOwBOc tbody"
+        product_purchase = "a"
+        product_desc = "td:nth-of-type(1)"
+        product_spec = "td:nth-of-type(2)"
 
-#         product_specifications_list = []
-#         for specification in specifications:
-#             descs = specification.find(product_desc)
-#             specs = specification.find(product_spec)
-#             for spec, desc in zip(specs,descs[1:]):
-#                 specs_object = {
-#                     desc.text : spec.text,
-#                 }
-#                 product_specifications_list.append(specs_object)
-#         for result in results:
-#             reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
-#             buying_link = 'https://google.com' + result.find(css_buying_link, first=True).attrs['href'] if result.find(css_buying_link, first=True).attrs['href'] else ''
-#             product_title = result.find(css_product_title, first=True).text
-#             buying_links.append(buying_link)
-#             review_links.append(reviews_link)
-#             output = {
-#                 'product_link': url,
-#                 'product_title' : result.find(css_product_title, first=True).text,
-#                 'product_description' : result.find(css_product_description, first=True).text,
-#                 'product_rating' : result.find(css_product_rating, first=True).text,
-#                 'review_count' : result.find(css_product_review_count, first=True).text,
-#                 'product_img' : result.find(css_product_img, first=True).attrs['src'],
-#                 'product_specs' : product_specifications_list,
-#                 'all_reviews_link': reviews_link,
-#                 'product_purchasing' : buying_link
-#             } 
-#             result_of_query['cards'].append(output)
+        results = response.html.find(css_identifier_result)
+        purchasing = response.html.find(css_product_purchasing)
+        specifications = response.html.find(css_product_specifications)
+
+        purchase_links = []
+        for purchase in purchasing:
+            link = (purchase.find(product_purchase, first=True).text).replace('Opens in a new window', '')
+            purchase_links.append(link)
+
+        product_specifications_list = []
+        for specification in specifications:
+            descs = specification.find(product_desc)
+            specs = specification.find(product_spec)
+            for spec, desc in zip(specs,descs[1:]):
+                specs_object = {
+                    desc.text : spec.text,
+                }
+                product_specifications_list.append(specs_object)
+        for result in results:
+            reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
+            buying_link = 'https://google.com' + result.find(css_buying_link, first=True).attrs['href'] if result.find(css_buying_link, first=True).attrs['href'] else ''
+            product_title = result.find(css_product_title, first=True).text
+            buying_links.append(buying_link)
+            review_links.append(reviews_link)
+            output = {
+                'product_link': url[0],
+                'entity': url[1],
+                'product_title' : result.find(css_product_title, first=True).text,
+                'product_description' : result.find(css_product_description, first=True).text,
+                'product_rating' : result.find(css_product_rating, first=True).text,
+                'review_count' : result.find(css_product_review_count, first=True).text,
+                'product_img' : result.find(css_product_img, first=True).attrs['src'],
+                'product_specs' : product_specifications_list,
+                'all_reviews_link': reviews_link,
+                'product_purchasing' : buying_link
+            } 
+            result_of_query['cards'].append(output)
   
         
-#     except requests.exceptions.RequestException as e:
-#             print(e)
+    except requests.exceptions.RequestException as e:
+            print(e)
 
-# # ####buying options parsing
+# ####buying options parsing
 
-# # # print(buying_links)
+# # print(buying_links)
 
-# # buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
+# buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
 # for url in buying_links:
 #     if url:
 #         session = HTMLSession()
@@ -326,53 +328,53 @@ from tld import get_tld
 # # ### INSERT YOUR REVIEW PARSER BELOW BELOW ###
 
 # # review_links = ['https://www.google.com/shopping/product/6222956906177139429/reviews?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rate:5,rnum:10,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwiGjJrjr6D-AhWRFlkFHZ9SCFEQn08IWCgA', 'https://www.google.com/shopping/product/127770160929837065/reviews?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rate:5,rnum:10,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwiUtcXjr6D-AhWSMlkFHeU-DzIQn08ITSgA']
-# for url in review_links:
-#     try:
-#         session = HTMLSession()
-#         response = session.get(url)
-#         # print(url, response.status_code)
+for url in review_links:
+    try:
+        session = HTMLSession()
+        response = session.get(url)
+        # print(url, response.status_code)
 
-#         css_identifier_result = ".z6XoBf"
-#         results = response.html.find(css_identifier_result)
-#         reviews = []
-#         for result in results[:2]:
-#             # reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
-#             title = result.find('.P3O8Ne', first=True).text
-#             date = result.find('.ff3bE', first=True).text
-#             # rating = int(result.find('.UzThIf::attr(aria-label)'))
-#             content = result.find('.g1lvWe div:nth-of-type(2)', first=True).text.replace('\xa0Less', '')
-#             # source = result.find('.sPPcBf').xpath('normalize-space()')
-#             output = {
-#                     # 'review_count' : result.find(css_product_review_count, first=True).text,
-#                     'review_link': response.url,
-#                     'title' : title,
-#                     # 'rating' : rating,
-#                     'date' : date,
-#                     'content' : content[:200],
-#                     # 'source' : source,
-#             } 
-#             reviews.append(output)
-#         for card in result_of_query['cards']:
-#             if card['all_reviews_link'] == url:
-#                 card['reviews'] = reviews
-#             else:
-#                 continue
-
-
-#             # CODE BELOW IS FOR GRABBING ALL REVIEWS FOR A PRODUCT
-
-#             # next_page = response.css('.sh-fp__pagination-button::attr(data-url)').get()
-
-#             # if next_page is not None:
-#             #     # re-assigns requests.get url to a new page url
-#             #     next_page_url = 'https://www.google.com' + next_page
-#             #     yield response.follow(next_page_url, callback=self.parse_reviews)
+        css_identifier_result = ".z6XoBf"
+        results = response.html.find(css_identifier_result)
+        reviews = []
+        for result in results[:2]:
+            # reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
+            title = result.find('.P3O8Ne', first=True).text
+            date = result.find('.ff3bE', first=True).text
+            # rating = int(result.find('.UzThIf::attr(aria-label)'))
+            content = result.find('.g1lvWe div:nth-of-type(2)', first=True).text.replace('\xa0Less', '')
+            # source = result.find('.sPPcBf').xpath('normalize-space()')
+            output = {
+                    # 'review_count' : result.find(css_product_review_count, first=True).text,
+                    'review_link': response.url,
+                    'title' : title,
+                    # 'rating' : rating,
+                    'date' : date,
+                    'content' : content[:200],
+                    # 'source' : source,
+            } 
+            reviews.append(output)
+        for card in result_of_query['cards']:
+            if card['all_reviews_link'] == url:
+                card['reviews'] = reviews
+            else:
+                continue
 
 
-#     except requests.exceptions.RequestException as e:
-#             print(e)
+            # CODE BELOW IS FOR GRABBING ALL REVIEWS FOR A PRODUCT
 
-# print(result_of_query)
+            # next_page = response.css('.sh-fp__pagination-button::attr(data-url)').get()
+
+            # if next_page is not None:
+            #     # re-assigns requests.get url to a new page url
+            #     next_page_url = 'https://www.google.com' + next_page
+            #     yield response.follow(next_page_url, callback=self.parse_reviews)
+
+
+    except requests.exceptions.RequestException as e:
+            print(e)
+
+print(result_of_query)
 
 
 
