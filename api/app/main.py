@@ -75,9 +75,11 @@ def blackwidow(query_input): #FOR TESTING
 
     result_of_query = {
         'query' : query,
-        'affiliate': [],
-        'reddit': [],
-        'youtube': [],
+        'links': {
+            'affiliate': [],
+            'reddit': [],
+            'youtube': [],
+        },
         'cards': [],
     }
     remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
@@ -130,7 +132,7 @@ def blackwidow(query_input): #FOR TESTING
             for i in transcript:
                 text = text + i['text'] + ' '
             transcript = text
-            result_of_query['youtube'].append({'link': serp_link,'text': transcript})
+            result_of_query['links']['youtube'].append({'link': serp_link,'text': transcript})
             # print(transcript[:100])
 
         elif 'reddit.com' in serp_link:
@@ -148,7 +150,7 @@ def blackwidow(query_input): #FOR TESTING
                     pass
                 else:
                     post_comments.append(comment.body.replace('\n', '').replace('\r', ''))
-            result_of_query['reddit'].append({'link':serp_link,'comments':post_comments})
+            result_of_query['links']['reddit'].append({'link':serp_link,'comments':post_comments})
             # print(post_comments)
 
         else:
@@ -178,7 +180,7 @@ def blackwidow(query_input): #FOR TESTING
                     lister.append(new_sentence)
 
             final_content = " ".join(lister)
-            result_of_query['affiliate'].append({'link':serp_link,'text':final_content})
+            result_of_query['links']['affiliate'].append({'link':serp_link,'text':final_content})
 
         # model_text = " ".join(final_text)
 
