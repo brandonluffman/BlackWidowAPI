@@ -29,7 +29,13 @@ from tld import get_tld
 # else:
 #     pass
 # # print(query)
-
+# result_of_query = {
+#     'query' : query,
+#     'affiliate': [],
+#     'reddit': [],
+#     'youtube': [],
+#     'cards': [],
+# }
 # remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
 # domain = "http://google.com/search?q="
 # google_query = query
@@ -80,6 +86,7 @@ from tld import get_tld
 #         for i in transcript:
 #             text = text + i['text'] + ' '
 #         transcript = text
+#         result_of_query['youtube'].append({'link': serp_link,'text': transcript})
 #         # print(transcript[:100])
 
 #     elif 'reddit.com' in serp_link:
@@ -97,6 +104,7 @@ from tld import get_tld
 #                 pass
 #             else:
 #                 post_comments.append(comment.body.replace('\n', '').replace('\r', ''))
+#         result_of_query['reddit'].append({'link':serp_link,'comments':post_comments})
 #         # print(post_comments)
 
 #     else:
@@ -126,11 +134,12 @@ from tld import get_tld
 #                 lister.append(new_sentence)
 
 #         final_content = " ".join(lister)
+#         result_of_query['affiliate'].append({'link':serp_link,'text':final_content})
 
 #         # print(final_content)
 
 
-# ## Render all data, then pass to spaCy endpoint [Pass Entities]
+# # ## Render all data, then pass to spaCy endpoint [Pass Entities]
 
 
 
@@ -143,7 +152,7 @@ from tld import get_tld
 # domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
 
 # entity_links = [domain + entity.replace(' ', '+') for entity in entities]
-
+# final_card_per_entity = []
 # for url in entity_links:
 #     try: 
 #         session = HTMLSession()
@@ -208,119 +217,121 @@ from tld import get_tld
 
 #         indexer = counts.index(max_card)
 #         final_card = output[indexer]
-#         # print(final_card)
+#         final_card_per_entity.append(final_card)
+        
             
 
 
-    # except requests.exceptions.RequestException as e:
-    #     print(e)
+#     except requests.exceptions.RequestException as e:
+#         print(e)
+
+# card_urls = [card['Data'] for card in final_card_per_entity]
 
 
-card_urls = ['https://www.google.com/shopping/product/6222956906177139429?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwiAjYmZ25_-AhVJEFkFHbLnA68Q8wII1ws', 'https://www.google.com/shopping/product/127770160929837065?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwj-4fyX25_-AhXVD1kFHbvUAYQQ8wIIuQ4']
-
-buying_links = []
-review_links = []
-for url in card_urls:
-    try:
-        session = HTMLSession()
-        response = session.get(url)
-        # print(url, response.status_code)
-        css_identifier_result = ".sg-product__dpdp-c"
-        css_product_img = ".wTvWSc img"
-        css_product_title = ".YVQvvd .BvQan"
-        css_product_description = ".Zh8lCd p .sh-ds__full .sh-ds__full-txt"
-        css_product_specs = ".lW5xPd .crbkUb"
-        css_product_rating = ".QKs7ff .uYNZm"
-        css_all_reviews_link = ".k0e9E a"
-        css_product_reviews = "#-9110982622418926094-full"
-        css_product_reviews_title = ".XBANlb .P3O8Ne"
-        css_product_reviews_rating = ".nMkOOb div"
-        css_product_review_count = ".QKs7ff .qIEPib"
-        css_product_purchasing = ".kPMwsc"
-        css_product_specifications = ".lW5xPd"
-        css_buying_link = ".dOwBOc a"
+# buying_links = []
+# review_links = []
+# for url in card_urls:
+#     try:
+#         session = HTMLSession()
+#         response = session.get(url)
+#         # print(url, response.status_code)
+#         css_identifier_result = ".sg-product__dpdp-c"
+#         css_product_img = ".wTvWSc img"
+#         css_product_title = ".YVQvvd .BvQan"
+#         css_product_description = ".Zh8lCd p .sh-ds__full .sh-ds__full-txt"
+#         css_product_specs = ".lW5xPd .crbkUb"
+#         css_product_rating = ".QKs7ff .uYNZm"
+#         css_all_reviews_link = ".k0e9E a"
+#         css_product_reviews = "#-9110982622418926094-full"
+#         css_product_reviews_title = ".XBANlb .P3O8Ne"
+#         css_product_reviews_rating = ".nMkOOb div"
+#         css_product_review_count = ".QKs7ff .qIEPib"
+#         css_product_purchasing = ".kPMwsc"
+#         css_product_specifications = ".lW5xPd"
+#         css_buying_link = ".dOwBOc a"
 
 
-        product_purchasing = ".dOwBOc tbody"
-        product_purchase = "a"
-        product_desc = "td:nth-of-type(1)"
-        product_spec = "td:nth-of-type(2)"
+#         product_purchasing = ".dOwBOc tbody"
+#         product_purchase = "a"
+#         product_desc = "td:nth-of-type(1)"
+#         product_spec = "td:nth-of-type(2)"
 
-        results = response.html.find(css_identifier_result)
-        purchasing = response.html.find(css_product_purchasing)
-        specifications = response.html.find(css_product_specifications)
+#         results = response.html.find(css_identifier_result)
+#         purchasing = response.html.find(css_product_purchasing)
+#         specifications = response.html.find(css_product_specifications)
 
-        purchase_links = []
-        for purchase in purchasing:
-            link = (purchase.find(product_purchase, first=True).text).replace('Opens in a new window', '')
-            purchase_links.append(link)
+#         purchase_links = []
+#         for purchase in purchasing:
+#             link = (purchase.find(product_purchase, first=True).text).replace('Opens in a new window', '')
+#             purchase_links.append(link)
 
-        product_specifications_list = []
-        for specification in specifications:
-            descs = specification.find(product_desc)
-            specs = specification.find(product_spec)
-            for spec, desc in zip(specs,descs[1:]):
-                specs_object = {
-                    desc.text : spec.text,
-                }
-                product_specifications_list.append(specs_object)
-        for result in results:
-            reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
-            buying_link = 'https://google.com' + result.find(css_buying_link, first=True).attrs['href'] if result.find(css_buying_link, first=True).attrs['href'] else ''
-            product_title = result.find(css_product_title, first=True).text
-            buying_links.append(buying_link)
-            review_links.append(reviews_link)
-            output = {
-                'product_title' : result.find(css_product_title, first=True),
-                'product_description' : result.find(css_product_description, first=True),
-                'product_rating' : result.find(css_product_rating, first=True).text,
-                'review_count' : result.find(css_product_review_count, first=True).text,
-                'product_img' : result.find(css_product_img, first=True).attrs['src'],
-                'product_specs' : product_specifications_list,
-                'all_reviews_link': reviews_link,
-                'product_purchasing' : buying_link
-            } 
-
-            # print(output)
+#         product_specifications_list = []
+#         for specification in specifications:
+#             descs = specification.find(product_desc)
+#             specs = specification.find(product_spec)
+#             for spec, desc in zip(specs,descs[1:]):
+#                 specs_object = {
+#                     desc.text : spec.text,
+#                 }
+#                 product_specifications_list.append(specs_object)
+#         for result in results:
+#             reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
+#             buying_link = 'https://google.com' + result.find(css_buying_link, first=True).attrs['href'] if result.find(css_buying_link, first=True).attrs['href'] else ''
+#             product_title = result.find(css_product_title, first=True).text
+#             buying_links.append(buying_link)
+#             review_links.append(reviews_link)
+#             output = {
+#                 'product_link': url,
+#                 'product_title' : result.find(css_product_title, first=True).text,
+#                 'product_description' : result.find(css_product_description, first=True).text,
+#                 'product_rating' : result.find(css_product_rating, first=True).text,
+#                 'review_count' : result.find(css_product_review_count, first=True).text,
+#                 'product_img' : result.find(css_product_img, first=True).attrs['src'],
+#                 'product_specs' : product_specifications_list,
+#                 'all_reviews_link': reviews_link,
+#                 'product_purchasing' : buying_link
+#             } 
+#             result_of_query['cards'].append(output)
   
         
-    except requests.exceptions.RequestException as e:
-            print(e)
+#     except requests.exceptions.RequestException as e:
+#             print(e)
 
+# # ####buying options parsing
 
-####buying options parsing
+# # # print(buying_links)
 
-# print(buying_links)
+# # buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
+# for url in buying_links:
+#     if url:
+#         session = HTMLSession()
+#         response = session.get(url)
 
-buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
-buying_link_to_buying_options = {}
-for url in buying_links:
-    if url:
-        session = HTMLSession()
-        response = session.get(url)
-
-        css_identifier_result = ".sg-product__dpdp-c"
-        result = response.html.find(css_identifier_result,first=True)
-        table = result.find("#sh-osd__online-sellers-cont",first=True)
-        rows = table.find("tr div.kPMwsc a")
-        buying_options = list(set([a_tag.attrs['href'].replace('/url?q=','') for a_tag in rows]))
-        buying_link_to_buying_options[url] = buying_options     
-    else:
-        continue
+#         css_identifier_result = ".sg-product__dpdp-c"
+#         result = response.html.find(css_identifier_result,first=True)
+#         table = result.find("#sh-osd__online-sellers-cont",first=True)
+#         rows = table.find("tr div.kPMwsc a")
+#         buying_options = list(set([a_tag.attrs['href'].replace('/url?q=','') for a_tag in rows]))
+#         for card in result_of_query['cards']:
+#             if card['product_purchasing'] == url:
+#                 card['buying_options'] = buying_options
+#             else:
+#                 continue
+#     else:
+#         continue
      
-### INSERT YOUR REVIEW PARSER BELOW BELOW ###
+# # ### INSERT YOUR REVIEW PARSER BELOW BELOW ###
 
-
-# review_links = ['https://www.google.com/shopping/product/6222956906177139429/reviews?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rate:5,rnum:10,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwiGjJrjr6D-AhWRFlkFHZ9SCFEQn08IWCgA', 'https://www.google.com/shopping/product/127770160929837065/reviews?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rate:5,rnum:10,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwiUtcXjr6D-AhWSMlkFHeU-DzIQn08ITSgA']
+# # review_links = ['https://www.google.com/shopping/product/6222956906177139429/reviews?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rate:5,rnum:10,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwiGjJrjr6D-AhWRFlkFHZ9SCFEQn08IWCgA', 'https://www.google.com/shopping/product/127770160929837065/reviews?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rate:5,rnum:10,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwiUtcXjr6D-AhWSMlkFHeU-DzIQn08ITSgA']
 # for url in review_links:
 #     try:
 #         session = HTMLSession()
 #         response = session.get(url)
-#         print(url, response.status_code)
+#         # print(url, response.status_code)
 
 #         css_identifier_result = ".z6XoBf"
 #         results = response.html.find(css_identifier_result)
-
+#         reviews = []
 #         for result in results[:2]:
 #             # reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
 #             title = result.find('.P3O8Ne', first=True).text
@@ -337,10 +348,15 @@ for url in buying_links:
 #                     'content' : content[:200],
 #                     # 'source' : source,
 #             } 
-#             print(output)
+#             reviews.append(output)
+#         for card in result_of_query['cards']:
+#             if card['all_reviews_link'] == url:
+#                 card['reviews'] = reviews
+#             else:
+#                 continue
 
 
-#             ## CODE BELOW IS FOR GRABBING ALL REVIEWS FOR A PRODUCT
+#             # CODE BELOW IS FOR GRABBING ALL REVIEWS FOR A PRODUCT
 
 #             # next_page = response.css('.sh-fp__pagination-button::attr(data-url)').get()
 
@@ -352,6 +368,8 @@ for url in buying_links:
 
 #     except requests.exceptions.RequestException as e:
 #             print(e)
+
+# print(result_of_query)
 
 
 
