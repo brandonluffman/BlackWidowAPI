@@ -71,3 +71,16 @@ async def model(sentence_input: Input):
     # # return response.json() 
 
 
+
+
+### ----------------------------------------------- ###
+
+#  # def get_product_names(self,response,text):
+#     # nlp = spacy.load('./output/model-best')
+#     # doc = nlp(text)
+#     # items = [x.text for x in doc.ents]
+#     # Counter(items).most_common(10)
+#     # docs.append(doc)
+#     # return docs
+
+

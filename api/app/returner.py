@@ -1,132 +1,99 @@
 returner = {
-  "query": "best+headphones+2023",
-  "affiliate": [
-    {
-      "link": "https://www.soundguys.com/best-headphones-2559/",
-      "text": {
-        "Google Link : http://google.com/search?q=best+headphones+2023+youtube": "Affiliate links on SoundGuys may earn us a commission. Learn more. If you’re looking for the best he"
-      }
-    }
-  ],
-  "reddit": [
-    {
-      "link": "https://www.reddit.com/r/HeadphoneAdvice/comments/sbx8h6/best_headphones_per_price_bracket/",
-      "comments": [
-        "0-200 is a world of difference",
-        "* $100-200: Sennheiser HD 560S or HD 25* $200-500: E-MU Teak (honestly I'd pick the Moondrop Blessing 2 over any headphone in this price bracket)* $500-1000: Hifiman Ananda or Focal Clear OG* $1000-2000: Hifiman Arya Stealth or HE 1000 V2* $2000+: Hifiman Susvara",
-        "$100-200: HD6XX    $200-500: This tier is hard...DT1990, HarmonicDyne Zeus, or Sundara.  Maybe the Hifiman XS?    $500-1000: Focal Clear OG    $1000-2000: Another hard tier. HD800S or LCD-X 2021.  Never tried Arya, but I bet that's in here too.    $2000+: Never heard anything in this tier, but I imagine the usual LCD-5, Susvara, and Utopia win this category.",
-        "0-50: Koss Porta Pro, KSC75, There are *tons* of IEMs in this price range that are excellent as well (CCA CRA, Final Audio E500, Moondrop quarks, and many others)50-150: HE400SE, HE-X4, DT770/990, SHP9500/9600150-200:HD560S,HD6XX,DT880200-350:r70x(my personal favorite), Sundara, DT 900 PRO X350-500: pretty much nothing lol maybe dt1990s500-1000:Focal Elex, LCD 2 Classic/Closed1000-2000:HD800/800S, LCD X, Focal Clear/Utopia, Hifiman Arya2000+: ZMF has tons of options in this range, theres also Hifiman Susvaras that are supposed to be amazing.$60,000 USD: Sennheiser HE-1",
-        "$100, Probably akg k361's, nice headphones although they have their quirks.$200, He400se or hd560s. Very different options but both quite nice.$200-$500, Sundara's look pretty nice. I could be biased since I own anandas, though.At $600 I enjoy the Ananda, Love the stage on that headphone. Elex and LCD-2C's are very nice as well, lots of great options in this price range, imo.$1k-2k, Ultimately I'd have to say used He1kv2, they're too hard to pass up. A lot of hifiman picks, wow. Hd800s also look quite nice, and the Focal Radiance is absolutely stunning.For Over $2000, I gotta say, Meze empyreans/elites, or the Stabilized Vérité Closed. Just beautiful, very well built, and slightly fun headphones, while being resolving enough (for my ears), and not crazy demanding. **I would completely agree that they're probably not a great value for most people, and I wouldn't recommend them in most circumstances,** but personally, I'm a huge fan of the trio."
-      ]
-    }
-  ],
-  "youtube": [
-    {
-      "link": "https://www.youtube.com/watch?v=sBba4MGPc2U",
-      "text": "right so i've recently decided that i need to get better at focusing and so obviously a pair of nois"
-    }
-  ],
+  "query": "headphones",
+  "affiliate": [],
+  "reddit": [],
+  "youtube": [],
   "cards": [
     {
-      "product_title": "Bose Noise Cancelling Wireless Headphones - Black",
-      "product_description": "QuietComfort headphones are engineered to sound better, be more comfortable and easier to take with you. Put them on, and suddenly everything changes. Your music is deep, powerful and balanced, and so quiet that every note sounds clearer. Try them in any noisy environment, and you’ll notice the difference the proprietary Acoustic Noise Canceling technology makes. Distractions will fade away, so you can focus on what matters - your music, movies and videos.",
-      "product_rating": "4.7",
-      "review_count": "5,927 reviews",
-      "product_img": "https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcRfIpT-h5A9N_MujD9031k3qIngbe90tUSMewhTmeJu491__mAmJtWAz-0ctth5eDHwFg9o1V8",
+      "id": 1,
+      "product_url": "https://www.google.com/shopping/product/2636278406643950307?hl=en&q=apple+airpods+max&prds=eto:6285694864132986188_0,pid:5704287260884834510,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwirq-69t6X-AhXDcvEDHVvADJIQ8wII5g8",
+      "entity": "apple airpods max",
+      "product_title": "Apple AirPods Pro with MagSafe Case",
+      "product_rating": "4.5",
+      "review_count": "67,452 reviews",
+      "product_img": "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcQjB1uoNK02EPvOnK4mcx272_4HzGlXfXGaRKn8Tg4tCrBkpqQR57sbPiXRkg",
       "product_specs": [
         {
-          "Product Type": "Headphones - Bluetooth - wireless - NFC"
+          "Product Type": "True wireless earphones - Bluetooth - wireless"
         },
         {
-          "Width": "6.7 in"
+          "Generation": "1st generation"
         },
         {
-          "Depth": "3.2 in"
+          "Compatibility": "iPhone, iPad, iPod, Mac"
         },
         {
-          "Height": "7.1 in"
+          "Additional Functions": "Wireless audio sharing"
         },
         {
-          "Weight": "8.29 oz"
+          "Dimensions & Weight Details": "Charging case: 2.4 in x 0.9 in x 1.8 in / 1.6 oz"
         }
       ],
-      "all_reviews_link": "https://google.com/shopping/product/11807794315385323242/reviews?hl=en&q=Bose+QuietComfort+45&prds=eto:12813554779527938774_0,pid:3490716478665632251,rate:5,rnum:10,rsk:PC_17370419192671336164&sa=X&ved=0ahUKEwjGy5bigqX-AhUgD1kFHVa8B2IQn08ITSgA",
-      "product_purchasing": "https://google.com/shopping/product/11807794315385323242/offers?hl=en&q=Bose+QuietComfort+45&prds=eto:12813554779527938774_0,pid:3490716478665632251,rsk:PC_17370419192671336164,scoring:p&sa=X&ved=0ahUKEwjGy5bigqX-AhUgD1kFHVa8B2IQtKsGCGU"
+      "all_reviews_link": "https://google.com/shopping/product/2636278406643950307/reviews?hl=en&q=apple+airpods+max&prds=eto:6285694864132986188_0,pid:5704287260884834510,rate:5,rnum:10,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwiYo86_t6X-AhUWEVkFHX1mA-gQn08IVSgA",
+      "product_purchasing": "https://google.com/shopping/product/2636278406643950307/offers?hl=en&q=apple+airpods+max&prds=eto:6285694864132986188_0,pid:5704287260884834510,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwiYo86_t6X-AhUWEVkFHX1mA-gQtKsGCHQ",
+      "buying_options": [
+        "https://www.truegether.com/listing.html%3Fid%3DUSER.03aae565-a300-44b2-b8c3-df3b07cbb56c&sa=U&ved=0ahUKEwjJ7r7At6X-AhXDEVkFHUsEC9oQ2ykIfw&usg=AOvVaw0GOsPIuU1L22I2FaPfHARx",
+        "https://simplecellshop.com/products/app742522124%3Fvariant%3D42748148252922%26currency%3DUSD%26utm_medium%3Dproduct_sync%26utm_source%3Dgoogle%26utm_content%3Dsag_organic%26utm_campaign%3Dsag_organic%26srsltid%3DAfAwrE6w_6LGphi1lX1Pyd54h9_DNms8L7-Or6XnH8f3n0GxX5gA_OWVWhU&sa=U&ved=0ahUKEwjJ7r7At6X-AhXDEVkFHUsEC9oQ2ykIhQE&usg=AOvVaw3aq7iPSHXPQVTLraGZh8p6",
+        "https://www.ecrater.com/p/40482326/apple-airpods-pro-white-with-magsafe%3Fgps%3D1%26srsltid%3DAfAwrE5IVJpor2LIuHDj6KNASYuCt2-mNSPYGNQ6hCcTPn0tLn57sqNwbBU&sa=U&ved=0ahUKEwjJ7r7At6X-AhXDEVkFHUsEC9oQ2ykIjQE&usg=AOvVaw030lZI8LxBsPd0G9Qktsqw",
+        "https://www.truegether.com/listing.html%3Fid%3DUSER.0367e808-3b42-4151-8e73-746351c3795d&sa=U&ved=0ahUKEwjJ7r7At6X-AhXDEVkFHUsEC9oQ2ykIeQ&usg=AOvVaw1xgE09Zv4dhob_UpNuycrb",
+        "https://www.ebay.com/itm/304829199428%3Fchn%3Dps%26mkevt%3D1%26mkcid%3D28%26srsltid%3DAfAwrE4Gh319gq5CFMFOFwvfxJGXGilES-iJZIDVLXxfOnqTj7hZpuAYZyI&sa=U&ved=0ahUKEwjJ7r7At6X-AhXDEVkFHUsEC9oQ2ykILA&usg=AOvVaw1zyYmdOYnfhzjgT5aeqHlm",
+        "https://www.bhphotovideo.com/c/product/802687341-USE/apple_mlwk3am_a_airpods_pro_with_wireless.html//%3Fsmpm%3Dbu_ull&sa=U&ved=0ahUKEwjJ7r7At6X-AhXDEVkFHUsEC9oQ2ykIWQ&usg=AOvVaw3jSjsrK8_jdy-XfsyRuR0P",
+        "https://maxandfix.com/products/airpods-pro%3Fvariant%3D43643957018904%26currency%3DUSD%26utm_medium%3Dproduct_sync%26utm_source%3Dgoogle%26utm_content%3Dsag_organic%26utm_campaign%3Dsag_organic%26srsltid%3DAfAwrE4CUShxvZAkkpqYptpXiPB8UEfAdWUF_g2FOg_H06766y2v6-Ia7sI&sa=U&ved=0ahUKEwjJ7r7At6X-AhXDEVkFHUsEC9oQ2ykInAE&usg=AOvVaw2_F6sSi6ZsAinNzBQRtYKA",
+        "https://jimspawn.com/products/pre-owned-apple-airpods-pro-with-charging-case-white%3Fvariant%3D40080228745281%26currency%3DUSD%26utm_medium%3Dproduct_sync%26utm_source%3Dgoogle%26utm_content%3Dsag_organic%26utm_campaign%3Dsag_organic%26srsltid%3DAfAwrE4rVuj04nrOeYnLqBRxV-EaT3K5IyRIHc7AhAU7ORr13Td7ZoXSQnw&sa=U&ved=0ahUKEwjJ7r7At6X-AhXDEVkFHUsEC9oQ2ykIZA&usg=AOvVaw2KgVQQHIU_Dg9q8YAjaGH0",
+        "https://www.buya.com/Item/Details/AS-IS-APPLE-AIRPODS-PRO-READ-DESCRIPTION/lite/bc0ba548d0a642c59de3eee7d25f2ce3&sa=U&ved=0ahUKEwjJ7r7At6X-AhXDEVkFHUsEC9oQ2ykIJA&usg=AOvVaw2ZjFr5fkB4HT_EBdRanf1F",
+        "https://www.super.com/shop/products/airpods-pro-with-magsafe-charging-case-white-refurbished/%3Fsku%3DR27532136223_77516%26srsltid%3DAfAwrE6BPnWn8oGy9ledj4sOYuJKvggLXXEE6JpKn2w2WRnStmaVdn15wxI&sa=U&ved=0ahUKEwjJ7r7At6X-AhXDEVkFHUsEC9oQ2ykIag&usg=AOvVaw3fQo5y0pzLEtaQ8F6QL4M_",
+        "https://www.adorama.com/acmlwk3ama.html%3Frefby%3Dinc-google-shop-o%26utm_source%3Dgoogle%26utm_medium%3Dorganic%26utm_campaign%3Dorganicshopping&sa=U&ved=0ahUKEwjJ7r7At6X-AhXDEVkFHUsEC9oQ2ykItQE&usg=AOvVaw3U1k1STSWOZbe10l-gFPDz",
+        "https://reebelo.com/collections/apple-airpods-pro%3Fcolor%3DWhite%26condition%3DGood%26id%3D148b7%26srsltid%3DAfAwrE7DsrDTll79e2QqOxA9bfytWeEWOX-TejZ6Z3X4X3InbBT-MzvUYAU&sa=U&ved=0ahUKEwjJ7r7At6X-AhXDEVkFHUsEC9oQ2ykIOQ&usg=AOvVaw2fFKV-vfHTlij8J5Hc8iD5",
+        "https://www.bhphotovideo.com/c/product/1668453-REG/apple_mlwk3am_a_airpods_pro_wireless_headphones.html%3Fkw%3DAPAIRPODSPMS%26ap%3Dy%26BI%3DE6540%26smp%3Dba_f1_ll%26srsltid%3DAfAwrE5CRIKZJiF1-qSe6OZMfI7Acdeio2Wt-u8Q9hK72PYQipozu8YL9Ok&sa=U&ved=0ahUKEwjJ7r7At6X-AhXDEVkFHUsEC9oQ2ykIkwE&usg=AOvVaw22I9Ssq7ig-063KH5wTG5s",
+        "https://www.ntelectronic.com/products/apple-airpods-pro-with-magsafe-wireless-charging-case-mlwk3am-a-white%3Fvariant%3D42938715472122%26currency%3DUSD%26utm_medium%3Dproduct_sync%26utm_source%3Dgoogle%26utm_content%3Dsag_organic%26utm_campaign%3Dsag_organic&sa=U&ved=0ahUKEwjJ7r7At6X-AhXDEVkFHUsEC9oQ2ykITg&usg=AOvVaw0EvJbJevzjz4lCl5SoHZfn",
+        "https://www.mercari.com/us/item/m91255970133/&sa=U&ved=0ahUKEwjJ7r7At6X-AhXDEVkFHUsEC9oQ2ykISQ&usg=AOvVaw2Oo1-mV9zIJ_r5eoSE3pMf",
+        "https://www.bonanza.com/listings/Apple-AirPods-Pro-with-MagSafe-Charging-Case-Excellent-Grade-A/1358387145%3Fgoog_pla%3D1&sa=U&ved=0ahUKEwjJ7r7At6X-AhXDEVkFHUsEC9oQ2ykIRA&usg=AOvVaw3FETCt47OpOzwVs3POhETT",
+        "https://www.backmarket.com/en-us/p/airpods-pro-with-magsafe-charging-case-white/9f0c1cec-a7d1-49f0-96c3-48ef88fa3aca%3Fshopping%3Dgmc%26srsltid%3DAfAwrE44XzkKVf55sfujDAwP0Tzm2Fc14rvdSzpFf2xJuQsApZjYo7qgKeU&sa=U&ved=0ahUKEwjJ7r7At6X-AhXDEVkFHUsEC9oQ2ykIbw&usg=AOvVaw1FMv-YNBc4_vcwaHbS3-sE"
+      ]
     },
     {
-      "product_title": "Sennheiser HD 450BT Wireless Headphones - Black",
-      "product_description": "DESCRIPTION These Sennheiser Headphones are ideal for listening to high quality sound at home or on the go, thanks to a comfortable over-ear design, Low Latency technology and active noise cancellation. It has a lengthy 30 hour battery life and USB-C fast charging to ensure that you're always ready to experience music, podcasts, audiobooks and other forms of media. Plus with the Sennheiser Smart Control app, you can customise your sound settings via an equalizer. Features These wireless headphones connect to your device via Bluetooth 5.0 technology. They're designed for your favourite music, media, podcasts, audiobooks and more The over-ear design provides a comfortable, immersive audio experience. The touch buttons on the earcups allow for easy calls and music management. The Sennheiser Smart Control app allows you to use an equalizer to control your audio setting via your smartphone or tablet. The headphones have a 30 hour battery life and fast charging via USB-C. The earphones have AAC and SBC codec support, as well as Low Latency technology, to ensure that your audio is of high quality. The active noise cancellation ensures that aren't distracted while on your commute to work, school or university. They come in a sleek black design.",
-      "product_rating": "4.2",
-      "review_count": "2,118 reviews",
-      "product_img": "https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcTvDdj7zpKSqXtK8CgxyuHo-BscUyKwmwbYzYxW7BzxkVIPSXu97ituAbpb54B7gXTjzaDJi2nk",
+      "id": 2,
+      "product_url": "https://www.google.com/shopping/product/6222956906177139429?hl=en&q=bose+quietcomfort+45&prds=eto:5138283840026257860_0,pid:3011142393657177064,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwjZs92-t6X-AhU0SvEDHd35D_gQ8wII2ws",
+      "entity": "bose quietcomfort 45",
+      "product_title": "Bose QuietComfort 45 Wireless Noise Cancelling Headphones, White Smoke",
+      "product_rating": "4.6",
+      "review_count": "5,076 reviews",
+      "product_img": "https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcReyyjj8oQCu4NkIIwmnxBerNtT9Rt6qD4b7FCkhBqzhKgH_1WaRbaH0BqabnKFHcUAvVnLcSBX",
       "product_specs": [
         {
           "Product Type": "Headphones - Bluetooth - wireless"
         },
         {
-          "Weight": "8.39 oz"
+          "Color": "Smoke white"
         },
         {
-          "Color": "Black"
+          "Recommended Use": "Portable electronics"
         },
         {
           "Audio Output": "Full size"
         },
         {
-          "Headphones Form Factor": "Closed"
+          "Headphones Form Factor": "Wireless"
         }
       ],
-      "all_reviews_link": "https://google.com/shopping/product/14040283102998867061/reviews?hl=en&q=Sennheiser+IE+200&prds=eto:3803349747599063501_0,pid:4727219811678779997,rate:5,rnum:10,rsk:PC_14891876550760916200&sa=X&ved=0ahUKEwilu8HigqX-AhVyEFkFHbJSC_oQn08IXSgA",
-      "product_purchasing": "https://google.com/shopping/product/14040283102998867061/offers?hl=en&q=Sennheiser+IE+200&prds=eto:3803349747599063501_0,pid:4727219811678779997,rsk:PC_14891876550760916200,scoring:p&sa=X&ved=0ahUKEwilu8HigqX-AhVyEFkFHbJSC_oQtKsGCHY"
-    },
-    {
-      "product_title": "Sony WH-1000XM4 Wireless Noise Canceling Over-Ear Headphones (Silver)",
-      "product_description": "Enter a new world of listening experiences with the Sony WH-1000XM4 headphones. These noise-cancelling headphones give you the power to personalize and control everything you hear. Enjoy long hours of music thanks to a 30-hour battery life and quick charging features. Make the best of the Smart Listening feature set, and carry conversations hands-free with the speak-to-chat feature. The touch sensor lets you navigate between songs, control volume and answer phone calls with ease. Sony's noise-cancellation technology is the best in the industry, which means you hear every detail with incredible clarity, no matter where you are. To reduce high and mid-frequency sounds, these noise-cancelling headphones feature additional mics that help isolate sounds efficiently. The ear pads are ultra-soft and made with foamed urethane to disperse pressure and increase area of contact for a perfect fit. Combined with a light-weight design, this pair of headphones can be your new go-to for everything from work to leisure. This also makes for a thoughtful gift to an audiophile or music-lover.",
-      "product_rating": "4.6",
-      "review_count": "18,025 reviews",
-      "product_img": "https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcRqFijjxmXrRv7GQMJCYpvseeVn-G8667yDwPekeKqHQC6PSBpZg3TwnWkZAg",
-      "product_specs": [
-        {
-          "Product Type": "Headphones - Bluetooth - wireless - NFC - 3.5 mm jack"
-        },
-        {
-          "Additional Functions": "Touch panel"
-        },
-        {
-          "Width": "3 in"
-        },
-        {
-          "Height": "9.9 in"
-        },
-        {
-          "Length": "7.3 in"
-        }
-      ],
-      "all_reviews_link": "https://google.com/shopping/product/1750428752407040408/reviews?hl=en&q=Sony+WH-1000XM4&prds=eto:2320404521285140659_0,pid:9284429138362173623,rate:5,rnum:10,rsk:PC_3375826184378489259&sa=X&ved=0ahUKEwiCwfPigqX-AhW0F1kFHTWtCdYQn08IXSgA",
-      "product_purchasing": "https://google.com/shopping/product/1750428752407040408/offers?hl=en&q=Sony+WH-1000XM4&prds=eto:2320404521285140659_0,pid:9284429138362173623,rsk:PC_3375826184378489259,scoring:p&sa=X&ved=0ahUKEwiCwfPigqX-AhW0F1kFHTWtCdYQtKsGCH8"
-    },
-    {
-      "product_title": "Sony WH-1000XM5 - Wireless Noise Cancelling Headphones Black",
-      "product_description": "Industry Leading noise cancellation-two processors control 8 microphones for unprecedented noise cancellation. With Auto NC Optimizer, noise canceling is automatically optimized based on your wearing conditions and environment. Magnificent Sound, engineered to perfection with the new Integrated Processor V1 Crystal clear hands-free calling with 4 beamforming microphones, precise voice pickup, and advanced audio signal processing. Up to 30-hour battery life with quick charging (3 min charge for 3 hours of playback). Ultra-comfortable, lightweight design with soft fit leather Multipoint connection allows you to quickly switch between devices Carry your headphones effortlessly in the redesigned case. Intuitive touch control settings to pause play skip tracks, control volume, activate your voice assistant, and answer phone calls. For everyday convenience, just Speak-to-Chat and Quick Attention mode stop your music and let in ambient sound With instant pause/instant play music automatically pauses when headphones are taken off and starts again when they are put back on.",
-      "product_rating": "4.5",
-      "review_count": "2,392 reviews",
-      "product_img": "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcR-wWaqBIlLEGENqbag_BpRpQx-MUaIsni03LP8ThNZWUz0VJ7_Jzv0mxIsviexeYZfZIYTkOI",
-      "product_specs": [
-        {
-          "Product Dimensions": "8.85 x 3.03 x 10.36 inches"
-        },
-        {
-          "Batteries": "1 Lithium Polymer batteries required. (included)"
-        },
-        {
-          "Is Discontinued By Manufacturer": "No"
-        },
-        {
-          "Country of Origin": "Malaysia"
-        }
-      ],
-      "all_reviews_link": "https://google.com/shopping/product/14556986932651510680/reviews?hl=en&q=Sony+WH-1000XM5&prds=eto:16373841088505883947_0,pid:1061495521773557507,rate:5,rnum:10,rsk:PC_11648784580466805463&sa=X&ved=0ahUKEwjb76bjgqX-AhVZGVkFHZJxDoYQn08ITSgA",
-      "product_purchasing": "https://google.com/shopping/product/14556986932651510680/offers?hl=en&q=Sony+WH-1000XM5&prds=eto:16373841088505883947_0,pid:1061495521773557507,rsk:PC_11648784580466805463,scoring:p&sa=X&ved=0ahUKEwjb76bjgqX-AhVZGVkFHZJxDoYQtKsGCGU"
+      "all_reviews_link": "https://google.com/shopping/product/6222956906177139429/reviews?hl=en&q=bose+quietcomfort+45&prds=eto:5138283840026257860_0,pid:3011142393657177064,rate:5,rnum:10,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwiq9ofAt6X-AhW9MlkFHc2PC6sQn08IWCgA",
+      "product_purchasing": "https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:5138283840026257860_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwiq9ofAt6X-AhW9MlkFHc2PC6sQtKsGCHg",
+      "buying_options": [
+        "https://www.discountbandit.com/bose-bose-quietcomfort-45-headphones-white-smoke.html%3Fgs%3D1&sa=U&ved=0ahUKEwiH1vzAt6X-AhXdFVkFHcq9AMMQ2ykILA&usg=AOvVaw0Rj0SKMu3sGz6iL1xCVE1L",
+        "https://www.bhphotovideo.com/c/product/1661262-REG/bose_866724_0200_quietcomfort_45_noise_canceling_wireless.html%3Fkw%3DBOQC45WS%26ap%3Dy%26BI%3DE6540%26smp%3Dba_f1_ll%26srsltid%3DAfAwrE6JwjOH6lmr1dtkGV36WqOU0NYDeKi3MiR5_KsKr-0VU5RSw2Gq_Ls&sa=U&ved=0ahUKEwiH1vzAt6X-AhXdFVkFHcq9AMMQ2ykIqAE&usg=AOvVaw0C6WN0v9_BHIH9NxmoQ0a9",
+        "https://www.bestbuy.com/site/bose-quietcomfort-45-wireless-noise-cancelling-over-the-ear-headphones-white-smoke/6471288.p%3FskuId%3D6471288%26ref%3D212%26loc%3D1%26extStoreId%3D263&sa=U&ved=0ahUKEwiH1vzAt6X-AhXdFVkFHcq9AMMQ2ykIiQE&usg=AOvVaw0VlwBYWRLkyj4LOTQ86j1T",
+        "https://www.dell.com/en-us/shop/bose-quietcomfort-45-headphones-with-mic-full-size-bluetooth-wireless-active-noise-canceling-noise-isolating-smoke-white/apd/ab800530/audio&sa=U&ved=0ahUKEwiH1vzAt6X-AhXdFVkFHcq9AMMQ2ykImAE&usg=AOvVaw3ayIo6Y8XqpxDg8eo22i0g",
+        "https://www.lenovo.com/us/en/p/accessories-and-software/audio/headphones/78072790%3Fcid%3Dus:seo:41h72l%26srsltid%3DAfAwrE6CUnyM_mEVdTuTka_GcfRxWCZjim0Cs2_zhkNpLDYrfHRgXnEvm9E&sa=U&ved=0ahUKEwiH1vzAt6X-AhXdFVkFHcq9AMMQ2ykInwE&usg=AOvVaw2cdZmg4DwC2P0U4f7JGraq",
+        "https://www.bkstr.com/calpolystore/product/bose-quietcmfrt-45-nc-hp-whtsm---online-only-594292-1&sa=U&ved=0ahUKEwiH1vzAt6X-AhXdFVkFHcq9AMMQ2ykIzwE&usg=AOvVaw0q4xEjOV1vkzXCrybKs6Jy",
+        "https://www.bkstr.com/bostoncollegestore/product/bose-quietcmfrt-45-nc-hp-whtsm---online-only-594292-1&sa=U&ved=0ahUKEwiH1vzAt6X-AhXdFVkFHcq9AMMQ2ykIzAE&usg=AOvVaw09G42jD78irpJHqyCupS1q",
+        "https://www.bestbuy.com/site/bose-quietcomfort-45-wireless-noise-cancelling-over-the-ear-headphones-white-smoke/6471288.p%3FskuId%3D6471288%26ref%3D212%26loc%3D1%26extStoreId%3D163&sa=U&ved=0ahUKEwiH1vzAt6X-AhXdFVkFHcq9AMMQ2ykIjAE&usg=AOvVaw3E2Ngtc-9EFIp4_5u8QYcX",
+        "https://www.amazon.com/Bose-QuietComfort-Bluetooth-Cancelling-Headphones/dp/B098FH5P3C%3Fsource%3Dps-sl-shoppingads-lpcontext%26ref_%3Dfplfs%26psc%3D1%26smid%3DATVPDKIKX0DER&sa=U&ved=0ahUKEwiH1vzAt6X-AhXdFVkFHcq9AMMQ2ykIag&usg=AOvVaw2OZTu_5dmkhMQvsnaJxbGE",
+        "https://www.pro-distributing.com/products/bose-quietcomfort-45-bluetooth-wireless-noise-cancelling-headphones-white-smoke%3Fcurrency%3DUSD%26variant%3D42816889225460%26utm_medium%3Dcpc%26utm_source%3Dgoogle%26utm_campaign%3DGoogle%2520Shopping&sa=U&ved=0ahUKEwiH1vzAt6X-AhXdFVkFHcq9AMMQ2ykIOg&usg=AOvVaw3Ky0C0r6lCVjAa6j9d7fnx",
+        "https://www.bestbuy.com/site/bose-quietcomfort-45-wireless-noise-cancelling-over-the-ear-headphones-white-smoke/6471288.p%3FskuId%3D6471288%26ref%3D212%26loc%3D1%26extStoreId%3D1022&sa=U&ved=0ahUKEwiH1vzAt6X-AhXdFVkFHcq9AMMQ2ykIjwE&usg=AOvVaw0IvNrrE2B66JBXttQop_Mx",
+        "https://www.walmart.com/ip/Bose-QuietComfort-45-Headphones-Noise-Cancelling-Over-Ear-Wireless-Bluetooth-Earphones-White-Smoke/110780811%3Fwmlspartner%3Dwlpa%26selectedSellerId%3D0&sa=U&ved=0ahUKEwiH1vzAt6X-AhXdFVkFHcq9AMMQ2ykIugE&usg=AOvVaw1CFSXFhs7vT4iQ-ZJmeH3L",
+        "https://www.bestbuy.com/site/bose-quietcomfort-45-wireless-noise-cancelling-over-the-ear-headphones-white-smoke/6471288.p%3FskuId%3D6471288%26ref%3D212%26loc%3D1%26extStoreId%3D1776&sa=U&ved=0ahUKEwiH1vzAt6X-AhXdFVkFHcq9AMMQ2ykIgwE&usg=AOvVaw06aPL6SteGRSF0kp7S2sU9",
+        "https://www.guitarcenter.com/Bose/QuietComfort-45-Headphones-White-Smoke-1500000360478.gc%3Fcntry%3Dus%26source%3D4SOS0DRBA&sa=U&ved=0ahUKEwiH1vzAt6X-AhXdFVkFHcq9AMMQ2ykIsQE&usg=AOvVaw33OdaW16wOsWsk6r8UnkNN"
+      ]
     }
   ]
 }
