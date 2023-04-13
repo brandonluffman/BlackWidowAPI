@@ -77,20 +77,14 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
     else:
         pass
     
-    cursor.execute(f"""SELECT * FROM rankidb.queries WHERE query_name = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
     query_data = cursor.fetchone()
     cursor.close()
     if query_data is not None:
         return {
                 "query": query_data[1],
-                "links": {
-                    "affiliate": query_data[5],
-                    "youtube": query_data[4],
-                    "reddit": query_data[3],
-                },
-                "cards": query_data[2]
-                
-                
+                "links": query_data[2],
+                "cards": query_data[3]           
             }
     else:
 
@@ -202,7 +196,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
                 final_content = " ".join(lister)
                 result_of_query['links']['affiliate'].append({'link':serp_link,'text':final_content})
-    
+
 
 
         # model_text = " ".join(final_text)
@@ -225,6 +219,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         entity_links = [domain + entity.replace(' ', '+') for entity in entities]
         final_card_links = []
         for url in entity_links:
+            print(url)
             try: 
                 session = HTMLSession()
                 response = session.get(url)
@@ -290,13 +285,17 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 else:
                     max_card = counts[max_index]
 
+                indexer = counts.index(max_card)
+                final_card = output[indexer]
+                final_card_links.append(final_card)
+
             except requests.exceptions.RequestException as e:
                     print(e)
 
 
 
         card_urls = [[card['Data'],card['entity']] for card in final_card_links]
-
+        print(card_urls)
         buying_links = []
         review_links = []
         card_counter = 0
