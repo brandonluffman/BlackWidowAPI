@@ -77,15 +77,16 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
     else:
         pass
     
-    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.request WHERE query = '{query}';""")
     query_data = cursor.fetchone()
-    cursor.close()
     if query_data is not None:
+        cursor.close()
         return {
                 "query": query_data[1],
-                "links": query_data[2],
+                "links": json.loads(query_data[2]),
                 "cards": query_data[3]           
             }
+        
     else:
 
         result_of_query = {
@@ -480,6 +481,41 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
             except requests.exceptions.RequestException as e:
                     print(e)
+
+        for card in result_of_query['cards']:
+            query ="""INSERT INTO rankidb.product
+                        (
+                            product_url,entity,product_title,product_description,
+                            product_rating,review_count,product_img,product_specs,
+                            all_reviews_link,product_purchasing,buying_options,reviews
+                        ) 
+                        values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);    
+                    """
+            values = (
+                        card['product_url'],
+                        card['entity'],
+                        card['product_title'],
+                        '',
+                        # card['product_description'],
+                        card['product_rating'],
+                        card['review_count'],
+                        card['product_img'],
+                        json.dumps(card['product_specs']),
+                        card['all_reviews_link'],
+                        card['product_purchasing'],
+                        json.dumps(card['buying_options']),
+                        json.dumps(card['reviews']),
+                    )
+            cursor.execute(query,values)
+    
+        scraped_data_insert_query = """
+                                            INSERT INTO rankidb.request (query,links,cards) 
+                                            VALUES (%s,%s,%s);
+                                        """
+        values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['cards']))
+        cursor.execute(scraped_data_insert_query,values)
+        connection.commit()
+        cursor.close()
         return result_of_query
 
 
