@@ -77,7 +77,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
     else:
         pass
     
-    cursor.execute(f"""SELECT * FROM rankidb.request WHERE query = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
         cursor.close()
@@ -507,9 +507,11 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         json.dumps(card['reviews']),
                     )
             cursor.execute(query,values)
+            connection.commit()
+            card['id'] = cursor.lastrowid
     
         scraped_data_insert_query = """
-                                            INSERT INTO rankidb.request (query,links,cards) 
+                                            INSERT INTO rankidb.query (query,links,cards) 
                                             VALUES (%s,%s,%s);
                                         """
         values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['cards']))
