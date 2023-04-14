@@ -18,6 +18,7 @@ from collections import Counter
 from pydantic import BaseModel
 from returner import returner
 import mysql.connector.pooling
+import os
 
 app = FastAPI()
 dbconfig = {
@@ -30,7 +31,10 @@ connection_pool = mysql.connector.pooling.MySQLConnectionPool(pool_size=20, **db
 
 def get_connection():
     return connection_pool.get_connection()
-# nlp = spacy.load('./output/model-last')
+
+print("EXISTS?",os.getcwd())
+nlp = spacy.load('./output/model-last')
+
 origins = ["*"]
 
 app.add_middleware(
@@ -61,7 +65,7 @@ async def get_products(connection=Depends(get_connection)):
 @app.get('/blackwidow/products/{id}')
 async def get_products(id: int, connection=Depends(get_connection)):
     cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT * FROM product WHERE {id};""")
+    cursor.execute(f"""SELECT * FROM product_test WHERE {id};""")
     print(cursor)
     data = cursor.fetchone()
     print(data)
@@ -94,7 +98,7 @@ async def read_item(item_id):
 # @app.post(f'/blackwidow/product/{id}')
 # async def get_product(id: ProductIdInput, connection=Depends(get_connection)):
 #     cursor = connection.cursor(buffered=True)
-#     cursor.execute(f"""SELECT * FROM product WHERE {id};""")
+#     cursor.execute(f"""SELECT * FROM product_test WHERE {id};""")
 #     print(cursor)
 #     data = cursor.fetchone()
 #     print(data)
@@ -149,7 +153,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
     else:
         pass
     
-    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query_test = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
         cursor.close()
@@ -170,6 +174,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             },
             'cards': [],
         }
+  
         remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
         domain = "http://google.com/search?q="
         google_query = query
@@ -270,29 +275,36 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 final_content = " ".join(lister)
                 result_of_query['links']['affiliate'].append({'link':serp_link,'text':final_content})
 
+        final_text = []
+        sources = list(result_of_query['links'].keys())
+        for source in sources:
+            if source == 'reddit':
+                for link in result_of_query['links'][source]:
+                    for comment in link['comments']:
+                        final_text.append(comment)
+            else:
+                for link in result_of_query['links'][source]:
+                    final_text.append(link['text'])
+                    
+        model_text = " ".join(final_text)
+        json_object = json.dumps(model_text)
 
 
-        # model_text = " ".join(final_text)
+        doc = nlp(json_object)
+        entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
+        items = [x.text for x in doc.ents]
+        Counter(items).most_common(10)
+        docs = []
+        docs.append(doc)
+        entities = [entity for entity in items]
 
-        # json_object = json.dumps(model_text)
-        # print(json_object)
-
-
-        # doc = nlp(json_object)
-        # entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
-        # items = [x.text for x in doc.ents]
-        # Counter(items).most_common(10)
-        # # docs = []
-        # # docs.append(doc)
-
-        # entities = [entity for entity in items]
-        entities = ['apple airpods max', 'bose quietcomfort 45']
+        # entities = ['apple airpods max', 'bose quietcomfort 45']
         domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
-        # entity_links = [domain + entity.replace(' ', '+') for entity in entities[:4]]
+        # # entity_links = [domain + entity.replace(' ', '+') for entity in entities[:4]]
         entity_links = [domain + entity.replace(' ', '+') for entity in entities]
         final_card_links = []
         for url in entity_links:
-            print(url)
+            # print(url)
             try: 
                 session = HTMLSession()
                 response = session.get(url)
@@ -368,7 +380,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
 
         card_urls = [[card['Data'],card['entity']] for card in final_card_links]
-        print(card_urls)
+        # print(card_urls)
         buying_links = []
         review_links = []
         card_counter = 0
@@ -451,7 +463,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             try:
                 session = HTMLSession()
                 response = session.get(url)
-                print(url, response.status_code)
+                # print(url, response.status_code)
 
                 css_identifier_result = ".sg-product__dpdp-c"
                 result = response.html.find(css_identifier_result,first=True)
@@ -493,12 +505,12 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     i +=1
 
                 for card in result_of_query['cards']:
-                    print(url)
-                    print(card['product_purchasing'])
+                    # print(url)
+                    # print(card['product_purchasing'])
                     if card['product_purchasing'] == url:
                         card['buying_options'] = iland
                     else:
-                        print('Nope')
+                        # print('Nope')
                         continue
 
             
@@ -555,7 +567,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     print(e)
 
         for card in result_of_query['cards']:
-            query ="""INSERT INTO rankidb.product
+            query ="""INSERT INTO rankidb.product_test
                         (
                             product_url,entity,product_title,product_description,
                             product_rating,review_count,product_img,product_specs,
@@ -581,15 +593,15 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             cursor.execute(query,values)
             connection.commit()
             card['id'] = cursor.lastrowid
-    
+
         scraped_data_insert_query = """
-                                            INSERT INTO rankidb.query (query,links,cards) 
+                                            INSERT INTO rankidb.query_test (query,links,cards) 
                                             VALUES (%s,%s,%s);
                                         """
         values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['cards']))
         cursor.execute(scraped_data_insert_query,values)
         connection.commit()
-        cursor.close()
+        # cursor.close()
         return result_of_query
 
 
