@@ -44,9 +44,41 @@ app.add_middleware(
 class QueryInput(BaseModel):
     query: str
 
+class ProductIdInput(BaseModel):
+    id: int
+
 @app.post('/')
 def home():
     return 'hello'
+
+
+@app.post('/blackwidow/product')
+async def get_product(id: ProductIdInput, connection=Depends(get_connection)):
+    cursor = connection.cursor(buffered=True)
+    cursor.execute(f"""SELECT * FROM product WHERE {id};""")
+    print(cursor)
+    data = cursor.fetchone()
+    print(data)
+    if data is not None:
+        cursor.close()
+        return {
+            "id": data[0],
+            "url": data[1],
+            "entity": data[2],
+            "product_title": data[3],
+            "product_description": data[4],
+            "product_rating": data[5],
+            "review_count": data[6],
+            "product_img": data[7],
+            "product_specs": json.loads(data[8]),
+            "all_reviews_link": data[9],
+            "buying_link": data[10],
+            "buying_options": json.loads(data[11]),
+            "reviews": json.loads(data[12])
+        }
+    else:
+        return "Product not available"
+
 
 
 @app.post('/blackwidow')
@@ -77,7 +109,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
     else:
         pass
     
-    cursor.execute(f"""SELECT * FROM rankidb.request WHERE query = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
         cursor.close()
@@ -507,9 +539,11 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         json.dumps(card['reviews']),
                     )
             cursor.execute(query,values)
+            connection.commit()
+            card['id'] = cursor.lastrowid
     
         scraped_data_insert_query = """
-                                            INSERT INTO rankidb.request (query,links,cards) 
+                                            INSERT INTO rankidb.query (query,links,cards) 
                                             VALUES (%s,%s,%s);
                                         """
         values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['cards']))
