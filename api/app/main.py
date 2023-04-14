@@ -84,7 +84,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         return {
                 "query": query_data[1],
                 "links": json.loads(query_data[2]),
-                "cards": query_data[3]           
+                "cards": json.loads(query_data[3])         
             }
         
     else:
