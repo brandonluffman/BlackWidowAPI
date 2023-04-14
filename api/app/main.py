@@ -65,7 +65,7 @@ async def get_products(connection=Depends(get_connection)):
 @app.get('/blackwidow/products/{id}')
 async def get_products(id: int, connection=Depends(get_connection)):
     cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT * FROM product_test WHERE {id};""")
+    cursor.execute(f"""SELECT * FROM product_test WHERE id={id};""")
     print(cursor)
     data = cursor.fetchone()
     print(data)
