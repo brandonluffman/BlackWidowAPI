@@ -297,7 +297,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         docs = []
         docs.append(doc)
         entities = [entity for entity in items]
-
+        #
         # entities = ['apple airpods max', 'bose quietcomfort 45']
         domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
         # # entity_links = [domain + entity.replace(' ', '+') for entity in entities[:4]]
