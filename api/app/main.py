@@ -61,7 +61,7 @@ async def get_products(connection=Depends(get_connection)):
 @app.get('/blackwidow/products/{id}')
 async def get_products(id: int, connection=Depends(get_connection)):
     cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT * FROM product WHERE {id};""")
+    cursor.execute(f"""SELECT * FROM product_test WHERE id={id};""")
     print(cursor)
     data = cursor.fetchone()
     print(data)
@@ -94,7 +94,7 @@ async def read_item(item_id):
 # @app.post(f'/blackwidow/product/{id}')
 # async def get_product(id: ProductIdInput, connection=Depends(get_connection)):
 #     cursor = connection.cursor(buffered=True)
-#     cursor.execute(f"""SELECT * FROM product WHERE {id};""")
+#     cursor.execute(f"""SELECT * FROM product_test WHERE {id};""")
 #     print(cursor)
 #     data = cursor.fetchone()
 #     print(data)
@@ -149,7 +149,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
     else:
         pass
     
-    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.query_test WHERE query = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
         cursor.close()
@@ -555,7 +555,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     print(e)
 
         for card in result_of_query['cards']:
-            query ="""INSERT INTO rankidb.product
+            query ="""INSERT INTO rankidb.product_test
                         (
                             product_url,entity,product_title,product_description,
                             product_rating,review_count,product_img,product_specs,
@@ -583,7 +583,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             card['id'] = cursor.lastrowid
     
         scraped_data_insert_query = """
-                                            INSERT INTO rankidb.query (query,links,cards) 
+                                            INSERT INTO rankidb.query_test (query,links,cards) 
                                             VALUES (%s,%s,%s);
                                         """
         values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['cards']))
