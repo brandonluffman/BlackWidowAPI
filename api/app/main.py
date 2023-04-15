@@ -64,10 +64,10 @@ async def get_products(connection=Depends(get_connection)):
 @app.get('/blackwidow/products/{id}')
 async def get_products(id: int, connection=Depends(get_connection)):
     cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT * FROM product WHERE id={id};""")
-    print(cursor)
+    cursor.execute(f"""SELECT * FROM product_test WHERE id={id};""")
+    # print(cursor)
     data = cursor.fetchone()
-    print(data)
+    # print(data)
     if data is not None:
         cursor.close()
         return {
@@ -153,7 +153,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
     else:
         pass
     
-    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.query_test WHERE query = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
         cursor.close()
@@ -202,7 +202,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
                 
                 if results: 
-                    for result in results[:6]:
+                    for result in results[:10]:
                         serp_link = result.find(css_identifier_link, first=True).attrs['href']
                         serp_links.append(serp_link)
                 else:
@@ -296,7 +296,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         Counter(items).most_common(10)
         docs = []
         docs.append(doc)
-        entities = [entity for entity in items][:5]
+        entities = [entity for entity in items][:10]
         print("ENTITIES:",entities)
         #
         # entities = ['apple airpods max', 'bose quietcomfort 45']
@@ -332,7 +332,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                             # print(int(product_review_count.split()[5].replace(',','')))
                             # print(product_review_count.split())
 
-                            if link_count < 3 and len(product_review_count) > 3:
+                            if link_count < 3 and len(product_review_count.split()) > 3:
                                 cards = {
                                 'Data' : product_link, 
                                 'Count' : int(product_compare),
@@ -463,9 +463,9 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             card['mentions']['reddit'] = reddit_mentions
             card['mentions']['affiliate'] = affiliate_mentions
             card['mentions']['youtube'] = youtube_mentions
-            print("REDDIT MENTIONS:", reddit_mentions)
-            print("YOUTUBE MENTIONS:",youtube_mentions)
-            print("AFFILIATE MENTINOS:",affiliate_mentions)
+            # print("REDDIT MENTIONS:", reddit_mentions)
+            # print("YOUTUBE MENTIONS:",youtube_mentions)
+            # print("AFFILIATE MENTINOS:",affiliate_mentions)
 
 
 
@@ -581,7 +581,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     print(e)
 
         for card in result_of_query['cards']:
-            query ="""INSERT INTO rankidb.product
+            query ="""INSERT INTO rankidb.product_test
                         (
                             product_url,entity,product_title,product_description,
                             product_rating,review_count,product_img,product_specs,
@@ -610,9 +610,9 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             card['id'] = cursor.lastrowid
 
         scraped_data_insert_query = """
-                                            INSERT INTO rankidb.query (query,links,cards) 
-                                            VALUES (%s,%s,%s);
-                                        """
+                                        INSERT INTO rankidb.query_test (query,links,cards) 
+                                        VALUES (%s,%s,%s);
+                                    """
         values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['cards']))
         cursor.execute(scraped_data_insert_query,values)
         connection.commit()
