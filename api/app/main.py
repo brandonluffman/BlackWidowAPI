@@ -32,7 +32,6 @@ connection_pool = mysql.connector.pooling.MySQLConnectionPool(pool_size=20, **db
 def get_connection():
     return connection_pool.get_connection()
 
-print("EXISTS?",os.getcwd())
 nlp = spacy.load('./output/model-last')
 
 origins = ["*"]
@@ -65,7 +64,7 @@ async def get_products(connection=Depends(get_connection)):
 @app.get('/blackwidow/products/{id}')
 async def get_products(id: int, connection=Depends(get_connection)):
     cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT * FROM product_test WHERE id={id};""")
+    cursor.execute(f"""SELECT * FROM product WHERE id={id};""")
     print(cursor)
     data = cursor.fetchone()
     print(data)
@@ -84,7 +83,8 @@ async def get_products(id: int, connection=Depends(get_connection)):
             "all_reviews_link": data[9],
             "buying_link": data[10],
             "buying_options": json.loads(data[11]),
-            "reviews": json.loads(data[12])
+            "reviews": json.loads(data[12]),
+            "mentions": json.loads(data[13])
         }
     else:
 
@@ -153,7 +153,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
     else:
         pass
     
-    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query_test = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
         cursor.close()
@@ -202,11 +202,11 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
                 
                 if results: 
-                    for result in results[:1]:
+                    for result in results[:6]:
                         serp_link = result.find(css_identifier_link, first=True).attrs['href']
                         serp_links.append(serp_link)
                 else:
-                    for youtube_result in youtube_results[:1]:
+                    for youtube_result in youtube_results[:6]:
                         serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
                         serp_links.append(serp_link)
 
@@ -296,7 +296,8 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         Counter(items).most_common(10)
         docs = []
         docs.append(doc)
-        entities = [entity for entity in items]
+        entities = [entity for entity in items][:5]
+        print("ENTITIES:",entities)
         #
         # entities = ['apple airpods max', 'bose quietcomfort 45']
         domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
@@ -383,9 +384,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         # print(card_urls)
         buying_links = []
         review_links = []
-        card_counter = 0
         for url in card_urls:
-            card_counter+=1
             try:
                 session = HTMLSession()
                 response = session.get(url[0])
@@ -437,7 +436,6 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     buying_links.append(buying_link)
                     review_links.append(reviews_link)
                     output = {
-                        'id': card_counter,
                         'product_url': url[0],
                         'entity': url[1],
                         'product_title' : result.find(css_product_title, first=True).text,
@@ -447,7 +445,8 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         'product_img' : result.find(css_product_img, first=True).attrs['src'],
                         'product_specs' : product_specifications_list,
                         'all_reviews_link': reviews_link,
-                        'product_purchasing' : buying_link
+                        'product_purchasing' : buying_link,
+                        'mentions': {}
                     } 
 
                     result_of_query['cards'].append(output)
@@ -455,9 +454,23 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             except requests.exceptions.RequestException as e:
                     print(e)
 
+        
+        for card in result_of_query['cards']:
+            reddit_mentions = [item['link'] for item in result_of_query['links']['reddit'] if any(card['entity'] in comment for comment in item['comments'])]
+            affiliate_mentions = [item['link'] for item in result_of_query['links']['affiliate'] if card['entity'] in item['text']]
+            youtube_mentions = [item['link'] for item in result_of_query['links']['youtube'] if card['entity'] in item['text']]
+            card['mentions']['reddit'] = reddit_mentions
+            card['mentions']['affiliate'] = affiliate_mentions
+            card['mentions']['youtube'] = youtube_mentions
+            print("REDDIT MENTIONS:", reddit_mentions)
+            print("YOUTUBE MENTIONS:",youtube_mentions)
+            print("AFFILIATE MENTINOS:",affiliate_mentions)
 
 
-        # buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
+
+
+
+     #   buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
 
         for url in buying_links:
             try:
@@ -567,13 +580,13 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     print(e)
 
         for card in result_of_query['cards']:
-            query ="""INSERT INTO rankidb.product_test
+            query ="""INSERT INTO rankidb.product
                         (
                             product_url,entity,product_title,product_description,
                             product_rating,review_count,product_img,product_specs,
-                            all_reviews_link,product_purchasing,buying_options,reviews
+                            all_reviews_link,product_purchasing,buying_options,reviews,mentions
                         ) 
-                        values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);    
+                        values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);    
                     """
             values = (
                         card['product_url'],
@@ -589,13 +602,14 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         card['product_purchasing'],
                         json.dumps(card['buying_options']),
                         json.dumps(card['reviews']),
+                        json.dumps(card['mentions'])
                     )
             cursor.execute(query,values)
             connection.commit()
             card['id'] = cursor.lastrowid
 
         scraped_data_insert_query = """
-                                            INSERT INTO rankidb.query_test (query,links,cards) 
+                                            INSERT INTO rankidb.query (query,links,cards) 
                                             VALUES (%s,%s,%s);
                                         """
         values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['cards']))
