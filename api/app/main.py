@@ -145,11 +145,11 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
     }
 
     if 'best' not in query.lower() and match is None:
-        query = 'best ' + query + ' 2023'
+        query = 'best+' + query + '+2023'
     elif match is None:
-        query = query + ' 2023'
+        query = query + '+2023'
     elif 'best' not in query.lower():
-        query = 'best ' + query
+        query = 'best+' + query
     else:
         pass
     
@@ -293,11 +293,21 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         doc = nlp(json_object)
         entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
         items = [x.text for x in doc.ents]
-        Counter(items).most_common(10)
-        docs = []
-        docs.append(doc)
-        entities = [entity for entity in items][:10]
-        print("ENTITIES:",entities)
+        ello = Counter(items).most_common(10)
+        ellos = []
+        for k,v in ello:
+            print(k,v)
+            ellos.append(k)
+        
+        # print("ENTITIES USED: ",entities)
+        # print('ELLOS?: ', ellos)
+        # print("ALL ENTITIES: ", all_ents)
+        # print("Items : ", items)
+        # docs = []
+        # docs.append(doc)
+    
+        entities = [entity for entity in ellos]
+        # all_ents = [entity for entity in items]
         #
         # entities = ['apple airpods max', 'bose quietcomfort 45']
         domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
@@ -329,14 +339,16 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         if product_compare.endswith('+'):
                             product_compare = product_compare[:-1]  
 
-                            # print(int(product_review_count.split()[5].replace(',','')))
-                            # print(product_review_count.split())
+                            if len(product_review_count.split()) > 3:
+                                review_num = int(product_review_count.split()[5].replace(',',''))
+                            else:
+                                review_num = False
 
-                            if link_count < 3 and len(product_review_count.split()) > 3:
+                            if link_count < 3 and review_num:
                                 cards = {
                                 'Data' : product_link, 
                                 'Count' : int(product_compare),
-                                'Review Count' : int(product_review_count.split()[5].replace(',','')),
+                                'Review Count' : review_num,
                                 'entity': entities[entity_links.index(url)]
                                 }
                                 output.append(cards)
@@ -549,7 +561,10 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     # title = result.find('.P3O8Ne', first=True).text
                     date = result.find('.ff3bE', first=True).text
                     # rating = int(result.find('.UzThIf::attr(aria-label)'))
-                    content = result.find('.g1lvWe div:nth-of-type(2)', first=True).text.replace('\xa0Less', '')
+                    if result.find('.g1lvWe div:nth-of-type(2)', first=True):
+                        content = result.find('.g1lvWe div:nth-of-type(2)', first=True).text.replace('\xa0Less', '')
+                    else:
+                        content = 'No review found'
                     # source = result.find('.sPPcBf').xpath('normalize-space()')
                     output = {
                             # 'review_count' : result.find(css_product_review_count, first=True).text,
