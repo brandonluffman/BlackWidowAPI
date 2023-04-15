@@ -436,6 +436,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     buying_links.append(buying_link)
                     review_links.append(reviews_link)
                     output = {
+                        'id': 0,
                         'product_url': url[0],
                         'entity': url[1],
                         'product_title' : result.find(css_product_title, first=True).text,
