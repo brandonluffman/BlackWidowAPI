@@ -1,88 +1,60 @@
 import requests
 from requests_html import HTMLSession
 
-domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
-
-entities = ['Cuisinart CPT-180P1 Metal Classic 4-Slice Toaster', 'BELLA 2 Slice Toaster']
-
-entity_links = [domain + entity.replace(' ', '+') for entity in entities]
-final_card_links = []
-for url in entity_links:
-    # print(url)
-    try: 
+result_of_query = {}
+review_links = ['https://www.google.com/shopping/product/6222956906177139429/reviews?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rate:5,rnum:10,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwiGjJrjr6D-AhWRFlkFHZ9SCFEQn08IWCgA', 'https://www.google.com/shopping/product/127770160929837065/reviews?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rate:5,rnum:10,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwiUtcXjr6D-AhWSMlkFHeU-DzIQn08ITSgA']
+for url in review_links:
+    try:
         session = HTMLSession()
         response = session.get(url)
-        print(url, response.status_code)
-        css_identifier_results = ".i0X6df"
-        css_identifier_link = "span a"
-        css_identifier_test_2 = ".Ldx8hd a span"
-        css_product_reviews = ".QIrs8"
-        product_results = response.html.find(css_identifier_results)
-        output = []
-        link_count = 0
-        ### For Loop Below loops through queries to find Shopping Link and Integer Representing Amounnt of Stores that are linked to that product ###
-        for product_result in product_results:
-            product_link = 'https://www.google.com' + product_result.find(css_identifier_link, first=True).attrs['href']
-            product_compare = product_result.find(css_identifier_test_2, first=True)
-            product_review_count = product_result.find(css_product_reviews, first=True).text
+        # print(url, response.status_code)
 
-            if product_compare:
-                product_compare = product_compare.text
+        css_identifier_result = ".z6XoBf"
+        results = response.html.find(css_identifier_result)
+        reviews = []
+        for result in results[:2]:
+            # reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
+            date = result.find('.ff3bE', first=True).text
+            if result.find('.g1lvWe div:nth-of-type(2)', first=True):
+                content = result.find('.g1lvWe div:nth-of-type(2)', first=True).text.replace('\xa0Less', '')
+            else:
+                content = 'No review found'
 
-                if product_compare.endswith('+'):
-                    product_compare = product_compare[:-1]  
+            if result.find('.P3O8Ne', first=True):
+                title = result.find('.P3O8Ne', first=True).text
+            else:
+                title = ' ----- '
 
-                    if len(product_review_count.split()) > 3:
-                        review_num = int(product_review_count.split()[5].replace(',',''))
-                    else:
-                        review_num = False
+            if result.find('.UzThIf'):
+                print(result.find('.UzThIf', first=True).attrs['aria-label'])
+                rating = result.find('.UzThIf', first=True).attrs['aria-label']
+            else:
+                rating = 0
+            
+            if result.find('.sPPcBf'):
+                source = result.find('.sPPcBf span')[1].text
+            else:
+                source = ' ----- '
+            
+            output = {
+                    # 'review_count' : result.find(css_product_review_count, first=True).text,
+                    'review_link': response.url,
+                    'title' : title,
+                    'rating' : rating,
+                    'date' : date,
+                    'content' : content[:200],
+                    'source' : source,
+            } 
+            reviews.append(output)
+            print(output)
+        # for card in result_of_query['cards']:
+        #     if card['all_reviews_link'] == url:
+        #         card['reviews'] = reviews
+        #     else:
+        #         continue
 
-                    if link_count < 3 and review_num:
-                        cards = {
-                        'Data' : product_link, 
-                        'Count' : int(product_compare),
-                        'Review Count' : review_num,
-                        'entity': entities[entity_links.index(url)]
-                        }
-                        output.append(cards)
-                        link_count += 1
-                    else:
-                        continue
 
-        counts = []
-        for out in output:
-            data = [out['Count'], out['Review Count']]
-            counts.append(data) 
-        print(counts)
-
-        count_list = []
-        for c in counts:
-            count_list.append(c[0])
-    
-        max_count = max(count_list)
-        max_indexes = [i for i in range(len(count_list)) if count_list[i] == max_count]         
-        index_len = len(max_indexes)
-        if index_len == 1:
-            max_index = max_indexes[0]
-
-        max_review_count = []
-        if index_len > 1:
-            for max_index in max_indexes:
-                max_review_count.append(counts[max_index][1])
-            max_review = max(max_review_count)
-            max_review_index = max_review_count.index(max_review)
-
-            for count in counts:
-                if max_review in count:
-                    max_card = count     
-        else:
-            max_card = counts[max_index]
-
-        indexer = counts.index(max_card)
-        final_card = output[indexer]
-        final_card_links.append(final_card)
-
-        print(final_card_links)
 
     except requests.exceptions.RequestException as e:
-            print(e)
+                        print(e)
+
