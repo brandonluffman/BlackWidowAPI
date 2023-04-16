@@ -459,7 +459,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         'product_url': url[0],
                         'entity': url[1],
                         'product_title' : result.find(css_product_title, first=True).text,
-                        # 'product_description' : result.find(css_product_description, first=True).text,
+                        'product_description' : result.find(css_product_description, first=True).text,
                         'product_rating' : result.find(css_product_rating, first=True).text,
                         'review_count' : result.find(css_product_review_count, first=True).text,
                         'product_img' : prod_img,
@@ -565,7 +565,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 reviews = []
                 for result in results[:2]:
                     # reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
-                    # title = result.find('.P3O8Ne', first=True).text
+                    title = result.find('.P3O8Ne', first=True).text
                     date = result.find('.ff3bE', first=True).text
                     # rating = int(result.find('.UzThIf::attr(aria-label)'))
                     if result.find('.g1lvWe div:nth-of-type(2)', first=True):
@@ -576,7 +576,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     output = {
                             # 'review_count' : result.find(css_product_review_count, first=True).text,
                             'review_link': response.url,
-                            # 'title' : title,
+                            'title' : title,
                             # 'rating' : rating,
                             'date' : date,
                             'content' : content[:200],
@@ -615,8 +615,8 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         card['product_url'],
                         card['entity'],
                         card['product_title'],
-                        '',
-                        # card['product_description'],
+                        # '',
+                        card['product_description'],
                         card['product_rating'],
                         card['review_count'],
                         card['product_img'],
