@@ -464,7 +464,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         'product_url': url[0],
                         'entity': url[1],
                         'product_title' : result.find(css_product_title, first=True).text,
-                        'product_description' : result.find(css_product_description, first=True).text,
+                        'product_description' : prod_desc,
                         'product_rating' : result.find(css_product_rating, first=True).text,
                         'review_count' : result.find(css_product_review_count, first=True).text,
                         'product_img' : prod_img,
@@ -575,19 +575,19 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         content = result.find('.g1lvWe div:nth-of-type(2)', first=True).text.replace('\xa0Less', '')
                     else:
                         content = 'No review found'
-
                     if result.find('.P3O8Ne', first=True):
                         title = result.find('.P3O8Ne', first=True).text
                     else:
                         title = ' ----- '
 
-                    if result.find('.UzThIf::attr(aria-label)'):
-                        rating = int(result.find('.UzThIf::attr(aria-label)'))
+                    if result.find('.UzThIf'):
+                        print(result.find('.UzThIf', first=True).attrs['aria-label'])
+                        rating = result.find('.UzThIf', first=True).attrs['aria-label']
                     else:
                         rating = 0
                     
-                    if result.find('.sPPcBf').xpath('normalize-space()'):
-                        source = result.find('.sPPcBf').xpath('normalize-space()')
+                    if result.find('.sPPcBf'):
+                        source = result.find('.sPPcBf span')[1].text
                     else:
                         source = ' ----- '
                     
@@ -598,7 +598,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                             'rating' : rating,
                             'date' : date,
                             'content' : content[:200],
-                            # 'source' : source,
+                            'source' : source,
                     } 
                     reviews.append(output)
                 for card in result_of_query['cards']:
