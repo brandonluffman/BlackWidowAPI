@@ -54,9 +54,12 @@ class QueryInput(BaseModel):
 def home():
     return 'hello'
 
-@app.get('/blackwidow/products/')
-async def get_products(connection=Depends(get_connection)):
-    return "Got It"
+@app.get('/blackwidow/products/{product}')
+async def get_products(product: str, connection=Depends(get_connection)):
+    cursor = connection.cursor(buffered=True)
+    cursor.execute(f"""SELECT entity FROM product_test WHERE entity LIKE '%{product}%';""")
+    data = cursor.fetchall()
+    return data
 
 
 @app.get('/blackwidow/products/{id}')
@@ -152,6 +155,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         pass
     
     cursor.execute(f"""SELECT * FROM rankidb.query_test WHERE query = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.query_test WHERE query = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
         cursor.close()
@@ -173,6 +177,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             },
             'links_only': [],
             'cards': [],
+            'mentions': [],
         }
   
         remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
@@ -301,11 +306,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         for k,v in ello:
             # print(k,v)
             ellos.append(k)
-        
-        # print("ENTITIES USED: ",entities)
-        # print('ELLOS?: ', ellos)
-        # print("ALL ENTITIES: ", all_ents)
-        # print("Items : ", items)
+
         # docs = []
         # docs.append(doc)
     
@@ -314,7 +315,6 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         #
         # entities = ['apple airpods max', 'bose quietcomfort 45']
         domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
-        # # entity_links = [domain + entity.replace(' ', '+') for entity in entities[:4]]
         entity_links = [domain + entity.replace(' ', '+') for entity in entities]
         final_card_links = []
         for url in entity_links:
@@ -450,6 +450,10 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     product_title = result.find(css_product_title, first=True).text
                     buying_links.append(buying_link)
                     review_links.append(reviews_link)
+                    if result.find(css_product_img, first=True):
+                        prod_img = result.find(css_product_img, first=True).attrs['src']
+                    else:
+                        prod_img = 'hello'
                     output = {
                         'id': 0,
                         'product_url': url[0],
@@ -458,7 +462,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         # 'product_description' : result.find(css_product_description, first=True).text,
                         'product_rating' : result.find(css_product_rating, first=True).text,
                         'review_count' : result.find(css_product_review_count, first=True).text,
-                        'product_img' : result.find(css_product_img, first=True).attrs['src'],
+                        'product_img' : prod_img,
                         'product_specs' : product_specifications_list,
                         'all_reviews_link': reviews_link,
                         'product_purchasing' : buying_link,
@@ -478,9 +482,9 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             card['mentions']['reddit'] = reddit_mentions
             card['mentions']['affiliate'] = affiliate_mentions
             card['mentions']['youtube'] = youtube_mentions
-            # print("REDDIT MENTIONS:", reddit_mentions)
-            # print("YOUTUBE MENTIONS:",youtube_mentions)
-            # print("AFFILIATE MENTINOS:",affiliate_mentions)
+            print("REDDIT MENTIONS:", reddit_mentions)
+            print("YOUTUBE MENTIONS:",youtube_mentions)
+            print("AFFILIATE MENTIONS:",affiliate_mentions)
 
 
 
