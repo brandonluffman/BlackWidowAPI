@@ -68,9 +68,9 @@ async def get_products(product: str, connection=Depends(get_connection)):
 async def get_products(id: int, connection=Depends(get_connection)):
     cursor = connection.cursor(buffered=True)
     cursor.execute(f"""SELECT * FROM product_test WHERE id={id};""")
-    print(cursor)
+    # print(cursor)
     data = cursor.fetchone()
-    print(data)
+    # print(data)
     if data is not None:
         cursor.close()
         return {
@@ -157,6 +157,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         pass
     
     cursor.execute(f"""SELECT * FROM rankidb.query_test WHERE query = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.query_test WHERE query = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
         cursor.close()
@@ -206,7 +207,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
                 
                 if results: 
-                    for result in results[:6]:
+                    for result in results[:10]:
                         serp_link = result.find(css_identifier_link, first=True).attrs['href']
                         serp_links.append(serp_link)
                 else:
@@ -297,7 +298,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         doc = nlp(json_object)
         entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
         items = [x.text for x in doc.ents]
-        ello = Counter(items).most_common(5)
+        ello = Counter(items).most_common(10)
         ellos = []
         for k,v in ello:
             print(k,v)
@@ -451,6 +452,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     else:
                         prod_img = 'hello'
                     output = {
+                        'id': 0,
                         'product_url': url[0],
                         'entity': url[1],
                         'product_title' : result.find(css_product_title, first=True).text,
@@ -627,9 +629,9 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             card['id'] = cursor.lastrowid
 
         scraped_data_insert_query = """
-                                            INSERT INTO rankidb.query_test (query,links,cards) 
-                                            VALUES (%s,%s,%s);
-                                        """
+                                        INSERT INTO rankidb.query_test (query,links,cards) 
+                                        VALUES (%s,%s,%s);
+                                    """
         values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['cards']))
         cursor.execute(scraped_data_insert_query,values)
         connection.commit()
