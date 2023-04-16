@@ -454,12 +454,17 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         prod_img = result.find(css_product_img, first=True).attrs['src']
                     else:
                         prod_img = 'hello'
+                    if result.find(css_product_description, first=True):
+                        prod_desc = result.find(css_product_description, first=True).text
+                    else:
+                        prod_desc = ' ---- '
+                        
                     output = {
                         'id': 0,
                         'product_url': url[0],
                         'entity': url[1],
                         'product_title' : result.find(css_product_title, first=True).text,
-                        # 'product_description' : result.find(css_product_description, first=True).text,
+                        'product_description' : result.find(css_product_description, first=True).text,
                         'product_rating' : result.find(css_product_rating, first=True).text,
                         'review_count' : result.find(css_product_review_count, first=True).text,
                         'product_img' : prod_img,
@@ -565,19 +570,32 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 reviews = []
                 for result in results[:2]:
                     # reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
-                    # title = result.find('.P3O8Ne', first=True).text
                     date = result.find('.ff3bE', first=True).text
-                    # rating = int(result.find('.UzThIf::attr(aria-label)'))
                     if result.find('.g1lvWe div:nth-of-type(2)', first=True):
                         content = result.find('.g1lvWe div:nth-of-type(2)', first=True).text.replace('\xa0Less', '')
                     else:
                         content = 'No review found'
-                    # source = result.find('.sPPcBf').xpath('normalize-space()')
+
+                    if result.find('.P3O8Ne', first=True):
+                        title = result.find('.P3O8Ne', first=True).text
+                    else:
+                        title = ' ----- '
+
+                    if result.find('.UzThIf::attr(aria-label)'):
+                        rating = int(result.find('.UzThIf::attr(aria-label)'))
+                    else:
+                        rating = 0
+                    
+                    if result.find('.sPPcBf').xpath('normalize-space()'):
+                        source = result.find('.sPPcBf').xpath('normalize-space()')
+                    else:
+                        source = ' ----- '
+                    
                     output = {
                             # 'review_count' : result.find(css_product_review_count, first=True).text,
                             'review_link': response.url,
-                            # 'title' : title,
-                            # 'rating' : rating,
+                            'title' : title,
+                            'rating' : rating,
                             'date' : date,
                             'content' : content[:200],
                             # 'source' : source,
