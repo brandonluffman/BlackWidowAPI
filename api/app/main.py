@@ -1,11 +1,10 @@
-from fastapi import FastAPI, Request, HTTPException, Depends
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import json 
 import spacy
 import requests
 from bs4 import BeautifulSoup
-import re
+# import re
 import datetime
 import requests
 from requests_html import HTMLSession
@@ -13,12 +12,11 @@ from youtube_transcript_api import YouTubeTranscriptApi
 import praw
 from praw.models import MoreComments
 from tld import get_tld
-import time
+# import time
 from collections import Counter
 from pydantic import BaseModel
-from returner import returner
+# from returner import returner
 import mysql.connector.pooling
-import os
 
 app = FastAPI()
 dbconfig = {
@@ -98,7 +96,7 @@ async def read_item(item_id):
 # @app.post(f'/blackwidow/product/{id}')
 # async def get_product(id: ProductIdInput, connection=Depends(get_connection)):
 #     cursor = connection.cursor(buffered=True)
-#     cursor.execute(f"""SELECT * FROM product_test WHERE {id};""")
+#     cursor.execute(f"""SELECT * FROM product WHERE {id};""")
 #     print(cursor)
 #     data = cursor.fetchone()
 #     print(data)
@@ -160,7 +158,8 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         return {
                 "query": query_data[1],
                 "links": json.loads(query_data[2]),
-                "cards": json.loads(query_data[3])         
+                "cards": json.loads(query_data[3]) ,
+                "links_only": json.loads(query_data[4])        
             }
         
     else:
@@ -172,6 +171,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 'reddit': [],
                 'youtube': [],
             },
+            'links_only': [],
             'cards': [],
         }
   
@@ -226,6 +226,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     text = text + i['text'] + ' '
                 transcript = text
                 result_of_query['links']['youtube'].append({'link': serp_link,'text': transcript})
+                result_of_query['links_only'].append(serp_link)
                 # print(transcript[:100])
 
             elif 'reddit.com' in serp_link:
@@ -244,6 +245,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     else:
                         post_comments.append(comment.body.replace('\n', '').replace('\r', ''))
                 result_of_query['links']['reddit'].append({'link':serp_link,'comments':post_comments})
+                result_of_query['links_only'].append(serp_link)
                 # print(post_comments)
 
             else:
@@ -274,6 +276,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
                 final_content = " ".join(lister)
                 result_of_query['links']['affiliate'].append({'link':serp_link,'text':final_content})
+                result_of_query['links_only'].append(serp_link)
 
         final_text = []
         sources = list(result_of_query['links'].keys())
@@ -296,7 +299,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         ello = Counter(items).most_common(10)
         ellos = []
         for k,v in ello:
-            print(k,v)
+            # print(k,v)
             ellos.append(k)
         
         # print("ENTITIES USED: ",entities)
@@ -469,9 +472,9 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
         
         for card in result_of_query['cards']:
-            reddit_mentions = [item['link'] for item in result_of_query['links']['reddit'] if any(card['entity'] in comment for comment in item['comments'])]
-            affiliate_mentions = [item['link'] for item in result_of_query['links']['affiliate'] if card['entity'] in item['text']]
-            youtube_mentions = [item['link'] for item in result_of_query['links']['youtube'] if card['entity'] in item['text']]
+            reddit_mentions = [{'link':item['link']} for item in result_of_query['links']['reddit'] if any(card['entity'] in comment for comment in item['comments'])]
+            affiliate_mentions = [{'link':item['link']} for item in result_of_query['links']['affiliate'] if card['entity'] in item['text']]
+            youtube_mentions = [{'link':item['link']} for item in result_of_query['links']['youtube'] if card['entity'] in item['text']]
             card['mentions']['reddit'] = reddit_mentions
             card['mentions']['affiliate'] = affiliate_mentions
             card['mentions']['youtube'] = youtube_mentions
@@ -625,10 +628,10 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             card['id'] = cursor.lastrowid
 
         scraped_data_insert_query = """
-                                        INSERT INTO rankidb.query_test (query,links,cards) 
-                                        VALUES (%s,%s,%s);
+                                        INSERT INTO rankidb.query_test (query,links,links_only,cards) 
+                                        VALUES (%s,%s,%s,%s);
                                     """
-        values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['cards']))
+        values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['links_only']),json.dumps(result_of_query['cards']))
         cursor.execute(scraped_data_insert_query,values)
         connection.commit()
         # cursor.close()
