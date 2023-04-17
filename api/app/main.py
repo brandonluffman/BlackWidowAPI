@@ -89,36 +89,6 @@ async def get_products(id: int, connection=Depends(get_connection)):
 @app.get("/items/{item_id}")
 async def read_item(item_id):
     return {"item_id": item_id}
-   
-
-# @app.post(f'/blackwidow/product/{id}')
-# async def get_product(id: ProductIdInput, connection=Depends(get_connection)):
-#     cursor = connection.cursor(buffered=True)
-#     cursor.execute(f"""SELECT * FROM product WHERE {id};""")
-#     print(cursor)
-#     data = cursor.fetchone()
-#     print(data)
-#     if data is not None:
-#         cursor.close()
-#         return {
-#             "id": data[0],
-#             "url": data[1],
-#             "entity": data[2],
-#             "product_title": data[3],
-#             "product_description": data[4],
-#             "product_rating": data[5],
-#             "review_count": data[6],
-#             "product_img": data[7],
-#             "product_specs": json.loads(data[8]),
-#             "all_reviews_link": data[9],
-#             "buying_link": data[10],
-#             "buying_options": json.loads(data[11]),
-#             "reviews": json.loads(data[12])
-#         }
-#     else:
-
-#         return "Product not available"
-
 
 
 @app.post('/blackwidow')
@@ -206,7 +176,10 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     for result in results[:10]:
                         serp_link = result.find(css_identifier_link, first=True).attrs['href']
                         serp_title = result.find(css_identifier_title, first=True).text
-                        serp_favicon = result.find(css_favicon, first=True).attrs['src']
+                        if result.find(css_favicon):
+                            serp_favicon = result.find(css_favicon, first=True).attrs['src']
+                        else:
+                            serp_favicon = ' -- '
                         serp_links.append({'link':serp_link,'title':serp_title,'favicon':serp_favicon})
                 else:
                     for youtube_result in youtube_results[:6]:
