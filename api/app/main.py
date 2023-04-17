@@ -575,7 +575,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         content = result.find('.g1lvWe div:nth-of-type(2)', first=True).text.replace('\xa0Less', '')
                     else:
                         content = 'No review found'
-                    if result.find('.P3O8Ne', first=True):
+                    if result.find('.P3O8Ne', first=True) != None:
                         title = result.find('.P3O8Ne', first=True).text
                     else:
                         title = ' ----- '
