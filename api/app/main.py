@@ -52,7 +52,7 @@ def home():
 @app.get('/blackwidow/products/{product}')
 async def get_products(product: str, connection=Depends(get_connection)):
     cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT entity FROM product_test WHERE entity LIKE '%{product}%';""")
+    cursor.execute(f"""SELECT entity FROM product WHERE entity LIKE '%{product}%';""")
     data = cursor.fetchall()
     return data
 
@@ -60,7 +60,7 @@ async def get_products(product: str, connection=Depends(get_connection)):
 @app.get('/blackwidow/products/{id}')
 async def get_products(id: int, connection=Depends(get_connection)):
     cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT * FROM product_test WHERE id={id};""")
+    cursor.execute(f"""SELECT * FROM product WHERE id={id};""")
     # print(cursor)
     data = cursor.fetchone()
     # print(data)
@@ -149,8 +149,8 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
     else:
         pass
     
-    cursor.execute(f"""SELECT * FROM rankidb.query_test WHERE query = '{query}';""")
-    cursor.execute(f"""SELECT * FROM rankidb.query_test WHERE query = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
         cursor.close()
@@ -207,12 +207,12 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         serp_link = result.find(css_identifier_link, first=True).attrs['href']
                         serp_title = result.find(css_identifier_title, first=True).text
                         serp_favicon = result.find(css_favicon, first=True).attrs['src']
-                        serp_links.append(serp_link)
+                        serp_links.append({'link':serp_link,'title':serp_title,'favicon':serp_favicon})
                 else:
                     for youtube_result in youtube_results[:6]:
                         serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
                         serp_title = result.find(css_identifier_title, first=True).text
-                        serp_links.append(serp_link)
+                        serp_links.append({'link':serp_link,'title':serp_title})
 
             except requests.exceptions.RequestException as e:
                 print(e)
@@ -221,23 +221,24 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
         for serp_link in serp_links:
 
-            if 'youtube.com' in serp_link:
+            if 'youtube.com' in serp_link['link']:
                 # print('Youtube Link')
-                id = serp_link.replace('https://www.youtube.com/watch?v=', '')
+                id = serp_link['link'].replace('https://www.youtube.com/watch?v=', '')
                 transcript = YouTubeTranscriptApi.get_transcript(id)
                 text = ''
                 for i in transcript:
                     text = text + i['text'] + ' '
                 transcript = text
-                result_of_query['links']['youtube'].append({'link': serp_link,'text': transcript})
-                result_of_query['links_only'].append(serp_link)
+                serp_link['text'] = transcript
+                result_of_query['links']['youtube'].append(serp_link)
+                result_of_query['links_only'].append(serp_link['link'])
                 # print(transcript[:100])
 
-            elif 'reddit.com' in serp_link:
+            elif 'reddit.com' in serp_link['link']:
                 reddit_read_only = praw.Reddit(client_id="6ziqexypJDMGiHf8tYfERA",         # your client id
                         client_secret="gBa1uvr2syOEbjxKbD8yzPsPo_fAbA",      # your client secret
                         user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36") 
-                submission = reddit_read_only.submission(url=serp_link)
+                submission = reddit_read_only.submission(url=serp_link['link'])
                     
                 post_comments = []
 
@@ -248,8 +249,9 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         pass
                     else:
                         post_comments.append(comment.body.replace('\n', '').replace('\r', ''))
-                result_of_query['links']['reddit'].append({'link':serp_link,'comments':post_comments})
-                result_of_query['links_only'].append(serp_link)
+                serp_link['comments'] = post_comments
+                result_of_query['links']['reddit'].append(serp_link)
+                result_of_query['links_only'].append(serp_link['link'])
                 # print(post_comments)
 
             else:
@@ -259,7 +261,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                             "Accept-Language": "en",
                             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
                 } 
-                r = requests.get(serp_link, headers=headers)
+                r = requests.get(serp_link['link'], headers=headers)
                 soup = BeautifulSoup(r.text, 'html.parser')
                 affiliate_content = []
                 for heading in soup.find_all(["p"]):
@@ -279,9 +281,9 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         lister.append(new_sentence)
 
                 final_content = " ".join(lister)
-                result_of_query['links']['affiliate'].append({'link':serp_link,'text':final_content})
-                result_of_query['links_only'].append(serp_link)
-                result_of_query['links_only'].append(serp_title)
+                serp_link['text'] = final_content
+                result_of_query['links']['affiliate'].append(serp_link)
+                result_of_query['links_only'].append(serp_link['link'])
 
 
         final_text = []
@@ -368,7 +370,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 for c in counts:
                     count_list.append(c[0])
             
-                max_count = max(count_list)
+                max_count = max(count_list,default=0)
                 max_indexes = [i for i in range(len(count_list)) if count_list[i] == max_count]         
                 index_len = len(max_indexes)
                 if index_len == 1:
@@ -623,7 +625,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     print(e)
 
         for card in result_of_query['cards']:
-            query ="""INSERT INTO rankidb.product_test
+            query ="""INSERT INTO rankidb.product
                         (
                             product_url,entity,product_title,product_description,
                             product_rating,review_count,product_img,product_specs,
@@ -652,7 +654,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             card['id'] = cursor.lastrowid
 
         scraped_data_insert_query = """
-                                        INSERT INTO rankidb.query_test (query,links,links_only,cards) 
+                                        INSERT INTO rankidb.query (query,links,links_only,cards) 
                                         VALUES (%s,%s,%s,%s);
                                     """
         values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['links_only']),json.dumps(result_of_query['cards']))
