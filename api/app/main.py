@@ -49,12 +49,12 @@ class QueryInput(BaseModel):
 def home():
     return 'hello'
 
-@app.get('/blackwidow/products/{product}')
-async def get_products(product: str, connection=Depends(get_connection)):
-    cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT entity FROM product_test WHERE entity LIKE '%{product}%';""")
-    data = cursor.fetchall()
-    return data
+# @app.get('/blackwidow/products/{product}')
+# async def get_products(product: str, connection=Depends(get_connection)):
+#     cursor = connection.cursor(buffered=True)
+#     cursor.execute(f"""SELECT entity FROM product_test WHERE entity LIKE '%{product}%';""")
+#     data = cursor.fetchall()
+#     return data
 
 
 @app.get('/blackwidow/products/{id}')
