@@ -196,6 +196,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 css_identifier_link = ".yuRUbf a"
                 css_identifier_link_youtube = '.DhN8Cf a'
                 css_identifier_text = ".VwiC3b"
+                css_favicon = '.eqA2re img'
 
                 results = response.html.find(css_identifier_result)
                 youtube_results = response.html.find(css_identifier_result_youtube)
@@ -205,6 +206,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     for result in results[:10]:
                         serp_link = result.find(css_identifier_link, first=True).attrs['href']
                         serp_title = result.find(css_identifier_title, first=True).text
+                        serp_favicon = result.find(css_favicon, first=True).attrs['src']
                         serp_links.append(serp_link)
                 else:
                     for youtube_result in youtube_results[:6]:
