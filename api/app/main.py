@@ -570,12 +570,13 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 reviews = []
                 for result in results[:2]:
                     # reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
+                    # title = result.find('.P3O8Ne', first=True).text
                     date = result.find('.ff3bE', first=True).text
                     if result.find('.g1lvWe div:nth-of-type(2)', first=True):
                         content = result.find('.g1lvWe div:nth-of-type(2)', first=True).text.replace('\xa0Less', '')
                     else:
                         content = 'No review found'
-                    if result.find('.P3O8Ne', first=True) != None:
+                    if result.find('.P3O8Ne', first=True) is not None:
                         title = result.find('.P3O8Ne', first=True).text
                     else:
                         title = ' ----- '
@@ -633,8 +634,8 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         card['product_url'],
                         card['entity'],
                         card['product_title'],
-                        '',
-                        # card['product_description'],
+                        # '',
+                        card['product_description'],
                         card['product_rating'],
                         card['review_count'],
                         card['product_img'],
