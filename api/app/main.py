@@ -45,11 +45,6 @@ app.add_middleware(
 class QueryInput(BaseModel):
     query: str
 
-# class ProductIdInput(BaseModel):
-#     identity: int
-
-
-
 @app.post('/')
 def home():
     return 'hello'
@@ -209,10 +204,12 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 if results: 
                     for result in results[:10]:
                         serp_link = result.find(css_identifier_link, first=True).attrs['href']
+                        serp_title = result.find(css_identifier_title, first=True).text
                         serp_links.append(serp_link)
                 else:
                     for youtube_result in youtube_results[:6]:
                         serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
+                        serp_title = result.find(css_identifier_title, first=True).text
                         serp_links.append(serp_link)
 
             except requests.exceptions.RequestException as e:
@@ -282,6 +279,8 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 final_content = " ".join(lister)
                 result_of_query['links']['affiliate'].append({'link':serp_link,'text':final_content})
                 result_of_query['links_only'].append(serp_link)
+                result_of_query['links_only'].append(serp_title)
+
 
         final_text = []
         sources = list(result_of_query['links'].keys())
