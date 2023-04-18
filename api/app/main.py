@@ -120,8 +120,11 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         pass
     
     cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
+<<<<<<< HEAD
 
     
+=======
+>>>>>>> 160d6228024f71ea79dbeb472319899c7816d0bc
     query_data = cursor.fetchone()
     if query_data is not None:
         cursor.close()
@@ -175,7 +178,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 
                 if results: 
                     for result in results[:10]:
-                        serp_link = result.find(css_identifier_link, first=True).attrs['href']
+                        serp_link = result.find(css_identifier_link, first=True).attrs['href'] 
                         serp_title = result.find(css_identifier_title, first=True).text
                         if result.find(css_favicon):
                             serp_favicon = result.find(css_favicon, first=True).attrs['src']
@@ -198,7 +201,10 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             if 'youtube.com' in serp_link['link']:
                 # print('Youtube Link')
                 id = serp_link['link'].replace('https://www.youtube.com/watch?v=', '')
-                transcript = YouTubeTranscriptApi.get_transcript(id)
+                try:
+                    transcript = YouTubeTranscriptApi.get_transcript(id)
+                except:
+                    continue
                 text = ''
                 for i in transcript:
                     text = text + i['text'] + ' '
@@ -212,8 +218,10 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 reddit_read_only = praw.Reddit(client_id="6ziqexypJDMGiHf8tYfERA",         # your client id
                         client_secret="gBa1uvr2syOEbjxKbD8yzPsPo_fAbA",      # your client secret
                         user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36") 
-                submission = reddit_read_only.submission(url=serp_link['link'])
-                    
+                try:
+                    submission = reddit_read_only.submission(url=serp_link['link'])
+                except:
+                    continue
                 post_comments = []
 
                 for comment in submission.comments[:10]:
@@ -272,9 +280,22 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     final_text.append(link['text'])
                     
         model_text = " ".join(final_text).lower()
+<<<<<<< HEAD
         # return model_text
         json_object = json.dumps(model_text)
 
+=======
+   
+        json_object = json.dumps(model_text)
+
+        # with open('train_data.txt','a') as f:
+        #     f.write(json_object)
+        #     f.write('\n')
+        #     f.write('\n')
+        #     f.write('----------')
+        #     f.write('\n')
+        #     f.write('\n')
+>>>>>>> 160d6228024f71ea79dbeb472319899c7816d0bc
 
         doc = nlp(json_object)
         entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
@@ -629,7 +650,11 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             card['id'] = cursor.lastrowid
 
         scraped_data_insert_query = """
+<<<<<<< HEAD
                                         INSERT INTO rankidb.query (query,links,links_only,cards) 
+=======
+                                        INSERT INTO rankidb.query_test (query,links,links_only,cards) 
+>>>>>>> 160d6228024f71ea79dbeb472319899c7816d0bc
                                         VALUES (%s,%s,%s,%s);
                                     """
         values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['links_only']),json.dumps(result_of_query['cards']))
