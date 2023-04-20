@@ -16,3 +16,11 @@ def link_strings(strings):
 
 strings = ['hello', 'lo', 'world', 'or', 'h', 'ell']
 print(link_strings(strings))
+
+
+
+
+
+
+
+
