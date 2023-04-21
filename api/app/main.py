@@ -17,6 +17,8 @@ from collections import Counter
 from pydantic import BaseModel
 # from returner import returner
 import mysql.connector.pooling
+import os
+import os.path
 
 app = FastAPI()
 dbconfig = {
@@ -30,7 +32,13 @@ connection_pool = mysql.connector.pooling.MySQLConnectionPool(pool_size=20, **db
 def get_connection():
     return connection_pool.get_connection()
 
-nlp = spacy.load('./output/model-last')
+def get_models():
+    output_path = os.getcwd() + '/output'
+    models = {
+        'product_ner': spacy.load(output_path+'/model-last')
+    }
+    return models
+ 
 
 origins = ["*"]
 
@@ -278,15 +286,8 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
    
         json_object = json.dumps(model_text)
 
-        # with open('train_data.txt','a') as f:
-        #     f.write(json_object)
-        #     f.write('\n')
-        #     f.write('\n')
-        #     f.write('----------')
-        #     f.write('\n')
-        #     f.write('\n')
-
-        doc = nlp(json_object)
+        model = get_models()['product_ner']
+        doc = model(json_object)
         entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
         items = [x.text for x in doc.ents]
         ello = Counter(items).most_common(10)
@@ -647,5 +648,4 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         connection.commit()
         # cursor.close()
         return result_of_query
-
 
