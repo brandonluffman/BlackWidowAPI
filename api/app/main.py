@@ -12,13 +12,14 @@ from youtube_transcript_api import YouTubeTranscriptApi
 import praw
 from praw.models import MoreComments
 from tld import get_tld
-# import time
 from collections import Counter
 from pydantic import BaseModel
-# from returner import returner
 import mysql.connector.pooling
 import os
 import os.path
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+
 
 app = FastAPI()
 dbconfig = {
@@ -180,7 +181,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
                 
                 if results: 
-                    for result in results[:10]:
+                    for result in results[:3]:
                         serp_link = result.find(css_identifier_link, first=True).attrs['href'] 
                         serp_title = result.find(css_identifier_title, first=True).text
                         if result.find(css_favicon):
@@ -189,7 +190,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                             serp_favicon = ' -- '
                         serp_links.append({'link':serp_link,'title':serp_title,'favicon':serp_favicon})
                 else:
-                    for youtube_result in youtube_results[:6]:
+                    for youtube_result in youtube_results[:1]:
                         serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
                         serp_title = result.find(css_identifier_title, first=True).text
                         serp_links.append({'link':serp_link,'title':serp_title})
@@ -202,17 +203,36 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         for serp_link in serp_links:
 
             if 'youtube.com' in serp_link['link']:
-                # print('Youtube Link')
-                id = serp_link['link'].replace('https://www.youtube.com/watch?v=', '')
+                API_KEY = 'AIzaSyC3ElvfankD9Hf6ujrk3MUH1WIm_cu87XI'
+                VIDEO_ID = serp_link['link'].replace('https://www.youtube.com/watch?v=', '')
+                youtube = build('youtube', 'v3', developerKey=API_KEY)
+
                 try:
-                    transcript = YouTubeTranscriptApi.get_transcript(id)
-                except:
-                    continue
-                text = ''
-                for i in transcript:
-                    text = text + i['text'] + ' '
-                transcript = text
-                serp_link['text'] = transcript
+                    response = youtube.videos().list(
+                        part='snippet',
+                        id=VIDEO_ID
+                    ).execute()
+
+                    if response['items']:
+                        description = response['items'][0]['snippet']['description']
+                    else:
+                        description = 'Nothing found'
+
+                    disclaimer = 'disclaimer'
+                    desc = description.replace('\n', '. ')
+                    regex_pattern = r'http\S+|https\S+|#\w+|\d{1,2}:\d{2}|[^a-zA-Z0-9\s]+' # Matches timestamps, URLs, and hashtags
+                    new_string = re.sub(regex_pattern, '', desc)
+                    modified_string = re.sub(r'\s{2,}', '. ', new_string)
+                    try:
+                        mod = modified_string[:modified_string.lower().index(disclaimer)]
+                    except:
+                        mod = modified_string
+                    
+                    serp_link['text'] = mod
+
+                except HttpError as e:
+                    print('An error occurred: %s' % e)
+                
                 result_of_query['links']['youtube'].append(serp_link)
                 result_of_query['links_only'].append(serp_link['link'])
                 # print(transcript[:100])
@@ -240,7 +260,6 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 # print(post_comments)
 
             else:
-                # print('Google Link')
                 headers = {
                             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                             "Accept-Language": "en",
@@ -249,9 +268,11 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 r = requests.get(serp_link['link'], headers=headers)
                 soup = BeautifulSoup(r.text, 'html.parser')
                 affiliate_content = []
-                for heading in soup.find_all(["p"]):
-                    if len(heading.text.strip()) > 20:
-                        affiliate_content.append(heading.text.strip())
+                best = 'best'
+                for heading in soup.find_all(["h2", "h3"]):
+                    extract = heading.text.strip()
+                    if len(extract) > 10 and len(extract) < 200 and extract[-1] != '?' and best not in extract.lower():
+                        affiliate_content.append(heading.text.strip().replace('\n', ''))
                     else:
                         pass
 
@@ -283,7 +304,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     final_text.append(link['text'])
                     
         model_text = " ".join(final_text).lower()
-   
+        # return model_text
         json_object = json.dumps(model_text)
 
         model = get_models()['product_ner']
@@ -571,7 +592,6 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         title = ' ----- '
 
                     if result.find('.UzThIf'):
-                        print(result.find('.UzThIf', first=True).attrs['aria-label'])
                         rating = result.find('.UzThIf', first=True).attrs['aria-label']
                     else:
                         rating = 0
@@ -649,3 +669,20 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         # cursor.close()
         return result_of_query
 
+
+
+
+
+
+    # if 'youtube.com' in serp_link['link']:
+    #     # print('Youtube Link')
+    #     id = serp_link['link'].replace('https://www.youtube.com/watch?v=', '')
+    #     try:
+    #         transcript = YouTubeTranscriptApi.get_transcript(id)
+    #     except:
+    #         continue
+    #     text = ''
+    #     for i in transcript:
+    #         text = text + i['text'] + ' '
+    #     transcript = text
+    #     serp_link['text'] = transcript
