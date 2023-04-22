@@ -127,7 +127,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
     else:
         pass
     
-    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.query_test WHERE query = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
         cursor.close()
@@ -504,8 +504,6 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
 
 
-
-
      #   buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
 
         for url in buying_links:
@@ -554,15 +552,10 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     i +=1
 
                 for card in result_of_query['cards']:
-                    # print(url)
-                    # print(card['product_purchasing'])
                     if card['product_purchasing'] == url:
                         card['buying_options'] = iland
                     else:
-                        # print('Nope')
                         continue
-
-            
 
             except requests.exceptions.RequestException as e:
                     print(e)
@@ -574,7 +567,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             try:
                 session = HTMLSession()
                 response = session.get(url)
-                # print(url, response.status_code)
+                print(url, response.status_code)
 
                 css_identifier_result = ".z6XoBf"
                 results = response.html.find(css_identifier_result)
@@ -617,13 +610,11 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 # results = response.html.find(css_identifier_result)
                 # result_two = response.html.find(css_identifier_result_two)
                 # i = 5
-                # outerput = {}
+                # outerput = []
                 # for result in result_two:
                 #     if result.find('.vL3wxf'):
                 #         rating_count = result.find('.vL3wxf', first=True).text
-                #         print(rating_count, i)
-                #         iver = i
-                #         outerput[iver] = rating_count
+                #         outerput.append(rating_count)
                 #         i = i - 1
                 #     else:
                 #         rating_count = 'None'
@@ -654,6 +645,11 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
                 #     else:
                 #         sentiment_text = 'None'
+
+            
+                # reviews.append(sentimenter)
+                # reviews.append(outerput)
+
             
                 for card in result_of_query['cards']:
                     if card['all_reviews_link'] == url:
@@ -675,7 +671,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     print(e)
 
         for card in result_of_query['cards']:
-            query ="""INSERT INTO rankidb.product
+            query ="""INSERT INTO rankidb.product_test
                         (
                             product_url,entity,product_title,product_description,
                             product_rating,review_count,product_img,product_specs,
