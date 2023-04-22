@@ -600,7 +600,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     if result.find('.sPPcBf'):
                         source = result.find('.sPPcBf span')[1].text
                     else:
-                        source = ' ----- '
+                        source = ''
                     
                     output = {
                             # 'review_count' : result.find(css_product_review_count, first=True).text,
@@ -612,6 +612,49 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                             'source' : source,
                     } 
                     reviews.append(output)
+                ### ADDS RATING COUNT -- NEEDS TO BE INTEGRATED WITH THE ABOVE AND HAVE THE "OUTERPUT" VARIABLE BE SENT INTO THE ABOVE OUTPUT VARIABLE BELOW SOURCE
+                # css_identifier_result_two = '.aALHge'
+                # results = response.html.find(css_identifier_result)
+                # result_two = response.html.find(css_identifier_result_two)
+                # i = 5
+                # outerput = {}
+                # for result in result_two:
+                #     if result.find('.vL3wxf'):
+                #         rating_count = result.find('.vL3wxf', first=True).text
+                #         print(rating_count, i)
+                #         iver = i
+                #         outerput[iver] = rating_count
+                #         i = i - 1
+                #     else:
+                #         rating_count = 'None'
+                ### ADDS SENTIMENT ANALYSIS FROM GOOGLE REVIEWS 
+                # sentimenter = []
+                # css_identifier_result_three = '.gKLqZc'
+                # result_three = response.html.find(css_identifier_result_three)
+                # for result in result_three[1:]:
+                #     if result.find('.QIrs8'):
+                #         start_word = 'about '
+                #         end_word = '.'
+                #         start = 'are '
+                #         end = '.'
+                #         sentiment_text = result.find('.QIrs8', first=True).text
+                #         # print(sentiment_text)
+                #         pattern = r"\d+%|\d+"
+                #         matches = re.findall(pattern, sentiment_text)
+                #         # print(matches)
+                #         start_index = sentiment_text.find(start_word)
+                #         end_index = sentiment_text.find(end_word, start_index)
+                #         result = sentiment_text[start_index+len(start_word):end_index]
+                #         starter = sentiment_text.find(start)
+                #         ender = sentiment_text.find(end, starter)
+                #         resulter = sentiment_text[starter+len(start):ender]
+                #         # print(f"QUALITY: -----> {result}")
+                #         # print(f"SENTIMENT: -----> {resulter}")
+                #         sentimenter.append([matches[0], result, matches[1]+' '+resulter])
+
+                #     else:
+                #         sentiment_text = 'None'
+            
                 for card in result_of_query['cards']:
                     if card['all_reviews_link'] == url:
                         card['reviews'] = reviews
