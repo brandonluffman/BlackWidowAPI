@@ -14,6 +14,8 @@ from tld import get_tld
 from collections import Counter
 from pydantic import BaseModel
 import mysql.connector.pooling
+import os
+import os.path
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
@@ -30,7 +32,13 @@ connection_pool = mysql.connector.pooling.MySQLConnectionPool(pool_size=20, **db
 def get_connection():
     return connection_pool.get_connection()
 
-nlp = spacy.load('./output/model-last')
+def get_models():
+    output_path = os.getcwd() + '/output'
+    models = {
+        'product_ner': spacy.load(output_path+'/model-last')
+    }
+    return models
+ 
 
 origins = ["*"]
 
@@ -297,8 +305,8 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         # return model_text
         json_object = json.dumps(model_text)
 
-
-        doc = nlp(json_object)
+        model = get_models()['product_ner']
+        doc = model(json_object)
         entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
         items = [x.text for x in doc.ents]
         print(items)
