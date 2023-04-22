@@ -56,6 +56,22 @@ def get_models():
     }
     return models
 
+query_counts = {}
+
+@app.post("/query")
+async def query(query_type:str):
+    global query_counts
+    if query_type in query_counts:
+        query_counts[query_type] += 1
+    else:
+        query_counts[query_type] = 1
+    
+    return {"message": f"{query_type} query received"}
+
+@app.get("/counts")
+async def get_counts():
+    global query_counts
+    return {"query_counts": query_counts}
 
 # @app.middleware("http")
 # async def log_requests(request: Request, call_next,connection=get_connection()):
@@ -108,40 +124,40 @@ class QueryInput(BaseModel):
 def home():
     return 'hello'
 
-@app.get('/blackwidow/products/{product}')
-async def get_products(product: str, connection=Depends(get_connection)):
-    cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT entity, product_img FROM product_test WHERE entity LIKE '%{product}%';""")
-    data = cursor.fetchall()
-    return data
-
-
-# @app.get('/blackwidow/products/{id}')
-# async def get_products(id: int, connection=Depends(get_connection)):
+# @app.get('/blackwidow/products/{product}')
+# async def get_products(product: str, connection=Depends(get_connection)):
 #     cursor = connection.cursor(buffered=True)
-#     cursor.execute(f"""SELECT * FROM product WHERE id={id};""")
-#     data = cursor.fetchone()
-#     if data is not None:
-#         cursor.close()
-#         return {
-#             "id": data[0],
-#             "url": data[1],
-#             "entity": data[2],
-#             "product_title": data[3],
-#             "product_description": data[4],
-#             "product_rating": data[5],
-#             "review_count": data[6],
-#             "product_img": data[7],
-#             "product_specs": json.loads(data[8]),
-#             "all_reviews_link": data[9],
-#             "buying_link": data[10],
-#             "buying_options": json.loads(data[11]),
-#             "reviews": json.loads(data[12]),
-#             "mentions": json.loads(data[13])
-#         }
-#     else:
+#     cursor.execute(f"""SELECT entity, product_img FROM product_test WHERE entity LIKE '%{product}%';""")
+#     data = cursor.fetchall()
+#     return data
 
-#         return "Product not available"
+
+@app.get('/blackwidow/products/{id}')
+async def get_products(id: int, connection=Depends(get_connection)):
+    cursor = connection.cursor(buffered=True)
+    cursor.execute(f"""SELECT * FROM product WHERE id={id};""")
+    data = cursor.fetchone()
+    if data is not None:
+        cursor.close()
+        return {
+            "id": data[0],
+            "url": data[1],
+            "entity": data[2],
+            "product_title": data[3],
+            "product_description": data[4],
+            "product_rating": data[5],
+            "review_count": data[6],
+            "product_img": data[7],
+            "product_specs": json.loads(data[8]),
+            "all_reviews_link": data[9],
+            "buying_link": data[10],
+            "buying_options": json.loads(data[11]),
+            "reviews": json.loads(data[12]),
+            "mentions": json.loads(data[13])
+        }
+    else:
+
+        return "Product not available"
 
 @app.get("/items/{item_id}")
 async def read_item(item_id):
