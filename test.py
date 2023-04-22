@@ -12,8 +12,6 @@ for url in review_links:
         results = response.html.find(css_identifier_result)
         reviews = []
         for result in results[:2]:
-            # reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
-            # title = result.find('.P3O8Ne', first=True).text
             date = result.find('.ff3bE', first=True).text
             if result.find('.g1lvWe div:nth-of-type(2)', first=True):
                 content = result.find('.g1lvWe div:nth-of-type(2)', first=True).text.replace('\xa0Less', '')
@@ -52,7 +50,7 @@ for url in review_links:
         for result in result_two:
             if result.find('.vL3wxf'):
                 rating_count = result.find('.vL3wxf', first=True).text
-                print(rating_count, i)
+                # print(rating_count, i)
                 iver = i
                 outerput.append(rating_count)
 
