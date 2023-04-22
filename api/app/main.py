@@ -1,5 +1,9 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+import logging
 import json 
 import spacy
 import requests
@@ -18,9 +22,20 @@ import os
 import os.path
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+import mysql.connector
+
 
 
 app = FastAPI()
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = logging.FileHandler("requests.log")
+logger.addHandler(handler)
+
+# 
+
+
 dbconfig = {
     "host": "rankidb.c39jpvgy5agc.us-east-2.rds.amazonaws.com",
     "user": "admin",
@@ -28,6 +43,8 @@ dbconfig = {
     "database": "rankidb"
 }
 connection_pool = mysql.connector.pooling.MySQLConnectionPool(pool_size=20, **dbconfig)
+
+
 
 def get_connection():
     return connection_pool.get_connection()
@@ -38,6 +55,40 @@ def get_models():
         'product_ner': spacy.load(output_path+'/model-last')
     }
     return models
+
+
+# @app.middleware("http")
+# async def log_requests(request: Request, call_next,connection=get_connection()):
+#     response = await call_next(request)
+#     # if method == 'POST' and path == '/blackwidow':
+#     # data = await request.form()
+#     # query = request.query_params
+#     # logger.info(f'QUERY: {query}')
+#     # data_dict = {k:v for k,v in data.items()}
+
+#     method = request.method
+#     path = request.url.path
+#     body = await request.body()
+#     status_code = response.status_code
+    
+
+#     cursor = connection.cursor(buffered=True)
+#     cursor.execute("INSERT INTO rankidb.request_logs (method, path, status_code) VALUES (%s, %s, %s,%s)", (method, path, status_code,json.dumps(body)))
+#     # connection.commit()
+#     return response
+
+# @app.get("/blackwidow/common_requests")
+# async def get_common_requests(connection=Depends(get_connection)):
+#     cursor = connection.cursor(buffered=True)
+#     cursor.execute("SELECT method, path, COUNT(*) as count FROM rankidb.request_logs GROUP BY method, path ORDER BY count DESC LIMIT 10")
+#     rows = cursor.fetchall()
+#     result = [{"method": row[0], "path": row[1], "count": row[2]} for row in rows]
+#     return result
+
+
+# output_path = os.getcwd() + '/output'
+
+# nlp = spacy.load(output_path+'/model-last')
  
 
 origins = ["*"]
@@ -302,6 +353,8 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         model_text = " ".join(final_text).lower()
         # return model_text
         json_object = json.dumps(model_text)
+        # return json_object
+      
 
         model = get_models()['product_ner']
         doc = model(json_object)
@@ -316,8 +369,8 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         
         print(ellos)
 
-        # docs = []
-        # docs.append(doc)
+        docs = []
+        docs.append(doc)
     
         entities = [entity for entity in ellos]
         # all_ents = [entity for entity in items]
@@ -603,50 +656,50 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                             'source' : source,
                     } 
                     reviews.append(output)
-                ### ADDS RATING COUNT -- NEEDS TO BE INTEGRATED WITH THE ABOVE AND HAVE THE "OUTERPUT" VARIABLE BE SENT INTO THE ABOVE OUTPUT VARIABLE BELOW SOURCE
-                # css_identifier_result_two = '.aALHge'
-                # results = response.html.find(css_identifier_result)
-                # result_two = response.html.find(css_identifier_result_two)
-                # i = 5
-                # outerput = []
-                # for result in result_two:
-                #     if result.find('.vL3wxf'):
-                #         rating_count = result.find('.vL3wxf', first=True).text
-                #         outerput.append(rating_count)
-                #         i = i - 1
-                #     else:
-                #         rating_count = 'None'
-                ### ADDS SENTIMENT ANALYSIS FROM GOOGLE REVIEWS 
-                # sentimenter = []
-                # css_identifier_result_three = '.gKLqZc'
-                # result_three = response.html.find(css_identifier_result_three)
-                # for result in result_three[1:]:
-                #     if result.find('.QIrs8'):
-                #         start_word = 'about '
-                #         end_word = '.'
-                #         start = 'are '
-                #         end = '.'
-                #         sentiment_text = result.find('.QIrs8', first=True).text
-                #         # print(sentiment_text)
-                #         pattern = r"\d+%|\d+"
-                #         matches = re.findall(pattern, sentiment_text)
-                #         # print(matches)
-                #         start_index = sentiment_text.find(start_word)
-                #         end_index = sentiment_text.find(end_word, start_index)
-                #         result = sentiment_text[start_index+len(start_word):end_index]
-                #         starter = sentiment_text.find(start)
-                #         ender = sentiment_text.find(end, starter)
-                #         resulter = sentiment_text[starter+len(start):ender]
-                #         # print(f"QUALITY: -----> {result}")
-                #         # print(f"SENTIMENT: -----> {resulter}")
-                #         sentimenter.append([matches[0], result, matches[1]+' '+resulter])
+                ## ADDS RATING COUNT -- NEEDS TO BE INTEGRATED WITH THE ABOVE AND HAVE THE "OUTERPUT" VARIABLE BE SENT INTO THE ABOVE OUTPUT VARIABLE BELOW SOURCE
+                css_identifier_result_two = '.aALHge'
+                results = response.html.find(css_identifier_result)
+                result_two = response.html.find(css_identifier_result_two)
+                i = 5
+                outerput = []
+                for result in result_two:
+                    if result.find('.vL3wxf'):
+                        rating_count = result.find('.vL3wxf', first=True).text
+                        outerput.append(rating_count)
+                        i = i - 1
+                    else:
+                        rating_count = 'None'
+                ## ADDS SENTIMENT ANALYSIS FROM GOOGLE REVIEWS 
+                sentimenter = []
+                css_identifier_result_three = '.gKLqZc'
+                result_three = response.html.find(css_identifier_result_three)
+                for result in result_three[1:]:
+                    if result.find('.QIrs8'):
+                        start_word = 'about '
+                        end_word = '.'
+                        start = 'are '
+                        end = '.'
+                        sentiment_text = result.find('.QIrs8', first=True).text
+                        # print(sentiment_text)
+                        pattern = r"\d+%|\d+"
+                        matches = re.findall(pattern, sentiment_text)
+                        # print(matches)
+                        start_index = sentiment_text.find(start_word)
+                        end_index = sentiment_text.find(end_word, start_index)
+                        result = sentiment_text[start_index+len(start_word):end_index]
+                        starter = sentiment_text.find(start)
+                        ender = sentiment_text.find(end, starter)
+                        resulter = sentiment_text[starter+len(start):ender]
+                        # print(f"QUALITY: -----> {result}")
+                        # print(f"SENTIMENT: -----> {resulter}")
+                        sentimenter.append([matches[0], result, matches[1]+' '+resulter])
 
-                #     else:
-                #         sentiment_text = 'None'
+                    else:
+                        sentiment_text = 'None'
 
             
-                # reviews.append(sentimenter)
-                # reviews.append(outerput)
+                reviews.append(sentimenter)
+                reviews.append(outerput)
 
             
                 for card in result_of_query['cards']:
@@ -655,14 +708,14 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     else:
                         continue
 
-                # CODE BELOW IS FOR GRABBING ALL REVIEWS FOR A PRODUCT
+    #             # CODE BELOW IS FOR GRABBING ALL REVIEWS FOR A PRODUCT
 
-                # next_page = response.css('.sh-fp__pagination-button::attr(data-url)').get()
+    #             # next_page = response.css('.sh-fp__pagination-button::attr(data-url)').get()
 
-                # if next_page is not None:
-                #     # re-assigns requests.get url to a new page url
-                #     next_page_url = 'https://www.google.com' + next_page
-                #     yield response.follow(next_page_url, callback=self.parse_reviews)
+    #             # if next_page is not None:
+    #             #     # re-assigns requests.get url to a new page url
+    #             #     next_page_url = 'https://www.google.com' + next_page
+    #             #     yield response.follow(next_page_url, callback=self.parse_reviews)
             
 
             except requests.exceptions.RequestException as e:
@@ -697,15 +750,15 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             connection.commit()
             card['id'] = cursor.lastrowid
 
-        scraped_data_insert_query = """
-                                        INSERT INTO rankidb.query_test (query,links,links_only,cards) 
-                                        VALUES (%s,%s,%s,%s);
-                                    """
-        values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['links_only']),json.dumps(result_of_query['cards']))
-        cursor.execute(scraped_data_insert_query,values)
-        connection.commit()
-        # cursor.close()
-        return result_of_query
+    #     scraped_data_insert_query = """
+    #                                     INSERT INTO rankidb.query (query,links,links_only,cards) 
+    #                                     VALUES (%s,%s,%s,%s);
+    #                                 """
+    #     values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['links_only']),json.dumps(result_of_query['cards']))
+    #     cursor.execute(scraped_data_insert_query,values)
+    #     connection.commit()
+    #     # cursor.close()
+    #     return result_of_query
 
 
 

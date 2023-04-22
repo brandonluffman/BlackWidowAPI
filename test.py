@@ -2,11 +2,18 @@ from requests_html import HTMLSession
 import requests
 import re
 review_links = ['https://www.google.com/shopping/product/6222956906177139429/reviews?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rate:5,rnum:10,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwiGjJrjr6D-AhWRFlkFHZ9SCFEQn08IWCgA', 'https://www.google.com/shopping/product/127770160929837065/reviews?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rate:5,rnum:10,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwiUtcXjr6D-AhWSMlkFHeU-DzIQn08ITSgA']
+review_data = []
 for url in review_links:
+    metrics = {
+        'rating_count': {},
+        'sentiment': [],
+        'reviews': [],
+    }
     try:
+
         session = HTMLSession()
         response = session.get(url)
-        print(url, response.status_code)
+        # print(url, response.status_code)
 
         css_identifier_result = ".z6XoBf"
         results = response.html.find(css_identifier_result)
@@ -41,7 +48,7 @@ for url in review_links:
                     'content' : content[:200],
                     'source' : source,
             } 
-            reviews.append(output)
+            metrics['reviews'].append(output)
         
         css_identifier_result_two = '.aALHge'
         result_two = response.html.find(css_identifier_result_two)
@@ -57,8 +64,12 @@ for url in review_links:
                 i = i - 1
             else:
                  rating_count = 'None'
-            
-        reviews.append(outerput)
+        # print("OUTERPUT", outerput)
+        for i in range(len(outerput)):
+            rating = f'{len(outerput) - i} stars' if len(outerput) - i > 1 else  f'{len(outerput) - i} star'
+            review_count = outerput[i]
+            metrics['rating_count'][rating] = review_count
+        # reviews.append(outerput)
 
         
         sentimenter = []
@@ -79,15 +90,18 @@ for url in review_links:
                 starter = sentiment_text.find(start)
                 ender = sentiment_text.find(end, starter)
                 resulter = sentiment_text[starter+len(start):ender]
-                sentimenter.append([matches[0], result, matches[1]+' '+resulter])
+                metrics['sentiment'].append({'favor_vote_count':matches[0], 'desc': result, 'favor_rating': matches[1]+' '+resulter})
+                # sentimenter.append([matches[0], result, matches[1]+' '+resulter])
 
             else:
                 sentiment_text = 'None'
-            
-        reviews.append(sentimenter)
+        review_data.append(metrics)
+        # print("SENTIMENTER", sentimenter)
+        # reviews.append(sentimenter)
+    
             
 
-        print(reviews)
+        # print(reviews)
         # for card in result_of_query['cards']:
         #     if card['all_reviews_link'] == url:
         #         card['reviews'] = reviews
@@ -95,3 +109,5 @@ for url in review_links:
         #         continue
     except requests.exceptions.RequestException as e:
                     print(e)
+    # print(review_data)
+print(review_data)
