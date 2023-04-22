@@ -57,33 +57,33 @@ def get_models():
     return models
 
 
-@app.middleware("http")
-async def log_requests(request: Request, call_next,connection=get_connection()):
-    response = await call_next(request)
-    # if method == 'POST' and path == '/blackwidow':
-    # data = await request.form()
-    # query = request.query_params
-    # logger.info(f'QUERY: {query}')
-    # data_dict = {k:v for k,v in data.items()}
+# @app.middleware("http")
+# async def log_requests(request: Request, call_next,connection=get_connection()):
+#     response = await call_next(request)
+#     # if method == 'POST' and path == '/blackwidow':
+#     # data = await request.form()
+#     # query = request.query_params
+#     # logger.info(f'QUERY: {query}')
+#     # data_dict = {k:v for k,v in data.items()}
 
-    method = request.method
-    path = request.url.path
-    body = await request.body()
-    status_code = response.status_code
+#     method = request.method
+#     path = request.url.path
+#     body = await request.body()
+#     status_code = response.status_code
     
 
-    cursor = connection.cursor(buffered=True)
-    cursor.execute("INSERT INTO rankidb.request_logs (method, path, status_code) VALUES (%s, %s, %s,%s)", (method, path, status_code,json.dumps(body)))
-    # connection.commit()
-    return response
+#     cursor = connection.cursor(buffered=True)
+#     cursor.execute("INSERT INTO rankidb.request_logs (method, path, status_code) VALUES (%s, %s, %s,%s)", (method, path, status_code,json.dumps(body)))
+#     # connection.commit()
+#     return response
 
-@app.get("/blackwidow/common_requests")
-async def get_common_requests(connection=Depends(get_connection)):
-    cursor = connection.cursor(buffered=True)
-    cursor.execute("SELECT method, path, COUNT(*) as count FROM rankidb.request_logs GROUP BY method, path ORDER BY count DESC LIMIT 10")
-    rows = cursor.fetchall()
-    result = [{"method": row[0], "path": row[1], "count": row[2]} for row in rows]
-    return result
+# @app.get("/blackwidow/common_requests")
+# async def get_common_requests(connection=Depends(get_connection)):
+#     cursor = connection.cursor(buffered=True)
+#     cursor.execute("SELECT method, path, COUNT(*) as count FROM rankidb.request_logs GROUP BY method, path ORDER BY count DESC LIMIT 10")
+#     rows = cursor.fetchall()
+#     result = [{"method": row[0], "path": row[1], "count": row[2]} for row in rows]
+#     return result
 
 
 # output_path = os.getcwd() + '/output'
