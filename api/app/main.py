@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, Request
+from fastapi import FastAPI, Depends, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
@@ -8,7 +8,7 @@ import json
 import spacy
 import requests
 from bs4 import BeautifulSoup
-# import re
+import re
 import datetime
 from requests_html import HTMLSession
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -18,12 +18,10 @@ from tld import get_tld
 from collections import Counter
 from pydantic import BaseModel
 import mysql.connector.pooling
-import os
 import os.path
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import mysql.connector
-
 
 
 app = FastAPI()
@@ -49,12 +47,12 @@ connection_pool = mysql.connector.pooling.MySQLConnectionPool(pool_size=20, **db
 def get_connection():
     return connection_pool.get_connection()
 
-def get_models():
-    output_path = os.getcwd() + '/output'
-    models = {
-        'product_ner': spacy.load(output_path+'/model-last')
-    }
-    return models
+# def get_models():
+#     output_path = os.getcwd() + '/output'
+#     models = {
+#         'product_ner': spacy.load(output_path+'/model-last')
+#     }
+#     return models
 
 query_counts = {}
 
@@ -76,21 +74,19 @@ async def get_counts():
 # @app.middleware("http")
 # async def log_requests(request: Request, call_next,connection=get_connection()):
 #     response = await call_next(request)
-#     # if method == 'POST' and path == '/blackwidow':
-#     # data = await request.form()
-#     # query = request.query_params
 #     # logger.info(f'QUERY: {query}')
 #     # data_dict = {k:v for k,v in data.items()}
+#     if request.method == 'POST':
+#         method = request.method
+#         path = request.url.path
+#         body = await request.body()
+#         body_str = body.decode('utf-8')
+#         status_code = response.status_code
+        
 
-#     method = request.method
-#     path = request.url.path
-#     body = await request.body()
-#     status_code = response.status_code
-    
-
-#     cursor = connection.cursor(buffered=True)
-#     cursor.execute("INSERT INTO rankidb.request_logs (method, path, status_code) VALUES (%s, %s, %s,%s)", (method, path, status_code,json.dumps(body)))
-#     # connection.commit()
+#         cursor = connection.cursor(buffered=True)
+#         cursor.execute("INSERT INTO rankidb.request_logs (method, path, status_code, body) VALUES (%s, %s, %s,%s)", (method, path, status_code,body_str))
+#         connection.commit()
 #     return response
 
 # @app.get("/blackwidow/common_requests")
@@ -213,7 +209,6 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             },
             'links_only': [],
             'cards': [],
-            'mentions': [],
         }
   
         remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
@@ -291,7 +286,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     except:
                         mod = modified_string
                     
-                    serp_link['text'] = mod
+                    serp_link['text'] = mod.lower()
 
                 except HttpError as e:
                     print('An error occurred: %s' % e)
@@ -316,7 +311,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     elif comment.body == '[removed]' or comment.body == '[deleted]' or comment.body[:6] == "Thanks":
                         pass
                     else:
-                        post_comments.append(comment.body.replace('\n', '').replace('\r', ''))
+                        post_comments.append(comment.body.replace('\n', '').replace('\r', '').lower())
                 serp_link['comments'] = post_comments
                 result_of_query['links']['reddit'].append(serp_link)
                 result_of_query['links_only'].append(serp_link['link'])
@@ -350,48 +345,49 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         lister.append(new_sentence)
 
                 final_content = " ".join(lister)
-                serp_link['text'] = final_content
+                serp_link['text'] = final_content.lower()
                 result_of_query['links']['affiliate'].append(serp_link)
                 result_of_query['links_only'].append(serp_link['link'])
+        
 
-
-        final_text = []
-        sources = list(result_of_query['links'].keys())
-        for source in sources:
-            if source == 'reddit':
-                for link in result_of_query['links'][source]:
-                    for comment in link['comments']:
-                        final_text.append(comment)
-            else:
-                for link in result_of_query['links'][source]:
-                    final_text.append(link['text'])
+        # final_text = []
+        # sources = list(result_of_query['links'].keys())
+        # for source in sources:
+        #     if source == 'reddit':
+        #         for link in result_of_query['links'][source]:
+        #             for comment in link['comments']:
+        #                 final_text.append(comment)
+        #     else:
+        #         for link in result_of_query['links'][source]:
+        #             final_text.append(link['text'])
                     
-        model_text = " ".join(final_text).lower()
+        # model_text = " ".join(final_text).lower()
         # return model_text
-        json_object = json.dumps(model_text)
+        # json_object = json.dumps(model_text)
         # return json_object
       
 
-        model = get_models()['product_ner']
-        doc = model(json_object)
-        entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
-        items = [x.text for x in doc.ents]
-        print(items)
-        ello = Counter(items).most_common(10)
-        ellos = []
-        for k,v in ello:
-            # print(k,v)
-            ellos.append(k)
+        # model = get_models()['product_ner']
+        # doc = model(json_object)
+        # entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
+     
+        # items = [x.text for x in doc.ents]
+        # # print(items)
+        # ello = Counter(items).most_common(10)
+        # ellos = []
+        # for k,v in ello:
+        #     # print(k,v)
+        #     ellos.append(k)
         
-        print(ellos)
+        # print(ellos)
 
-        docs = []
-        docs.append(doc)
+        # docs = []
+        # docs.append(doc)
+        # entities = [entity for entity in ellos]
     
-        entities = [entity for entity in ellos]
-        # all_ents = [entity for entity in items]
-        #
-        # entities = ['apple airpods max', 'bose quietcomfort 45']
+        # # all_ents = [entity for entity in items]
+        # #
+        entities = ['jabra elite 45h','apple airpods max', 'bose quietcomfort','susvara.5. ksc75','sony wh-1000xm5','sennheiser hd800 s']
         domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
         entity_links = [domain + entity.replace(' ', '+') for entity in entities]
         final_card_links = []
@@ -557,7 +553,8 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             except requests.exceptions.RequestException as e:
                     print(e)
 
-        
+            
+      
         for card in result_of_query['cards']:
             reddit_mentions = [{'link':item['link']} for item in result_of_query['links']['reddit'] if any(card['entity'] in comment for comment in item['comments'])]
             affiliate_mentions = [{'link':item['link']} for item in result_of_query['links']['affiliate'] if card['entity'] in item['text']]
@@ -565,13 +562,11 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             card['mentions']['reddit'] = reddit_mentions
             card['mentions']['affiliate'] = affiliate_mentions
             card['mentions']['youtube'] = youtube_mentions
-            print("REDDIT MENTIONS:", reddit_mentions)
-            print("YOUTUBE MENTIONS:",youtube_mentions)
-            print("AFFILIATE MENTIONS:",affiliate_mentions)
+      
 
 
 
-     #   buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
+        # buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
 
         for url in buying_links:
             try:
@@ -630,166 +625,168 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
 
         # review_links = ['https://www.google.com/shopping/product/6222956906177139429/reviews?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rate:5,rnum:10,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwiGjJrjr6D-AhWRFlkFHZ9SCFEQn08IWCgA', 'https://www.google.com/shopping/product/127770160929837065/reviews?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rate:5,rnum:10,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwiUtcXjr6D-AhWSMlkFHeU-DzIQn08ITSgA']
-        for url in review_links:
-            try:
-                session = HTMLSession()
-                response = session.get(url)
-                print(url, response.status_code)
+    for url in review_links:
+        metrics = {
+            'rating_count': {},
+            'sentiment': [],
+            'reviews': [],
+        }
+        try:
+            import re
+            session = HTMLSession()
+            response = session.get(url)
+            # print(url, response.status_code)
 
-                css_identifier_result = ".z6XoBf"
-                results = response.html.find(css_identifier_result)
-                reviews = []
-                for result in results[:2]:
-                    # reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
-                    # title = result.find('.P3O8Ne', first=True).text
-                    date = result.find('.ff3bE', first=True).text
-                    if result.find('.g1lvWe div:nth-of-type(2)', first=True):
-                        content = result.find('.g1lvWe div:nth-of-type(2)', first=True).text.replace('\xa0Less', '')
-                    else:
-                        content = 'No review found'
-                    if result.find('.P3O8Ne', first=True) is not None:
-                        title = result.find('.P3O8Ne', first=True).text
-                    else:
-                        title = ' ----- '
+            css_identifier_result = ".z6XoBf"
+            results = response.html.find(css_identifier_result)
+            reviews = []
+            for result in results[:2]:
+                # reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
+                # title = result.find('.P3O8Ne', first=True).text
+                date = result.find('.ff3bE', first=True).text
+                if result.find('.g1lvWe div:nth-of-type(2)', first=True):
+                    content = result.find('.g1lvWe div:nth-of-type(2)', first=True).text.replace('\xa0Less', '')
+                else:
+                    content = 'No review found'
+                if result.find('.P3O8Ne', first=True) is not None:
+                    title = result.find('.P3O8Ne', first=True).text
+                else:
+                    title = ' ----- '
 
-                    if result.find('.UzThIf'):
-                        rating = result.find('.UzThIf', first=True).attrs['aria-label']
-                    else:
-                        rating = 0
-                    
-                    if result.find('.sPPcBf'):
-                        source = result.find('.sPPcBf span')[1].text
-                    else:
-                        source = ''
-                    
-                    output = {
-                            # 'review_count' : result.find(css_product_review_count, first=True).text,
-                            'review_link': response.url,
-                            'title' : title,
-                            'rating' : rating,
-                            'date' : date,
-                            'content' : content[:200],
-                            'source' : source,
-                    } 
-                    reviews.append(output)
-                ## ADDS RATING COUNT -- NEEDS TO BE INTEGRATED WITH THE ABOVE AND HAVE THE "OUTERPUT" VARIABLE BE SENT INTO THE ABOVE OUTPUT VARIABLE BELOW SOURCE
-                css_identifier_result_two = '.aALHge'
-                results = response.html.find(css_identifier_result)
-                result_two = response.html.find(css_identifier_result_two)
-                i = 5
-                outerput = []
-                for result in result_two:
-                    if result.find('.vL3wxf'):
-                        rating_count = result.find('.vL3wxf', first=True).text
-                        outerput.append(rating_count)
-                        i = i - 1
-                    else:
-                        rating_count = 'None'
-                ## ADDS SENTIMENT ANALYSIS FROM GOOGLE REVIEWS 
-                sentimenter = []
-                css_identifier_result_three = '.gKLqZc'
-                result_three = response.html.find(css_identifier_result_three)
-                for result in result_three[1:]:
-                    if result.find('.QIrs8'):
-                        start_word = 'about '
-                        end_word = '.'
-                        start = 'are '
-                        end = '.'
-                        sentiment_text = result.find('.QIrs8', first=True).text
-                        # print(sentiment_text)
-                        pattern = r"\d+%|\d+"
-                        matches = re.findall(pattern, sentiment_text)
-                        # print(matches)
-                        start_index = sentiment_text.find(start_word)
-                        end_index = sentiment_text.find(end_word, start_index)
-                        result = sentiment_text[start_index+len(start_word):end_index]
-                        starter = sentiment_text.find(start)
-                        ender = sentiment_text.find(end, starter)
-                        resulter = sentiment_text[starter+len(start):ender]
-                        # print(f"QUALITY: -----> {result}")
-                        # print(f"SENTIMENT: -----> {resulter}")
-                        sentimenter.append([matches[0], result, matches[1]+' '+resulter])
+                if result.find('.UzThIf'):
+                    rating = result.find('.UzThIf', first=True).attrs['aria-label']
+                else:
+                    rating = 0
+                
+                if result.find('.sPPcBf'):
+                    source = result.find('.sPPcBf span')[1].text
+                else:
+                    source = ' ----- '
+                
+                output = {
+                        # 'review_count' : result.find(css_product_review_count, first=True).text,
+                        'review_link': response.url,
+                        'title' : title,
+                        'rating' : rating,
+                        'date' : date,
+                        'content' : content[:200],
+                        'source' : source,
+                } 
+                metrics['reviews'].append(output)
+            
+            css_identifier_result_two = '.aALHge'
+            result_two = response.html.find(css_identifier_result_two)
+            i = 5
+            outerput = []
+            for result in result_two:
+                if result.find('.vL3wxf'):
+                    rating_count = result.find('.vL3wxf', first=True).text
+                    # print(rating_count, i)
+                    iver = i
+                    outerput.append(rating_count)
 
-                    else:
-                        sentiment_text = 'None'
+                    i = i - 1
+                else:
+                    rating_count = 'None'
+            # print("OUTERPUT", outerput)
+            for i in range(len(outerput)):
+                rating = f'{len(outerput) - i} stars' if len(outerput) - i > 1 else  f'{len(outerput) - i} star'
+                review_count = outerput[i]
+                metrics['rating_count'][rating] = review_count
+            # reviews.append(outerput)
 
             
-                reviews.append(sentimenter)
-                reviews.append(outerput)
+            sentimenter = []
+            css_identifier_result_three = '.gKLqZc'
+            result_three = response.html.find(css_identifier_result_three)
+            count = 0
+            for result in result_three[1:]:
+                count+=1
+                if result.find('.QIrs8'):
+                    start_word = 'about '
+                    end_word = '.'
+                    start = 'are '
+                    end = '.'
+                    sentiment_text = result.find('.QIrs8', first=True).text
+                    # print("TEXT", type(sentiment_text))
+                    pattern = r"\d+%|\d+"
+                    matches = re.findall(pattern, sentiment_text)
+                    start_index = sentiment_text.find(start_word)
+                    end_index = sentiment_text.find(end_word, start_index)
+                    result = sentiment_text[start_index+len(start_word):end_index]
+                    starter = sentiment_text.find(start)
+                    ender = sentiment_text.find(end, starter)
+                    resulter = sentiment_text[starter+len(start):ender]
+                    metrics['sentiment'].append({'favor_vote_count':matches[0], 'desc': result, 'favor_rating': matches[1]+' '+resulter})
+                    sentimenter.append([matches[0], result, matches[1]+' '+resulter])
+                else:
+                    sentiment_text = 'None'
+            # print("SENTIMENTER", sentimenter)
+            # reviews.append(sentimenter)
 
-            
-                for card in result_of_query['cards']:
-                    if card['all_reviews_link'] == url:
-                        card['reviews'] = reviews
-                    else:
-                        continue
-
-    #             # CODE BELOW IS FOR GRABBING ALL REVIEWS FOR A PRODUCT
-
-    #             # next_page = response.css('.sh-fp__pagination-button::attr(data-url)').get()
-
-    #             # if next_page is not None:
-    #             #     # re-assigns requests.get url to a new page url
-    #             #     next_page_url = 'https://www.google.com' + next_page
-    #             #     yield response.follow(next_page_url, callback=self.parse_reviews)
-            
-
-            except requests.exceptions.RequestException as e:
-                    print(e)
-
-        for card in result_of_query['cards']:
-            query ="""INSERT INTO rankidb.product_test
-                        (
-                            product_url,entity,product_title,product_description,
-                            product_rating,review_count,product_img,product_specs,
-                            all_reviews_link,product_purchasing,buying_options,reviews,mentions
-                        ) 
-                        values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);    
-                    """
-            values = (
-                        card['product_url'],
-                        card['entity'],
-                        card['product_title'],
-                        # '',
-                        card['product_description'],
-                        card['product_rating'],
-                        card['review_count'],
-                        card['product_img'],
-                        json.dumps(card['product_specs']),
-                        card['all_reviews_link'],
-                        card['product_purchasing'],
-                        json.dumps(card['buying_options']),
-                        json.dumps(card['reviews']),
-                        json.dumps(card['mentions'])
-                    )
-            cursor.execute(query,values)
-            connection.commit()
-            card['id'] = cursor.lastrowid
-
-    #     scraped_data_insert_query = """
-    #                                     INSERT INTO rankidb.query (query,links,links_only,cards) 
-    #                                     VALUES (%s,%s,%s,%s);
-    #                                 """
-    #     values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['links_only']),json.dumps(result_of_query['cards']))
-    #     cursor.execute(scraped_data_insert_query,values)
-    #     connection.commit()
-    #     # cursor.close()
-    #     return result_of_query
+            # print(reviews)
+            for card in result_of_query['cards']:
+                if card['all_reviews_link'] == url:
+                    card['review_data'] = metrics
+                else:
+                    continue
+        except requests.exceptions.RequestException as e:
+                        print(e)
 
 
+ 
+    for card in result_of_query['cards']: 
+        query ="""INSERT INTO rankidb.product_test
+                    (
+                        product_url,entity,product_title,product_description,
+                        product_rating,review_count,product_img,product_specs,
+                        all_reviews_link,product_purchasing,buying_options,reviews,mentions
+                    ) 
+                    values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);    
+                """
+        values = (
+                    card['product_url'],
+                    card['entity'],
+                    card['product_title'],
+                    # '',
+                    card['product_description'],
+                    card['product_rating'],
+                    card['review_count'],
+                    card['product_img'],
+                    json.dumps(card['product_specs']),
+                    card['all_reviews_link'],
+                    card['product_purchasing'],
+                    json.dumps(card['buying_options']),
+                    json.dumps(card['review_data']),
+                    json.dumps(card['mentions'])
+                )
+        cursor.execute(query,values)
+        connection.commit()
+        card['id'] = cursor.lastrowid
+
+    scraped_data_insert_query = """
+                                    INSERT INTO rankidb.query_test (query,links,links_only,cards) 
+                                    VALUES (%s,%s,%s,%s);
+                                """
+    values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['links_only']),json.dumps(result_of_query['cards']))
+    cursor.execute(scraped_data_insert_query,values)
+    connection.commit()
+    cursor.close()
 
 
 
 
-    # if 'youtube.com' in serp_link['link']:
-    #     # print('Youtube Link')
-    #     id = serp_link['link'].replace('https://www.youtube.com/watch?v=', '')
-    #     try:
-    #         transcript = YouTubeTranscriptApi.get_transcript(id)
-    #     except:
-    #         continue
-    #     text = ''
-    #     for i in transcript:
-    #         text = text + i['text'] + ' '
-    #     transcript = text
-    #     serp_link['text'] = transcript
+
+
+# # # if 'youtube.com' in serp_link['link']:
+# # #     # print('Youtube Link')
+# # #     id = serp_link['link'].replace('https://www.youtube.com/watch?v=', '')
+# # #     try:
+# # #         transcript = YouTubeTranscriptApi.get_transcript(id)
+# # #     except:
+# # #         continue
+# # #     text = ''
+# # #     for i in transcript:
+# # #         text = text + i['text'] + ' '
+# # #     transcript = text
+# # #     serp_link['text'] = transcript
