@@ -6,7 +6,6 @@ import requests
 from bs4 import BeautifulSoup
 # import re
 import datetime
-import requests
 from requests_html import HTMLSession
 from youtube_transcript_api import YouTubeTranscriptApi
 import praw
@@ -132,7 +131,6 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             }
         
     else:
-
         result_of_query = {
             'query' : query,
             'links' : {
@@ -303,11 +301,14 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         doc = nlp(json_object)
         entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
         items = [x.text for x in doc.ents]
+        print(items)
         ello = Counter(items).most_common(10)
         ellos = []
         for k,v in ello:
             # print(k,v)
             ellos.append(k)
+        
+        print(ellos)
 
         # docs = []
         # docs.append(doc)

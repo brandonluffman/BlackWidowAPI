@@ -7,11 +7,13 @@ import praw
 from praw.models import MoreComments
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+import re
     
     
 # cats = ["Womens Bags", "Mens belts", "womens belts", "womens eyeglasses", "mens eyeglasses", "Mens sunglasses", "womens sunglasses", "beanies", "wallets", "mens hats", "womens hats", "womens necklaces", "mens chains", "mens bracelets", "womens bracelets", "womens earrings", "mens earrings", "mens rings", "womens rings", "Air Fryer", "Humidifier", "Comforter"]
-cats = ["Womens Bags"]
-
+# cats = ["Womens Bags"]
+# cats = ["Over Ear Headphones", "Earbuds", "Smartphones", "Tablets", "Routers", "Cameras", "TV", "Laptop", "Bluetooth Speakers", "Smart Watches", "Home Security System", "Mens Jeans", "Womens Leggings", "Mens Cardigans", "Bras", "Womens Underwear", "Mens Underwear", "Mens Gym Shorts", "Mens gym shirts"]
+cats = ["Blender", "Toaster", "Water Bottle", "Crock Pot", "Food Scale", "Skillet", "Grill", "Smoker", "Pellet Grills", "Food Storage Containers", "Beauty & Personal Care", "Sunscreen", "Body Lotion", "Face Lotion", "Deodorant", "Perfume", "Cologne", "Mens Razors", "Womens Razors", "Makeup Remover", "Mascara", "Lipstick", "Chapstick", "Nail Polish", "Blow Dryer", "Mens Electric Razor", "Exfoliator", "Men's Body Wash", "Women's Body Wash", "Womens Shampoo", "Men's Shampoo", "Womens Conditioner", "Mens Conditioner"]
 queries = ['best+' + cat.replace(' ', '+') for cat in cats]
 
 for query in queries:
@@ -79,8 +81,6 @@ for query in queries:
                     description = 'Nothing found'
 
                 disclaimer = 'disclaimer'
-
-                # print(description)
                 desc = description.replace('\n', '. ')
                 regex_pattern = r'http\S+|https\S+|#\w+|\d{1,2}:\d{2}|[^a-zA-Z0-9\s]+' # Matches timestamps, URLs, and hashtags
                 new_string = re.sub(regex_pattern, '', desc)
@@ -91,17 +91,19 @@ for query in queries:
                     mod = modified_string
                 
                 serp_link['text'] = mod
+                         
+                with open('annotation2.txt', "a") as f:
+                    f.write(mod)
+                    f.write('\n')
+                    print('Done')
 
-                print(mod)
             except HttpError as e:
                 mod = 'Error'
-                print('An error occurred: %s' % e)
-
-            
+                print('An error occurred: %s' % e)   
             
             final.append(mod)
+            print(f"Youtube -----> {mod}\n\n")
 
-           
 
         elif 'reddit.com' in serp_link['link']:
             reddit_read_only = praw.Reddit(client_id="6ziqexypJDMGiHf8tYfERA",         # your client id
@@ -111,16 +113,25 @@ for query in queries:
                 
             post_comments = []
 
-            for comment in submission.comments[:10]:
+            for comment in submission.comments[:5]:
                 if type(comment) == MoreComments:
                     continue
                 elif comment.body == '[removed]' or comment.body == '[deleted]' or comment.body[:6] == "Thanks":
                     pass
                 else:
-                    post_comments.append(comment.body.replace('\n', '').replace('\r', ''))
+                    cbody = comment.body.replace('\n', '').replace('\r', '')
+                    regex_pattern = r'http\S+|https\S+'
+                    new_comment = re.sub(regex_pattern, '', cbody)
+                    post_comments.append(new_comment)
+                             
+                    
 
             post = " ".join(post_comments)
-            # print(f"REDDIT -----> \n {post}")
+            with open('annotation2.txt', "a") as f:
+                        f.write(post)
+                        f.write('\n')
+                        print('Done')
+            print(f"Reddit -----> {post}\n\n")
             final.append(post)
 
         else:
@@ -139,8 +150,6 @@ for query in queries:
                     affiliate_content.append(heading.text.strip().replace('\n', ''))
                 else:
                     pass
-            
-
 
             lister = []
             for sentence in affiliate_content:
@@ -152,11 +161,15 @@ for query in queries:
                     lister.append(new_sentence)
 
             final_content = " ".join(lister)
+            with open('annotation2.txt', "a") as f:
+                    f.write(final_content)
+                    f.write('\n')
+                    print('Done')
             final.append(final_content)
-            print(f"Google -----> {final_content}")
+            print(f"Google -----> {final_content}\n\n")
 
     model = " ".join(final)
-    print(f"MODEL -----> \n {model}")
+    # print(f"MODEL -----> \n {model}")
             
     # with open('annotation.txt', "a") as f:
     #     f.write(model)
