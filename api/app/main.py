@@ -792,7 +792,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         except requests.exceptions.RequestException as e:
                         print(e)
 
-
+####
  
     for card in result_of_query['cards']: 
         query ="""INSERT INTO rankidb.product
