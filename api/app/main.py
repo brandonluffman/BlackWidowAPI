@@ -142,7 +142,7 @@ async def get_products(id: int, connection=Depends(get_connection)):
     cursor.execute(f"""SELECT * FROM product WHERE id={id};""")
     data = cursor.fetchone()
     if data is not None:
-        cursor.execute(f"""UPDATE rankidb.product SET request_count = request_count + 1 WHERE id = {id};""")
+        cursor.execute(f"""UPDATE rankidb.product_test SET request_count = request_count + 1 WHERE id = {id};""")
         connection.commit()
         cursor.close()
         return {
@@ -163,13 +163,14 @@ async def get_products(id: int, connection=Depends(get_connection)):
             "request_count": data[14]
         }
     else:
+
         return "Product not available"
 
 
 @app.get("/blackwidow/trending/products/")
 async def get_trending_products(connection=Depends(get_connection)):
     cursor = connection.cursor(buffered=True)
-    cursor.execute("SELECT * FROM rankidb.product ORDER BY request_count DESC")
+    cursor.execute("SELECT * FROM rankidb.product_test ORDER BY request_count DESC")
     data = cursor.fetchall()
     order = []
     for row in data:
@@ -196,7 +197,7 @@ async def get_trending_products(connection=Depends(get_connection)):
 @app.get("/blackwidow/trending/searches/")
 async def get_trending_products(connection=Depends(get_connection)):
     cursor = connection.cursor(buffered=True)
-    cursor.execute("SELECT * FROM rankidb.query ORDER BY request_count DESC")
+    cursor.execute("SELECT * FROM rankidb.query_test ORDER BY request_count DESC")
     data = cursor.fetchall()
     order = []
     for row in data:
@@ -221,13 +222,13 @@ async def read_item(item_id):
 async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)):
     cursor = connection.cursor(buffered=True)
     # return returner
-    global query_counts
-    if query_input in query_counts:
-        query_counts[query_input] += 1
-    else:
-        query_counts[query_input] = 1
+    # global query_counts
+    # if query_input in query_counts:
+    #     query_counts[query_input] += 1
+    # else:
+    #     query_counts[query_input] = 1
     
-    print(f"{query_input} query received")
+    # print(f"{query_input} query received")
     import re
 
     query = query_input.query
@@ -254,7 +255,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
     cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
-        cursor.execute(f"""UPDATE rankidb.query SET request_count = request_count + 1 WHERE query = '{query}' """)
+        cursor.execute(f"""UPDATE rankidb.query_test SET request_count = request_count + 1 WHERE query = '{query}' """)
         connection.commit()
         cursor.close()
         return {
@@ -801,7 +802,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
  
     for card in result_of_query['cards']: 
-        query ="""INSERT INTO rankidb.product
+        query ="""INSERT INTO rankidb.product_test
                     (
                         product_url,entity,product_title,product_description,
                         product_rating,review_count,product_img,product_specs,
@@ -831,7 +832,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         card['id'] = cursor.lastrowid
 
     scraped_data_insert_query = """
-                                    INSERT INTO rankidb.query (query,links,links_only,cards,request_count) 
+                                    INSERT INTO rankidb.query_test (query,links,links_only,cards,request_count) 
                                     VALUES (%s,%s,%s,%s,%s);
                                 """
     values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['links_only']),json.dumps(result_of_query['cards']),1)
