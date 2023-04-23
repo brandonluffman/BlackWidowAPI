@@ -139,7 +139,7 @@ def home():
 @app.get('/blackwidow/products/{id}')
 async def get_products(id: int, connection=Depends(get_connection)):
     cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT * FROM product WHERE id={id};""")
+    cursor.execute(f"""SELECT * FROM product_test WHERE id={id};""")
     data = cursor.fetchone()
     if data is not None:
         cursor.execute(f"""UPDATE rankidb.product_test SET request_count = request_count + 1 WHERE id = {id};""")
@@ -232,6 +232,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
     import re
 
     query = query_input.query
+    orig_input = query
     today = datetime.date.today()
     year = today.year
     match = re.search(f'{year}', query)
@@ -251,8 +252,22 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         query = 'best+' + query
     else:
         pass
-    
-    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
+    domain =  "http://google.com/search?q="
+    css_identifier_search_correction = '.p64x9c'
+    session = HTMLSession()
+    response = session.get(domain+query)
+    correction_p_tag = response.html.find(css_identifier_search_correction, first=True)
+    if correction_p_tag is not None:
+        corrections = correction_p_tag.find('a.gL9Hy b')
+        correction_text = " ".join([tag.text for tag in corrections])
+        query = query.replace(orig_input,correction_text)
+        print("Original Input:", orig_input)
+        print("Correct Input:", correction_text)
+
+        
+   
+        
+    cursor.execute(f"""SELECT * FROM rankidb.query_test WHERE query = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
         cursor.execute(f"""UPDATE rankidb.query_test SET request_count = request_count + 1 WHERE query = '{query}' """)
@@ -276,6 +291,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             'links_only': [],
             'cards': [],
         }
+
   
         remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
         domain = "http://google.com/search?q="
@@ -291,6 +307,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 response = session.get(url)
                 # print(url, response.status_code)
 
+                
                 css_identifier_result = ".tF2Cxc"
                 css_identifier_result_youtube = ".dFd2Tb"
                 css_identifier_result = ".tF2Cxc"
@@ -606,7 +623,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         'product_title' : result.find(css_product_title, first=True).text,
                         'product_description' : prod_desc,
                         'product_rating' : result.find(css_product_rating, first=True).text,
-                        'review_count' : result.find(css_product_review_count, first=True).text,
+                        'review_count' : int(result.find(css_product_review_count, first=True).text.replace(',','').replace(' reviews','')),
                         'product_img' : prod_img,
                         'product_specs' : product_specifications_list,
                         'all_reviews_link': reviews_link,
@@ -661,7 +678,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         hello.append(test)
                     else:
                         continue
-
+#
                 resers = []
                 for urler in hello:
                     res = get_tld(urler,as_object=True)
@@ -757,7 +774,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             # print("OUTERPUT", outerput)
             for i in range(len(outerput)):
                 rating = f'{len(outerput) - i} stars' if len(outerput) - i > 1 else  f'{len(outerput) - i} star'
-                review_count = outerput[i]
+                review_count = int(outerput[i].replace(',','').replace(' reviews',''))
                 metrics['rating_count'][rating] = review_count
             # reviews.append(outerput)
 
@@ -799,7 +816,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         except requests.exceptions.RequestException as e:
                         print(e)
 
-
+####
  
     for card in result_of_query['cards']: 
         query ="""INSERT INTO rankidb.product_test
