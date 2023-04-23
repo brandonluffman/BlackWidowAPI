@@ -120,10 +120,18 @@ class QueryInput(BaseModel):
 def home():
     return 'hello'
 
+# @app.get('/blackwidow/{entity}')
+# async def get_entity(entity: str,connection=Depends(get_connection)):
+#     cursor = connection.cursor(buffered=True)
+#     cursor.execute(f"""SELECT * FROM product WHERE entity = '{entity}';""")
+#     data = cursor.fetchall()
+#     return {'data': data}
+
 # @app.get('/blackwidow/products/{product}')
 # async def get_products(product: str, connection=Depends(get_connection)):
 #     cursor = connection.cursor(buffered=True)
-#     cursor.execute(f"""SELECT entity, product_img FROM product_test WHERE entity LIKE '%{product}%';""")
+#     cursor.execute(f"""SELECT entity, product_img FROM product WHERE entity LIKE '%{product}%';""")
+#     connection.commit()
 #     data = cursor.fetchall()
 #     return data
 
@@ -134,6 +142,8 @@ async def get_products(id: int, connection=Depends(get_connection)):
     cursor.execute(f"""SELECT * FROM product WHERE id={id};""")
     data = cursor.fetchone()
     if data is not None:
+        cursor.execute(f"""UPDATE rankidb.product SET request_count = request_count + 1 WHERE id = {id};""")
+        connection.commit()
         cursor.close()
         return {
             "id": data[0],
@@ -149,11 +159,58 @@ async def get_products(id: int, connection=Depends(get_connection)):
             "buying_link": data[10],
             "buying_options": json.loads(data[11]),
             "reviews": json.loads(data[12]),
-            "mentions": json.loads(data[13])
+            "mentions": json.loads(data[13]),
+            "request_count": data[14]
         }
     else:
-
         return "Product not available"
+
+
+@app.get("/blackwidow/trending/products/")
+async def get_trending_products(connection=Depends(get_connection)):
+    cursor = connection.cursor(buffered=True)
+    cursor.execute("SELECT * FROM rankidb.product ORDER BY request_count DESC")
+    data = cursor.fetchall()
+    order = []
+    for row in data:
+        structure = {
+            "request_count": row[14],
+            "id": row[0],
+            "url": row[1],
+            "entity": row[2],
+            "product_title": row[3],
+            "product_description": row[4],
+            "product_rating": row[5],
+            "review_count": row[6],
+            "product_img": row[7],
+            "product_specs": json.loads(row[8]),
+            "all_reviews_link": row[9],
+            "buying_link": row[10],
+            "buying_options": json.loads(row[11]),
+            "reviews": json.loads(row[12]),
+            "mentions": json.loads(row[13]),
+        }
+        order.append(structure)
+    return order
+
+@app.get("/blackwidow/trending/searches/")
+async def get_trending_products(connection=Depends(get_connection)):
+    cursor = connection.cursor(buffered=True)
+    cursor.execute("SELECT * FROM rankidb.query ORDER BY request_count DESC")
+    data = cursor.fetchall()
+    order = []
+    for row in data:
+        structure = {
+                "request_count": row[5],
+                "query": row[1],
+                "links": json.loads(row[2]),
+                "cards": json.loads(row[3]) ,
+                "links_only": json.loads(row[4])        
+            }
+        order.append(structure)
+    return order
+
+
 
 @app.get("/items/{item_id}")
 async def read_item(item_id):
@@ -194,9 +251,11 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
     else:
         pass
     
-    cursor.execute(f"""SELECT * FROM rankidb.query_test WHERE query = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
+        cursor.execute(f"""UPDATE rankidb.query SET request_count = request_count + 1 WHERE query = '{query}' """)
+        connection.commit()
         cursor.close()
         return {
                 "query": query_data[1],
@@ -742,13 +801,13 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
  
     for card in result_of_query['cards']: 
-        query ="""INSERT INTO rankidb.product_test
+        query ="""INSERT INTO rankidb.product
                     (
                         product_url,entity,product_title,product_description,
                         product_rating,review_count,product_img,product_specs,
-                        all_reviews_link,product_purchasing,buying_options,reviews,mentions
+                        all_reviews_link,product_purchasing,buying_options,reviews,mentions,request_count
                     ) 
-                    values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);    
+                    values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);    
                 """
         values = (
                     card['product_url'],
@@ -764,20 +823,22 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     card['product_purchasing'],
                     json.dumps(card['buying_options']),
                     json.dumps(card['review_data']),
-                    json.dumps(card['mentions'])
+                    json.dumps(card['mentions']),
+                    0
                 )
         cursor.execute(query,values)
         connection.commit()
         card['id'] = cursor.lastrowid
 
     scraped_data_insert_query = """
-                                    INSERT INTO rankidb.query_test (query,links,links_only,cards) 
-                                    VALUES (%s,%s,%s,%s);
+                                    INSERT INTO rankidb.query (query,links,links_only,cards,request_count) 
+                                    VALUES (%s,%s,%s,%s,%s);
                                 """
-    values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['links_only']),json.dumps(result_of_query['cards']))
+    values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['links_only']),json.dumps(result_of_query['cards']),1)
     cursor.execute(scraped_data_insert_query,values)
     connection.commit()
     cursor.close()
+    return result_of_query
 
 
 
