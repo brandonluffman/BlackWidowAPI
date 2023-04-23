@@ -225,6 +225,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
     import re
 
     query = query_input.query
+    orig_input = query
     today = datetime.date.today()
     year = today.year
     match = re.search(f'{year}', query)
@@ -244,7 +245,21 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         query = 'best+' + query
     else:
         pass
-    
+    domain =  "http://google.com/search?q="
+    css_identifier_search_correction = '.p64x9c'
+    session = HTMLSession()
+    response = session.get(domain+query)
+    correction_p_tag = response.html.find(css_identifier_search_correction, first=True)
+    if correction_p_tag is not None:
+        corrections = correction_p_tag.find('a.gL9Hy b')
+        correction_text = " ".join([tag.text for tag in corrections])
+        query = query.replace(orig_input,correction_text)
+        print("Original Input:", orig_input)
+        print("Correct Input:", correction_text)
+
+        
+   
+        
     cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
@@ -269,6 +284,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             'links_only': [],
             'cards': [],
         }
+
   
         remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
         domain = "http://google.com/search?q="
@@ -284,6 +300,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 response = session.get(url)
                 # print(url, response.status_code)
 
+                
                 css_identifier_result = ".tF2Cxc"
                 css_identifier_result_youtube = ".dFd2Tb"
                 css_identifier_result = ".tF2Cxc"
