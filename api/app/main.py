@@ -56,20 +56,20 @@ def get_connection():
 
 query_counts = {}
 
-@app.post("/query")
-async def query(query_type:str):
-    global query_counts
-    if query_type in query_counts:
-        query_counts[query_type] += 1
-    else:
-        query_counts[query_type] = 1
+# @app.post("/query")
+# async def query(query_type:str):
+#     global query_counts
+#     if query_type in query_counts:
+#         query_counts[query_type] += 1
+#     else:
+#         query_counts[query_type] = 1
     
-    return {"message": f"{query_type} query received"}
+#     return {"message": f"{query_type} query received"}
 
-@app.get("/counts")
-async def get_counts():
-    global query_counts
-    return {"query_counts": query_counts}
+# @app.get("/counts")
+# async def get_counts():
+#     global query_counts
+#     return {"query_counts": query_counts}
 
 # @app.middleware("http")
 # async def log_requests(request: Request, call_next,connection=get_connection()):
@@ -164,7 +164,13 @@ async def read_item(item_id):
 async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)):
     cursor = connection.cursor(buffered=True)
     # return returner
-
+    global query_counts
+    if query_input in query_counts:
+        query_counts[query_input] += 1
+    else:
+        query_counts[query_input] = 1
+    
+    print(f"{query_input} query received")
     import re
 
     query = query_input.query
