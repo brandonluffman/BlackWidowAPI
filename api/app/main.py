@@ -139,10 +139,10 @@ def home():
 @app.get('/blackwidow/products/{id}')
 async def get_products(id: int, connection=Depends(get_connection)):
     cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT * FROM product WHERE id={id};""")
+    cursor.execute(f"""SELECT * FROM product_test WHERE id={id};""")
     data = cursor.fetchone()
     if data is not None:
-        cursor.execute(f"""UPDATE rankidb.product SET request_count = request_count + 1 WHERE id = {id};""")
+        cursor.execute(f"""UPDATE rankidb.product_test SET request_count = request_count + 1 WHERE id = {id};""")
         connection.commit()
         cursor.close()
         return {
@@ -170,7 +170,7 @@ async def get_products(id: int, connection=Depends(get_connection)):
 @app.get("/blackwidow/trending/products/")
 async def get_trending_products(connection=Depends(get_connection)):
     cursor = connection.cursor(buffered=True)
-    cursor.execute("SELECT * FROM rankidb.product ORDER BY request_count DESC")
+    cursor.execute("SELECT * FROM rankidb.product_test ORDER BY request_count DESC")
     data = cursor.fetchall()
     order = []
     for row in data:
@@ -197,7 +197,7 @@ async def get_trending_products(connection=Depends(get_connection)):
 @app.get("/blackwidow/trending/searches/")
 async def get_trending_products(connection=Depends(get_connection)):
     cursor = connection.cursor(buffered=True)
-    cursor.execute("SELECT * FROM rankidb.query ORDER BY request_count DESC")
+    cursor.execute("SELECT * FROM rankidb.query_test ORDER BY request_count DESC")
     data = cursor.fetchall()
     order = []
     for row in data:
@@ -266,10 +266,10 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         
    
         
-    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.query_test WHERE query = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
-        cursor.execute(f"""UPDATE rankidb.query SET request_count = request_count + 1 WHERE query = '{query}' """)
+        cursor.execute(f"""UPDATE rankidb.query_test SET request_count = request_count + 1 WHERE query = '{query}' """)
         connection.commit()
         cursor.close()
         return {
@@ -464,13 +464,15 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
     
         # # all_ents = [entity for entity in items]
         # #
-        entities = ['jabra elite 45h','apple airpods max', 'bose quietcomfort','susvara.5. ksc75','sony wh-1000xm5','sennheiser hd800 s']
+        entities = ['jabra elite 45h','apple airpods max', 'bose quietcomfort','ksc75','sony wh-1000xm5']
         domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
-        entity_links = [domain + entity.replace(' ', '+') for entity in entities]
+        entity_links = [(domain + entity.replace(' ', '+'),entity) for entity in entities]
         final_card_links = []
-        for url in entity_links:
+        for item in entity_links:
             # print(url)
             try: 
+                url = item[0]
+                entity = item[1]
                 session = HTMLSession()
                 response = session.get(url)
                 # print(url, response.status_code)
@@ -478,7 +480,8 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 css_identifier_link = "span a"
                 css_identifier_test_2 = ".Ldx8hd a span"
                 css_product_reviews = ".QIrs8"
-                product_results = response.html.find(css_identifier_results)
+                css_product_title = "span.C7Lkve div.EI11Pd h3.tAxDx"
+                product_results = [item for item in response.html.find(css_identifier_results) if (item.find(css_product_title, first=True) and all(elem in item.find(css_product_title, first=True).text.lower() for elem in entity.split()))] 
                 output = []
                 link_count = 0
                 ### For Loop Below loops through queries to find Shopping Link and Integer Representing Amounnt of Stores that are linked to that product ###
@@ -503,7 +506,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                                 'Data' : product_link, 
                                 'Count' : int(product_compare),
                                 'Review Count' : review_num,
-                                'entity': entities[entity_links.index(url)]
+                                'entity': entity
                                 }
                                 output.append(cards)
                                 link_count += 1
@@ -750,7 +753,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                         'source' : source,
                 } 
                 metrics['reviews'].append(output)
-            
+            metrics['review_sources'] = list(set([item['source'] for item in metrics['reviews']]))
             css_identifier_result_two = '.aALHge'
             result_two = response.html.find(css_identifier_result_two)
             i = 5
@@ -813,7 +816,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 ####
  
     for card in result_of_query['cards']: 
-        query ="""INSERT INTO rankidb.product
+        query ="""INSERT INTO rankidb.product_test
                     (
                         product_url,entity,product_title,product_description,
                         product_rating,review_count,product_img,product_specs,
@@ -843,7 +846,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         card['id'] = cursor.lastrowid
 
     scraped_data_insert_query = """
-                                    INSERT INTO rankidb.query (query,links,cards,request_count) 
+                                    INSERT INTO rankidb.query_test (query,links,cards,request_count) 
                                     VALUES (%s,%s,%s,%s);
                                 """
     values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['cards']),1)
