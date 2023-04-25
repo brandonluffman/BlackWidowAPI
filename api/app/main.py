@@ -254,9 +254,19 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
     else:
         pass
     domain =  "http://google.com/search?q="
+    css_identifier_header_tag = '.O3S9Rb'
     css_identifier_search_correction = '.p64x9c'
     session = HTMLSession()
     response = session.get(domain+query)
+    header_tags = response.html.find(css_identifier_header_tag)
+    if header_tags: 
+        if 'Shopping' in [result.text for result in header_tags[:3]]:
+            pass
+        else:
+            return "INVALID PRODUCT QUERY"
+    else:
+        return "INVALID PRODUCT QUERY"
+
     correction_p_tag = response.html.find(css_identifier_search_correction, first=True)
     if correction_p_tag is not None:
         corrections = correction_p_tag.find('a.gL9Hy b')
@@ -268,10 +278,10 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         
    
         
-    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.query_test WHERE query_test = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
-        cursor.execute(f"""UPDATE rankidb.query SET request_count = request_count + 1 WHERE query = '{query}' """)
+        cursor.execute(f"""UPDATE rankidb.query_test SET request_count = request_count + 1 WHERE query = '{query}' """)
         connection.commit()
         cursor.close()
         return {
@@ -426,8 +436,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
                 final_content = " ".join(lister)
                 serp_link['text'] = final_content.lower()
-                result_of_query['links']['affiliate'].append(serp_link)
-        
+#                 result_of_query['links']['affiliate'].append(serp_link)
 
         final_text = []
         sources = list(result_of_query['links'].keys())
@@ -531,7 +540,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                                 continue
                         else:
                             continue
-                            print('no prooduct revieew count')
+                            # print('no prooduct revieew count')
                 if not output:
                     product_link = 'https://www.google.com' + product_result.find(css_identifier_link, first=True).attrs['href']
                     card = {
@@ -846,44 +855,44 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
 ####
  
-    # for card in result_of_query['cards']: 
-    #     query ="""INSERT INTO rankidb.product
-    #                 (
-    #                     product_url,entity,product_title,product_description,
-    #                     product_rating,review_count,product_img,product_specs,
-    #                     all_reviews_link,product_purchasing,buying_options,reviews,mentions,request_count
-    #                 ) 
-    #                 values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);    
-    #             """
-    #     values = (
-    #                 card['product_url'],
-    #                 card['entity'],
-    #                 card['product_title'],
-    #                 # '',
-    #                 card['product_description'],
-    #                 card['product_rating'],
-    #                 card['review_count'],
-    #                 card['product_img'],
-    #                 json.dumps(card['product_specs']),
-    #                 card['all_reviews_link'],
-    #                 card['product_purchasing'],
-    #                 json.dumps(card['buying_options']),
-    #                 json.dumps(card['review_data']),
-    #                 json.dumps(card['mentions']),
-    #                 0
-    #             )
-    #     cursor.execute(query,values)
-    #     connection.commit()
-    #     card['id'] = cursor.lastrowid
+    for card in result_of_query['cards']: 
+        query ="""INSERT INTO rankidb.product_test
+                    (
+                        product_url,entity,product_title,product_description,
+                        product_rating,review_count,product_img,product_specs,
+                        all_reviews_link,product_purchasing,buying_options,reviews,mentions,request_count
+                    ) 
+                    values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);    
+                """
+        values = (
+                    card['product_url'],
+                    card['entity'],
+                    card['product_title'],
+                    # '',
+                    card['product_description'],
+                    card['product_rating'],
+                    card['review_count'],
+                    card['product_img'],
+                    json.dumps(card['product_specs']),
+                    card['all_reviews_link'],
+                    card['product_purchasing'],
+                    json.dumps(card['buying_options']),
+                    json.dumps(card['review_data']),
+                    json.dumps(card['mentions']),
+                    0
+                )
+        cursor.execute(query,values)
+        connection.commit()
+        card['id'] = cursor.lastrowid
 
-    # scraped_data_insert_query = """
-    #                                 INSERT INTO rankidb.query (query,links,cards,request_count) 
-    #                                 VALUES (%s,%s,%s,%s);
-    #                             """
-    # values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['cards']),1)
-    # cursor.execute(scraped_data_insert_query,values)
-    # connection.commit()
-    # cursor.close()
+    scraped_data_insert_query = """
+                                    INSERT INTO rankidb.query_test (query,links,cards,request_count) 
+                                    VALUES (%s,%s,%s,%s);
+                                """
+    values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['cards']),1)
+    cursor.execute(scraped_data_insert_query,values)
+    connection.commit()
+    cursor.close()
     return result_of_query
 
 
@@ -891,15 +900,15 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
 
 
-# # # if 'youtube.com' in serp_link['link']:
-# # #     # print('Youtube Link')
-# # #     id = serp_link['link'].replace('https://www.youtube.com/watch?v=', '')
-# # #     try:
-# # #         transcript = YouTubeTranscriptApi.get_transcript(id)
-# # #     except:
-# # #         continue
-# # #     text = ''
-# # #     for i in transcript:
-# # #         text = text + i['text'] + ' '
-# # #     transcript = text
-# # #     serp_link['text'] = transcript
+# # # # if 'youtube.com' in serp_link['link']:
+# # # #     # print('Youtube Link')
+# # # #     id = serp_link['link'].replace('https://www.youtube.com/watch?v=', '')
+# # # #     try:
+# # # #         transcript = YouTubeTranscriptApi.get_transcript(id)
+# # # #     except:
+# # # #         continue
+# # # #     text = ''
+# # # #     for i in transcript:
+# # # #         text = text + i['text'] + ' '
+# # # #     transcript = text
+# # # #     serp_link['text'] = transcript

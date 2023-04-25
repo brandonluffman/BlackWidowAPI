@@ -19,21 +19,15 @@ else:
     pass
 domain =  "http://google.com/search?q="
 # css_identifier_search_correction_div = 'DdVMXd'
-css_identifier_cat_tag = '.O3S9Rb'
+css_identifier_header_tag = '.O3S9Rb'
 css_identifier_search_correction = '.p64x9c'
 session = HTMLSession()
 response = session.get(domain+query)
-css_identifier_result = '.O3S9Rb'
 
-results = response.html.find(css_identifier_result)
+header_tags = response.html.find(css_identifier_header_tag)
 
-if results: 
-    tags = []
-    for result in results[:3]:
-        # print(result.text)
-        tags.append(result.text)
-    
-    if 'Shopping' in tags[:]:
+if header_tags: 
+    if 'Shopping' in [result.text for result in header_tags[:3]]:
         print('Valid Product Query')
     else:
         print("INVALID PRODUCT QUERY")
