@@ -102,6 +102,8 @@ query_counts = {}
 
 # nlp = spacy.load(output_path+'/model-last')
  
+nlp = spacy.load('./output/model-last')
+
 
 origins = ["*"]
 
@@ -440,10 +442,9 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                     
         model_text = " ".join(final_text).lower()
         json_object = json.dumps(model_text)
-      
-
-        model = get_models()['product_ner']
-        doc = model(json_object)
+        doc = nlp(json_object)
+        # model = get_models()['product_ner']
+        # doc = model(json_object)
         entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
      
         items = [x.text for x in doc.ents]
@@ -454,15 +455,14 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
             # print(k,v)
             ellos.append(k)
         
-        # print(ellos)
+        print(ellos)
 
         docs = []
         docs.append(doc)
-        entities = [entity for entity in ellos][:1]
-     
+        entities = [entity for entity in ellos if len(entity) > 20]
     
         # all_ents = [entity for entity in items]
-        #
+        # #
         # entities = ['jabra elite 45h','apple airpods max', 'bose quietcomfort','ksc75','sony wh-1000xm5']
         domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
         entity_links = [(domain + entity.replace(' ', '+'),entity) for entity in entities]
@@ -480,7 +480,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 css_identifier_test_2 = ".Ldx8hd a span"
                 css_product_reviews = ".QIrs8"
                 css_product_title = "span.C7Lkve div.EI11Pd h3.tAxDx"
-                # product_results = [item for item in response.html.find(css_identifier_results) if (item.find(css_product_title, first=True) and entity in item.find(css_product_title, first=True).text.lower())] 
+                # product_results = [item for item in response.html.find(css_identifier_results) if (item.find(css_product_title, first=True) and all(elem in item.find(css_product_title, first=True).text.lower() for elem in entity.split()))] 
                 product_results = response.html.find(css_identifier_results)
                 output = []
                 link_count = 0

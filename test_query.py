@@ -19,17 +19,31 @@ else:
     pass
 domain =  "http://google.com/search?q="
 # css_identifier_search_correction_div = 'DdVMXd'
+css_identifier_cat_tag = '.O3S9Rb'
 css_identifier_search_correction = '.p64x9c'
 session = HTMLSession()
 response = session.get(domain+query)
-correction_p_tag = response.html.find(css_identifier_search_correction, first=True)
-print(correction_p_tag)
-corrections = correction_p_tag.find('a.gL9Hy b')
-correction_text = " ".join([tag.text for tag in corrections])
-print("Original Search:", orig_input)
-print("Correct Search:", correction_text)
-query = query.replace(orig_input,correction_text)
-print("SHOWING RESULTS FOR:", query)
+if response.html.find(css_identifier_cat_tag,first=True):
+    if response.html.find(css_identifier_cat_tag,first=True).text == 'Shopping':
+        print("Valid product")
+    else:
+        print("please enter a valid product.")
+else:
+    print("please enter a valid product")
+
+
+
+
+
+
+# correction_p_tag = response.html.find(css_identifier_search_correction, first=True)
+# print(correction_p_tag)
+# corrections = correction_p_tag.find('a.gL9Hy b')
+# correction_text = " ".join([tag.text for tag in corrections])
+# print("Original Search:", orig_input)
+# print("Correct Search:", correction_text)
+# query = query.replace(orig_input,correction_text)
+# print("SHOWING RESULTS FOR:", query)
 # print("Correction:", correction)
 # if correction is None:
 #     print('correct')
