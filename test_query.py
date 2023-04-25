@@ -30,7 +30,6 @@ results = response.html.find(css_identifier_result)
 if results: 
     tags = []
     for result in results[:3]:
-        # print(result.text)
         tags.append(result.text)
     
     if 'Shopping' in tags[:]:
