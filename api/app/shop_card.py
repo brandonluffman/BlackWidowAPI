@@ -27,7 +27,6 @@ for item in entity_links:
         link_count = 0
         ### For Loop Below loops through queries to find Shopping Link and Integer Representing Amounnt of Stores that are linked to that product ###
         for product_result in product_results[:5]:
-            # print(prod'uct_result)
             product_link = 'https://www.google.com' + product_result.find(css_identifier_link, first=True).attrs['href']
             product_compare = product_result.find(css_identifier_test_2, first=True)
             product_review_count = product_result.find(css_product_reviews, first=True).text
@@ -74,6 +73,7 @@ for item in entity_links:
                     else:
                         continue
                 else:
+                    continue
                     print('no prooduct revieew count')
 
 
