@@ -23,13 +23,31 @@ css_identifier_cat_tag = '.O3S9Rb'
 css_identifier_search_correction = '.p64x9c'
 session = HTMLSession()
 response = session.get(domain+query)
-if response.html.find(css_identifier_cat_tag,first=True):
-    if response.html.find(css_identifier_cat_tag,first=True).text == 'Shopping':
-        print("Valid product")
+css_identifier_result = '.O3S9Rb'
+
+results = response.html.find(css_identifier_result)
+
+if results: 
+    tags = []
+    for result in results[:3]:
+        # print(result.text)
+        tags.append(result.text)
+    
+    if 'Shopping' in tags[:]:
+        print('Valid Product Query')
     else:
-        print("please enter a valid product.")
+        print("INVALID PRODUCT QUERY")
 else:
     print("please enter a valid product")
+      
+# if response.html.find(css_identifier_cat_tag,first=True):
+#     print(response.html.find(css_identifier_cat_tag,first=True).text)
+#     # if response.html.find(css_identifier_cat_tag,first=True).text == 'Shopping':
+#     #     print("Valid product")
+#     # else:
+#     #     print("please enter a valid product.")
+# else:
+#     print("please enter a valid product")
 
 
 
