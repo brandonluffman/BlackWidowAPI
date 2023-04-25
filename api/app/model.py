@@ -13,17 +13,18 @@ import re
 # cats = ["Womens Bags", "Mens belts", "womens belts", "womens eyeglasses", "mens eyeglasses", "Mens sunglasses", "womens sunglasses", "beanies", "wallets", "mens hats", "womens hats", "womens necklaces", "mens chains", "mens bracelets", "womens bracelets", "womens earrings", "mens earrings", "mens rings", "womens rings", "Air Fryer", "Humidifier", "Comforter"]
 # cats = ["Womens Bags"]
 # cats = ["Over Ear Headphones", "Earbuds", "Smartphones", "Tablets", "Routers", "Cameras", "TV", "Laptop", "Bluetooth Speakers", "Smart Watches", "Home Security System", "Mens Jeans", "Womens Leggings", "Mens Cardigans", "Bras", "Womens Underwear", "Mens Underwear", "Mens Gym Shorts", "Mens gym shirts"]
-cats = ["Blender", "Toaster", "Water Bottle", "Crock Pot", "Food Scale", "Skillet", "Grill", "Smoker", "Pellet Grills", "Food Storage Containers", "Beauty & Personal Care", "Sunscreen", "Body Lotion", "Face Lotion", "Deodorant", "Perfume", "Cologne", "Mens Razors", "Womens Razors", "Makeup Remover", "Mascara", "Lipstick", "Chapstick", "Nail Polish", "Blow Dryer", "Mens Electric Razor", "Exfoliator", "Men's Body Wash", "Women's Body Wash", "Womens Shampoo", "Men's Shampoo", "Womens Conditioner", "Mens Conditioner"]
-cats = ["Water Bottle"]
+#cats = ["Blender", "Toaster", "Water Bottle", "Crock Pot", "Food Scale", "Skillet", "Grill", "Smoker", "Pellet Grills", "Food Storage Containers", "Beauty & Personal Care", "Sunscreen", "Body Lotion", "Face Lotion", "Deodorant", "Perfume", "Cologne", "Mens Razors", "Womens Razors", "Makeup Remover", "Mascara", "Lipstick", "Chapstick", "Nail Polish", "Blow Dryer", "Mens Electric Razor", "Exfoliator", "Men's Body Wash", "Women's Body Wash", "Womens Shampoo", "Men's Shampoo", "Womens Conditioner", "Mens Conditioner"]
+#cats = ["Water Bottle"]
+cats = ["Sunscreen", "Body Lotion", "Face Lotion", "Deodorant", "Perfume", "Cologne", "Mens Razors", "Womens Razors", "Makeup Remover", "Mascara", "Lipstick", "Chapstick", "Nail Polish", "Blow Dryer", "Mens Electric Razor", "Exfoliator", "Men's Body Wash", "Women's Body Wash", "Womens Shampoo", "Men's Shampoo", "Womens Conditioner", "Mens Conditioner", "Blender", "Toaster", "Water Bottle", "Crock Pot", "Food Scale", "Skillet", "Grill", "Smoker", "Pellet Grills", "Food Storage Containers", "beanies", "wallets", "mens hats", "womens hats", "womens necklaces", "mens chains", "mens bracelets", "womens bracelets", "womens earrings", "mens earrings", "mens rings", "womens rings", "Air Fryer", "Humidifier", "Comforter"]
 
 queries = ['best+' + cat.replace(' ', '+') for cat in cats]
 
-for query in queries[:5]:
-    
+for query in queries:
+    print(query)
     domain = "http://google.com/search?q="
-    google_query = query #http://google.com/search?q=best+Blender
-    reddit_query = (query + '+reddit').replace('+2023', '') #http://google.com/search?q=best+Blender+reddit
-    youtube_query = (query + '+youtube') #http://google.com/search?q=best+Blender+youtube
+    google_query = query
+    reddit_query = (query + '+reddit').replace('+2023', '')
+    youtube_query = (query + '+youtube')
     queries = [google_query, reddit_query, youtube_query]
     # print(queries)
     urls = [domain + query for query in queries]
@@ -43,27 +44,27 @@ for query in queries[:5]:
 
             # print(url, response.status_code)
 
-            css_identifier_result = ".tF2Cxc" #div class for each result on google results page
-            css_identifier_result_youtube = ".dFd2Tb" #The youtube div class for top youtube results in a googly '+youtube search'
-            css_identifier_link = ".yuRUbf a" #grabs the link of css_identifier result
-            css_identifier_link_youtube = '.DhN8Cf a' #grabs the link of the css_identifier_youtube result
+            css_identifier_result = ".tF2Cxc"
+            css_identifier_result_youtube = ".dFd2Tb"
+            css_identifier_link = ".yuRUbf a"
+            css_identifier_link_youtube = '.DhN8Cf a'
 
-            results = response.html.find(css_identifier_result) #google and reddit query results
-            youtube_results = response.html.find(css_identifier_result_youtube) #youtube results
+            results = response.html.find(css_identifier_result)
+            youtube_results = response.html.find(css_identifier_result_youtube)
 
             if results: 
                 for result in results[:1]:
                     serp_link = result.find(css_identifier_link, first=True).attrs['href']
-                    serp_links.append({'link':serp_link}) #appending the query links from the reddit or google data
+                    serp_links.append({'link':serp_link})
             else:
                 for youtube_result in youtube_results[:1]:
                     serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
-                    serp_links.append({'link':serp_link})#appending the query links from the youtube data
+                    serp_links.append({'link':serp_link})
 
         except requests.exceptions.RequestException as e:
             print(e)
 
-    print(serp_links)
+
     for serp_link in serp_links:
         if 'youtube.com' in serp_link['link']:
             API_KEY = 'AIzaSyC3ElvfankD9Hf6ujrk3MUH1WIm_cu87XI'
@@ -94,14 +95,14 @@ for query in queries[:5]:
                 
                 serp_link['text'] = mod
                          
-                # with open('annotation2.txt', "a") as f:
-                #     f.write(mod)
-                #     f.write('\n')
-                #     print('Done')
+                with open('annotation2.txt', "a", encoding='utf-8') as f:
+                    f.write(mod)
+                    f.write('\n')
+                    # print('Done')
 
             except HttpError as e:
                 mod = 'Error'
-                print('An error occurred: %s' % e)   
+                # print('An error occurred: %s' % e)   
             
             final.append(mod)
             # print(f"Youtube -----> {mod}\n\n")
@@ -129,11 +130,9 @@ for query in queries[:5]:
                     
 
             post = " ".join(post_comments)
-            # with open('annotation2.txt', "a") as f:
-            #             f.write(post)
-            #             f.write('\n')
-            #             print('Done')
-            # print(f"Reddit -----> {post}\n\n")
+            with open('annotation2.txt', "a",encoding='utf-8') as f:
+                        f.write(post)
+                        f.write('\n')
             final.append(post)
 
         else:
@@ -163,15 +162,13 @@ for query in queries[:5]:
                     lister.append(new_sentence)
 
             final_content = " ".join(lister)
-            # with open('annotation2.txt', "a") as f:
-            #         f.write(final_content)
-            #         f.write('\n')
-            #         print('Done')
-            # final.append(final_content)
-            # print(f"Google -----> {final_content}\n\n")
+            with open('annotation2.txt', "a",encoding='utf-8') as f:
+                    f.write(final_content)
+                    f.write('\n')
+            final.append(final_content)
+            print(f"Google -----> {final_content}\n\n")
 
     model = " ".join(final)
-    print("text:", model)
     print(f"MODEL -----> \n {model}")
             
     with open('annotation.txt', "a",encoding='utf-8') as f:

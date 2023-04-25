@@ -47,12 +47,12 @@ connection_pool = mysql.connector.pooling.MySQLConnectionPool(pool_size=20, **db
 def get_connection():
     return connection_pool.get_connection()
 
-# def get_models():
-#     output_path = os.getcwd() + '/output'
-#     models = {
-#         'product_ner': spacy.load(output_path+'/model-last')
-#     }
-#     return models
+def get_models():
+    output_path = os.getcwd() + '/output'
+    models = {
+        'product_ner': spacy.load(output_path+'/model-last')
+    }
+    return models
 
 query_counts = {}
 
@@ -266,10 +266,10 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
         
    
         
-    cursor.execute(f"""SELECT * FROM rankidb.query_test WHERE query = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
-        cursor.execute(f"""UPDATE rankidb.query_test SET request_count = request_count + 1 WHERE query = '{query}' """)
+        cursor.execute(f"""UPDATE rankidb.query SET request_count = request_count + 1 WHERE query = '{query}' """)
         connection.commit()
         cursor.close()
         return {
@@ -427,44 +427,43 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 result_of_query['links']['affiliate'].append(serp_link)
         
 
-        # final_text = []
-        # sources = list(result_of_query['links'].keys())
-        # for source in sources:
-        #     if source == 'reddit':
-        #         for link in result_of_query['links'][source]:
-        #             for comment in link['comments']:
-        #                 final_text.append(comment)
-        #     else:
-        #         for link in result_of_query['links'][source]:
-        #             final_text.append(link['text'])
+        final_text = []
+        sources = list(result_of_query['links'].keys())
+        for source in sources:
+            if source == 'reddit':
+                for link in result_of_query['links'][source]:
+                    for comment in link['comments']:
+                        final_text.append(comment)
+            else:
+                for link in result_of_query['links'][source]:
+                    final_text.append(link['text'])
                     
-        # model_text = " ".join(final_text).lower()
-        # return model_text
-        # json_object = json.dumps(model_text)
-        # return json_object
+        model_text = " ".join(final_text).lower()
+        json_object = json.dumps(model_text)
       
 
-        # model = get_models()['product_ner']
-        # doc = model(json_object)
-        # entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
+        model = get_models()['product_ner']
+        doc = model(json_object)
+        entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
      
-        # items = [x.text for x in doc.ents]
-        # # print(items)
-        # ello = Counter(items).most_common(10)
-        # ellos = []
-        # for k,v in ello:
-        #     # print(k,v)
-        #     ellos.append(k)
+        items = [x.text for x in doc.ents]
+        # print(items)
+        ello = Counter(items).most_common(10)
+        ellos = []
+        for k,v in ello:
+            # print(k,v)
+            ellos.append(k)
         
         # print(ellos)
 
-        # docs = []
-        # docs.append(doc)
-        # entities = [entity for entity in ellos]
+        docs = []
+        docs.append(doc)
+        entities = [entity for entity in ellos][:1]
+     
     
-        # # all_ents = [entity for entity in items]
-        # #
-        entities = ['jabra elite 45h','apple airpods max', 'bose quietcomfort','ksc75','sony wh-1000xm5']
+        # all_ents = [entity for entity in items]
+        #
+        # entities = ['jabra elite 45h','apple airpods max', 'bose quietcomfort','ksc75','sony wh-1000xm5']
         domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
         entity_links = [(domain + entity.replace(' ', '+'),entity) for entity in entities]
         final_card_links = []
@@ -481,7 +480,8 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 css_identifier_test_2 = ".Ldx8hd a span"
                 css_product_reviews = ".QIrs8"
                 css_product_title = "span.C7Lkve div.EI11Pd h3.tAxDx"
-                product_results = [item for item in response.html.find(css_identifier_results) if (item.find(css_product_title, first=True) and all(elem in item.find(css_product_title, first=True).text.lower() for elem in entity.split()))] 
+                # product_results = [item for item in response.html.find(css_identifier_results) if (item.find(css_product_title, first=True) and entity in item.find(css_product_title, first=True).text.lower())] 
+                product_results = response.html.find(css_identifier_results)
                 output = []
                 link_count = 0
                 ### For Loop Below loops through queries to find Shopping Link and Integer Representing Amounnt of Stores that are linked to that product ###
@@ -815,44 +815,44 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
 ####
  
-    for card in result_of_query['cards']: 
-        query ="""INSERT INTO rankidb.product_test
-                    (
-                        product_url,entity,product_title,product_description,
-                        product_rating,review_count,product_img,product_specs,
-                        all_reviews_link,product_purchasing,buying_options,reviews,mentions,request_count
-                    ) 
-                    values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);    
-                """
-        values = (
-                    card['product_url'],
-                    card['entity'],
-                    card['product_title'],
-                    # '',
-                    card['product_description'],
-                    card['product_rating'],
-                    card['review_count'],
-                    card['product_img'],
-                    json.dumps(card['product_specs']),
-                    card['all_reviews_link'],
-                    card['product_purchasing'],
-                    json.dumps(card['buying_options']),
-                    json.dumps(card['review_data']),
-                    json.dumps(card['mentions']),
-                    0
-                )
-        cursor.execute(query,values)
-        connection.commit()
-        card['id'] = cursor.lastrowid
+    # for card in result_of_query['cards']: 
+    #     query ="""INSERT INTO rankidb.product
+    #                 (
+    #                     product_url,entity,product_title,product_description,
+    #                     product_rating,review_count,product_img,product_specs,
+    #                     all_reviews_link,product_purchasing,buying_options,reviews,mentions,request_count
+    #                 ) 
+    #                 values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);    
+    #             """
+    #     values = (
+    #                 card['product_url'],
+    #                 card['entity'],
+    #                 card['product_title'],
+    #                 # '',
+    #                 card['product_description'],
+    #                 card['product_rating'],
+    #                 card['review_count'],
+    #                 card['product_img'],
+    #                 json.dumps(card['product_specs']),
+    #                 card['all_reviews_link'],
+    #                 card['product_purchasing'],
+    #                 json.dumps(card['buying_options']),
+    #                 json.dumps(card['review_data']),
+    #                 json.dumps(card['mentions']),
+    #                 0
+    #             )
+    #     cursor.execute(query,values)
+    #     connection.commit()
+    #     card['id'] = cursor.lastrowid
 
-    scraped_data_insert_query = """
-                                    INSERT INTO rankidb.query_test (query,links,cards,request_count) 
-                                    VALUES (%s,%s,%s,%s);
-                                """
-    values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['cards']),1)
-    cursor.execute(scraped_data_insert_query,values)
-    connection.commit()
-    cursor.close()
+    # scraped_data_insert_query = """
+    #                                 INSERT INTO rankidb.query (query,links,cards,request_count) 
+    #                                 VALUES (%s,%s,%s,%s);
+    #                             """
+    # values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['cards']),1)
+    # cursor.execute(scraped_data_insert_query,values)
+    # connection.commit()
+    # cursor.close()
     return result_of_query
 
 

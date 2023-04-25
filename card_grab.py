@@ -1,5 +1,34 @@
 from requests_html import HTMLSession
 import requests 
+import re
+import datetime
+
+
+query = str(input("search: "))
+orig_input = query
+today = datetime.date.today()
+year = today.year
+match = re.search(f'{year}', query)
+
+if 'best' not in query.lower() and match is None:
+    query = 'best+' + query + '+2023'
+elif match is None:
+    query = query + '+2023'
+elif 'best' not in query.lower():
+    query = 'best+' + query
+else:
+    pass
+domain =  "http://google.com/search?q="
+# css_identifier_search_correction_div = 'DdVMXd'
+css_identifier_search_correction = '.p64x9c'
+session = HTMLSession()
+response = session.get(domain+query)
+correction_p_tag = response.html.find(css_identifier_search_correction, first=True)
+corrections = correction_p_tag.find('a.gL9Hy b')
+correction_text = " ".join([tag.text for tag in corrections])
+query = query.replace(orig_input,correction_text)
+
+
 
 entities = ['jabra elite 45h','apple airpods max', 'bose quietcomfort','ksc75','sony wh-1000xm5','sennheiser hd 800 s']
 domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
@@ -26,4 +55,4 @@ for item in entity_links:
 
     except requests.exceptions.RequestException as e:
             print(e)
-print(entity_product_results)
+
