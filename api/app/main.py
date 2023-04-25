@@ -459,7 +459,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
 
         docs = []
         docs.append(doc)
-        entities = [entity for entity in ellos if len(entity) > 20]
+        entities = [entity for entity in ellos]
     
         # all_ents = [entity for entity in items]
         # #
@@ -485,7 +485,7 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 output = []
                 link_count = 0
                 ### For Loop Below loops through queries to find Shopping Link and Integer Representing Amounnt of Stores that are linked to that product ###
-                for product_result in product_results:
+                for product_result in product_results[:10]:
                     product_link = 'https://www.google.com' + product_result.find(css_identifier_link, first=True).attrs['href']
                     product_compare = product_result.find(css_identifier_test_2, first=True)
                     product_review_count = product_result.find(css_product_reviews, first=True).text
@@ -510,39 +510,70 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                                 }
                                 output.append(cards)
                                 link_count += 1
-
-                counts = []
-                for out in output:
-                    data = [out['Count'], out['Review Count']]
-                    counts.append(data) 
-                # print(counts)
-
-                count_list = []
-                for c in counts:
-                    count_list.append(c[0])
-            
-                max_count = max(count_list,default=0)
-                max_indexes = [i for i in range(len(count_list)) if count_list[i] == max_count]         
-                index_len = len(max_indexes)
-                if index_len == 1:
-                    max_index = max_indexes[0]
-
-                max_review_count = []
-                if index_len > 1:
-                    for max_index in max_indexes:
-                        max_review_count.append(counts[max_index][1])
-                    max_review = max(max_review_count)
-                    max_review_index = max_review_count.index(max_review)
-
-                    for count in counts:
-                        if max_review in count:
-                            max_card = count     
+                            else:
+                                continue
+                    else:
+                        if product_review_count:
+                            print(product_review_count)
+                            if len(product_review_count.split()) > 3:
+                                review_num = int(product_review_count.split()[5].replace(',',''))
+                            else:
+                                review_num = False
+                            if review_num:
+                                cards = {
+                                'Data' : product_link, 
+                                'Count' : 0,
+                                'Review Count' : review_num,
+                                'entity': entity
+                                }
+                                output.append(cards)
+                            else:
+                                continue
+                        else:
+                            continue
+                            print('no prooduct revieew count')
+                if not output:
+                    product_link = 'https://www.google.com' + product_result.find(css_identifier_link, first=True).attrs['href']
+                    card = {
+                                'Data' : product_link, 
+                                'Count' : 0,
+                                'Review Count' : 0,
+                                'entity': entity,
+                            }
+                    final_card_links.append(card)
                 else:
-                    max_card = counts[max_index]
+                    counts = []
+                    for out in output:
+                        data = [out['Count'], out['Review Count']]
+                        counts.append(data) 
+                    # print(counts)
 
-                indexer = counts.index(max_card)
-                final_card = output[indexer]
-                final_card_links.append(final_card)
+                    count_list = []
+                    for c in counts:
+                        count_list.append(c[0])
+                
+                    max_count = max(count_list,default=0)
+                    max_indexes = [i for i in range(len(count_list)) if count_list[i] == max_count]         
+                    index_len = len(max_indexes)
+                    if index_len == 1:
+                        max_index = max_indexes[0]
+
+                    max_review_count = []
+                    if index_len > 1:
+                        for max_index in max_indexes:
+                            max_review_count.append(counts[max_index][1])
+                        max_review = max(max_review_count)
+                        max_review_index = max_review_count.index(max_review)
+
+                        for count in counts:
+                            if max_review in count:
+                                max_card = count     
+                    else:
+                        max_card = counts[max_index]
+
+                    indexer = counts.index(max_card)
+                    final_card = output[indexer]
+                    final_card_links.append(final_card)
 
             except requests.exceptions.RequestException as e:
                     print(e)
