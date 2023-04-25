@@ -14,7 +14,9 @@ import re
 # cats = ["Womens Bags"]
 # cats = ["Over Ear Headphones", "Earbuds", "Smartphones", "Tablets", "Routers", "Cameras", "TV", "Laptop", "Bluetooth Speakers", "Smart Watches", "Home Security System", "Mens Jeans", "Womens Leggings", "Mens Cardigans", "Bras", "Womens Underwear", "Mens Underwear", "Mens Gym Shorts", "Mens gym shirts"]
 cats = ["Blender", "Toaster", "Water Bottle", "Crock Pot", "Food Scale", "Skillet", "Grill", "Smoker", "Pellet Grills", "Food Storage Containers", "Beauty & Personal Care", "Sunscreen", "Body Lotion", "Face Lotion", "Deodorant", "Perfume", "Cologne", "Mens Razors", "Womens Razors", "Makeup Remover", "Mascara", "Lipstick", "Chapstick", "Nail Polish", "Blow Dryer", "Mens Electric Razor", "Exfoliator", "Men's Body Wash", "Women's Body Wash", "Womens Shampoo", "Men's Shampoo", "Womens Conditioner", "Mens Conditioner"]
-queries = ['best+' + cat.replace(' ', '+') for cat in cats] #best+Blender
+cats = ["Water Bottle"]
+
+queries = ['best+' + cat.replace(' ', '+') for cat in cats]
 
 for query in queries[:5]:
     
@@ -82,9 +84,9 @@ for query in queries[:5]:
 
                 disclaimer = 'disclaimer'
                 desc = description.replace('\n', '. ')
-                regex_pattern = r'http\S+|https\S+|#\w+|\d{1,2}:\d{2}|[^a-zA-Z0-9\s]+' # Matches timestamps, URLs, and hashtags
+                regex_pattern = r'http\S+|www\S+|\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|#\w+' # Matches timestamps, URLs, and hashtags
                 new_string = re.sub(regex_pattern, '', desc)
-                modified_string = re.sub(r'\s{2,}', '. ', new_string)
+                modified_string = re.sub(r'\s{2,}', '', new_string)
                 try:
                     mod = modified_string[:modified_string.lower().index(disclaimer)]
                 except:
