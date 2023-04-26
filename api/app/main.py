@@ -453,31 +453,34 @@ async def blackwidow(query_input: QueryInput, request: Request):
                 serp_link['text'] = final_content.lower()
                 result_of_query['links']['affiliate'].append(serp_link)
   
-        # final_text = []
-        # sources = list(result_of_query['links'].keys())
-        # for source in sources:
-        #     if source == 'reddit':
-        #         for link in result_of_query['links'][source]:
-        #             for comment in link['comments']:
-        #                 final_text.append(comment)
-        #     else:
-        #         for link in result_of_query['links'][source]:
-        #             final_text.append(link['text'])
+        final_text = []
+        sources = list(result_of_query['links'].keys())
+        for source in sources:
+            if source == 'reddit':
+                for link in result_of_query['links'][source]:
+                    for comment in link['comments']:
+                        final_text.append(comment)
+            else:
+                for link in result_of_query['links'][source]:
+                    final_text.append(link['text'])
                     
-        # model_text = " ".join(final_text).lower()
-        # json_object = json.dumps(model_text)
-        # doc = nlp(json_object)
-        # # model = get_models()['product_ner']
-        # # doc = model(json_object)
-        # entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
-     
-        # items = [x.text for x in doc.ents]
-        # # print(items)
-        # ello = Counter(items).most_common(10)
-        # ellos = []
-        # for k,v in ello:
-        #     # print(k,v)
-        #     ellos.append(k)
+        model_text = " ".join(final_text).lower()
+        json_object = json.dumps(model_text)
+        doc = nlp(json_object)
+        # model = get_models()['product_ner']
+        # doc = model(json_object)
+        entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
+        cleaned_items = []
+        items = [ent.text for ent in doc.ents if ent.label_ == "PRODUCT"]
+        cleaner_item = re.sub(r'\s{2,}|[^\w&\s]', '', item)
+        cleaned_item = cleaner_item.lower()
+        cleaned_items.append(cleaned_item)
+
+        ello = Counter(cleaned_items).most_common(10)
+        ellos = []
+        for k,v in ello:
+            # print(k,v)
+            ellos.append(k)
         
         # print(ellos)
 
