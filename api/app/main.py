@@ -26,10 +26,10 @@ import mysql.connector
 
 app = FastAPI()
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler("requests.log")
-logger.addHandler(handler)
+# logger = logging.getLogger(__name__)
+# logger.setLevel(logging.DEBUG)
+# handler = logging.FileHandler("requests.log")
+# logger.addHandler(handler)
 
 # 
 
@@ -38,14 +38,25 @@ dbconfig = {
     "host": "rankidb.c39jpvgy5agc.us-east-2.rds.amazonaws.com",
     "user": "admin",
     "password": "Phxntom10$!",
-    "database": "rankidb"
+    "database": "rankidb",
+    'pool_size': 1
 }
-connection_pool = mysql.connector.pooling.MySQLConnectionPool(pool_size=20, **dbconfig)
+
+# connection_pool_two = mysql.connector.connect(pool_name='ranki_pool',pool_size=5,**dbconfig)
+def init_pool():
+    connection_pool = mysql.connector.pooling.MySQLConnectionPool(**dbconfig)
+    return connection_pool
 
 
+@app.middleware("http")
+async def create_pool(request: Request, call_next):
+    request.state.connection_pool = init_pool()
+    reponse = await call_next(request)
+    # request.state.connection_pool.close()
+    return reponse
 
-def get_connection():
-    return connection_pool.get_connection()
+# def get_connection():
+#     return connection_pool.get_connection()
 
 def get_models():
     output_path = os.getcwd() + '/output'
@@ -139,7 +150,8 @@ def home():
 
 
 @app.get('/blackwidow/products/{id}')
-async def get_products(id: int, connection=Depends(get_connection)):
+async def get_products(id: int,request: Request):
+    connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
     cursor.execute(f"""SELECT * FROM product_test WHERE id={id};""")
     data = cursor.fetchone()
@@ -170,7 +182,8 @@ async def get_products(id: int, connection=Depends(get_connection)):
 
 
 @app.get("/blackwidow/trending/products/")
-async def get_trending_products(connection=Depends(get_connection)):
+async def get_trending_products(request: Request):
+    connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
     cursor.execute("SELECT * FROM rankidb.product_test ORDER BY request_count DESC")
     data = cursor.fetchall()
@@ -197,7 +210,8 @@ async def get_trending_products(connection=Depends(get_connection)):
     return order
 
 @app.get("/blackwidow/trending/searches/")
-async def get_trending_products(connection=Depends(get_connection)):
+async def get_trending_products(request: Request):
+    connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
     cursor.execute("SELECT * FROM rankidb.query_test ORDER BY request_count DESC")
     data = cursor.fetchall()
@@ -220,7 +234,8 @@ async def read_item(item_id):
 
 
 @app.post('/blackwidow')
-async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)):
+async def blackwidow(query_input: QueryInput, request: Request):
+    connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
     # return returner
     # global query_counts
@@ -438,41 +453,41 @@ async def blackwidow(query_input: QueryInput, connection=Depends(get_connection)
                 serp_link['text'] = final_content.lower()
                 result_of_query['links']['affiliate'].append(serp_link)
   
-        final_text = []
-        sources = list(result_of_query['links'].keys())
-        for source in sources:
-            if source == 'reddit':
-                for link in result_of_query['links'][source]:
-                    for comment in link['comments']:
-                        final_text.append(comment)
-            else:
-                for link in result_of_query['links'][source]:
-                    final_text.append(link['text'])
+        # final_text = []
+        # sources = list(result_of_query['links'].keys())
+        # for source in sources:
+        #     if source == 'reddit':
+        #         for link in result_of_query['links'][source]:
+        #             for comment in link['comments']:
+        #                 final_text.append(comment)
+        #     else:
+        #         for link in result_of_query['links'][source]:
+        #             final_text.append(link['text'])
                     
-        model_text = " ".join(final_text).lower()
-        json_object = json.dumps(model_text)
-        doc = nlp(json_object)
-        # model = get_models()['product_ner']
-        # doc = model(json_object)
-        entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
+        # model_text = " ".join(final_text).lower()
+        # json_object = json.dumps(model_text)
+        # doc = nlp(json_object)
+        # # model = get_models()['product_ner']
+        # # doc = model(json_object)
+        # entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
      
-        items = [x.text for x in doc.ents]
-        # print(items)
-        ello = Counter(items).most_common(10)
-        ellos = []
-        for k,v in ello:
-            # print(k,v)
-            ellos.append(k)
+        # items = [x.text for x in doc.ents]
+        # # print(items)
+        # ello = Counter(items).most_common(10)
+        # ellos = []
+        # for k,v in ello:
+        #     # print(k,v)
+        #     ellos.append(k)
         
-        print(ellos)
+        # print(ellos)
 
-        docs = []
-        docs.append(doc)
-        entities = [entity for entity in ellos]
+        # docs = []
+        # docs.append(doc)
+        # entities = [entity for entity in ellos]
     
         # all_ents = [entity for entity in items]
         # #
-        # entities = ['jabra elite 45h','apple airpods max', 'bose quietcomfort','ksc75','sony wh-1000xm5']
+        entities = ['jabra elite 45h','apple airpods max', 'bose quietcomfort','ksc75','sony wh-1000xm5']
         domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
         entity_links = [(domain + entity.replace(' ', '+'),entity) for entity in entities]
         final_card_links = []
