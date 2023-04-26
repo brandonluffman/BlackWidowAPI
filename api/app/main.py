@@ -140,6 +140,7 @@ def home():
 #     data = cursor.fetchall()
 #     return {'data': data}
 
+<<<<<<< HEAD
 @app.get('/blackwidow/products/{product}')
 async def get_products(product: str, request: Request):
     connection = request.state.connection_pool.get_connection()
@@ -181,6 +182,53 @@ async def get_products(product: str, request: Request):
 
 #         return "Product not available"
 
+=======
+# @app.get('/blackwidow/products/{product}')
+# async def get_products(product: str, request):
+#     cursor = connection.cursor(buffered=True)
+#     cursor.execute(f"""SELECT entity, product_img FROM product WHERE entity LIKE '%{product}%';""")
+#     connection.commit()
+#     data = cursor.fetchall()
+#     return data
+
+
+@app.get('/blackwidow/products/{input}')
+async def get_products(input: str,request: Request):
+    connection = request.state.connection_pool.get_connection()
+    cursor = connection.cursor(buffered=True)
+    if input.isdigit():
+        input = int(input)
+        cursor.execute(f"""SELECT * FROM product_test WHERE id={input};""")
+        data = cursor.fetchone()
+        if data is not None:
+            cursor.execute(f"""UPDATE rankidb.product_test SET request_count = request_count + 1 WHERE id = {input};""")
+            connection.commit()
+            cursor.close()
+            return {
+                "id": data[0],
+                "url": data[1],
+                "entity": data[2],
+                "product_title": data[3],
+                "product_description": data[4],
+                "product_rating": data[5],
+                "review_count": data[6],
+                "product_img": data[7],
+                "product_specs": json.loads(data[8]),
+                "all_reviews_link": data[9],
+                "buying_link": data[10],
+                "buying_options": json.loads(data[11]),
+                "reviews": json.loads(data[12]),
+                "mentions": json.loads(data[13]),
+                "request_count": data[14]
+            }
+        else:
+            return "Product not available"
+    else:
+        cursor.execute(f"""SELECT id, entity, product_img FROM product WHERE entity LIKE '%{input}%';""")
+        connection.commit()
+        data = cursor.fetchall()
+        return data
+>>>>>>> 85627dd0a41df95cb3cf50bafadf0fe2b8edc059
 
 @app.get("/blackwidow/trending/products/")
 async def get_trending_products(request: Request):
