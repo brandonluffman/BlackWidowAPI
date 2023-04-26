@@ -140,49 +140,6 @@ def home():
 #     data = cursor.fetchall()
 #     return {'data': data}
 
-<<<<<<< HEAD
-@app.get('/blackwidow/products/{product}')
-async def get_products(product: str, request: Request):
-    connection = request.state.connection_pool.get_connection()
-    cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT entity, product_img FROM product WHERE entity LIKE '%{product}%';""")
-    connection.commit()
-    data = cursor.fetchall()
-    return data
-
-
-# @app.get('/blackwidow/products/{id}')
-# async def get_products(id: int,request: Request):
-#     connection = request.state.connection_pool.get_connection()
-#     cursor = connection.cursor(buffered=True)
-#     cursor.execute(f"""SELECT * FROM product_test WHERE id={id};""")
-#     data = cursor.fetchone()
-#     if data is not None:
-#         cursor.execute(f"""UPDATE rankidb.product_test SET request_count = request_count + 1 WHERE id = {id};""")
-#         connection.commit()
-#         cursor.close()
-#         return {
-#             "id": data[0],
-#             "url": data[1],
-#             "entity": data[2],
-#             "product_title": data[3],
-#             "product_description": data[4],
-#             "product_rating": data[5],
-#             "review_count": data[6],
-#             "product_img": data[7],
-#             "product_specs": json.loads(data[8]),
-#             "all_reviews_link": data[9],
-#             "buying_link": data[10],
-#             "buying_options": json.loads(data[11]),
-#             "reviews": json.loads(data[12]),
-#             "mentions": json.loads(data[13]),
-#             "request_count": data[14]
-#         }
-#     else:
-
-#         return "Product not available"
-
-=======
 # @app.get('/blackwidow/products/{product}')
 # async def get_products(product: str, request):
 #     cursor = connection.cursor(buffered=True)
@@ -228,7 +185,6 @@ async def get_products(input: str,request: Request):
         connection.commit()
         data = cursor.fetchall()
         return data
->>>>>>> 85627dd0a41df95cb3cf50bafadf0fe2b8edc059
 
 @app.get("/blackwidow/trending/products/")
 async def get_trending_products(request: Request):
@@ -521,9 +477,10 @@ async def blackwidow(query_input: QueryInput, request: Request):
         entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
         cleaned_items = []
         items = [ent.text for ent in doc.ents if ent.label_ == "PRODUCT"]
-        cleaner_item = re.sub(r'\s{2,}|[^\w&\s]', '', item)
-        cleaned_item = cleaner_item.lower()
-        cleaned_items.append(cleaned_item)
+        for item in items:
+            cleaner_item = re.sub(r'\s{2,}|[^\w&\s]', '', item)
+            cleaned_item = cleaner_item.lower()
+            cleaned_items.append(cleaned_item)
 
         ello = Counter(cleaned_items).most_common(10)
         ellos = []
@@ -535,11 +492,11 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
         # docs = []
         # docs.append(doc)
-        # entities = [entity for entity in ellos]
+        entities = [entity for entity in ellos]
     
         # all_ents = [entity for entity in items]
         # #
-        entities = ['jabra elite 45h','apple airpods max', 'bose quietcomfort','ksc75','sony wh-1000xm5']
+        # entities = ['jabra elite 45h','apple airpods max', 'bose quietcomfort','ksc75','sony wh-1000xm5']
         domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
         entity_links = [(domain + entity.replace(' ', '+'),entity) for entity in entities]
         final_card_links = []
@@ -878,7 +835,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
             # print("OUTERPUT", outerput)
             for i in range(len(outerput)):
                 rating = f'{len(outerput) - i} stars' if len(outerput) - i > 1 else  f'{len(outerput) - i} star'
-                review_count = int(outerput[i].replace(',','').replace(' reviews',''))
+                review_count = int(outerput[i].replace(',','').replace(' reviews','').replace(' review', ''))
                 metrics['rating_count'][rating] = review_count
             # reviews.append(outerput)
 

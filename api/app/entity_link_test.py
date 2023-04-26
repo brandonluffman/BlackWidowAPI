@@ -94,6 +94,7 @@ for item in items:
 
 ello = Counter(cleaned_items).most_common(10)
 print(ello)
+ent_mention_count = 0
 ellos = []
 i = 0
 for k,v in ello:
