@@ -23,6 +23,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import mysql.connector
 from itertools import chain
+from urllib.parse import urlparse
 
 
 app = FastAPI()
@@ -145,7 +146,7 @@ def home():
 async def get_products(product_id: int, request: Request):
     connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT * FROM product_test WHERE id={product_id};""")
+    cursor.execute(f"""SELECT * FROM rankidb.product_test WHERE id={product_id};""")
     data = cursor.fetchone()
     cursor.close()
     if data is None:
@@ -174,9 +175,9 @@ async def get_products(product_id: int, request: Request):
 async def get_products(input: str,request: Request):
     connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT id, entity, product_img FROM product_test WHERE entity LIKE '%{input}%';""")
+    cursor.execute(f"""SELECT id, entity, product_img FROM rankidb.product_test WHERE entity LIKE '%{input}%';""")
     product_data = cursor.fetchall()
-    cursor.execute(f"""SELECT query FROM query_test WHERE query LIKE '%{input}%'""")
+    cursor.execute(f"""SELECT query FROM rankidb.query_test WHERE query LIKE '%{input}%'""")
     query_data = list(chain(*cursor.fetchall()))
     cursor.close()
     return product_data + query_data
@@ -264,11 +265,11 @@ async def blackwidow(query_input: QueryInput, request: Request):
     }
 
     if 'best' not in query.lower() and match is None:
-        query = 'best+' + query + '+2023'
+        query = 'best ' + query + ' 2023'
     elif match is None:
-        query = query + '+2023'
+        query = query + ' 2023'
     elif 'best' not in query.lower():
-        query = 'best+' + query
+        query = 'best ' + query
     else:
         pass
     domain =  "http://google.com/search?q="
@@ -485,23 +486,24 @@ async def blackwidow(query_input: QueryInput, request: Request):
             # print(k,v)
             ellos.append(k)
         
-        # print(ellos)
+        print(ellos)
 
-        # docs = []
-        # docs.append(doc)
-        # entities = [entity for entity in ellos]
+        docs = []
+        docs.append(doc)
+        entities = [entity for entity in ellos]
     
         # all_ents = [entity for entity in items]
         # #
-        entities = ['jabra elite 45h','apple airpods max', 'bose quietcomfort','ksc75','sony wh-1000xm5']
+        # entities = ['jabra elite 45h','apple airpods max', 'bose quietcomfort','ksc75','sony wh-1000xm5']
         domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
-        entity_links = [(domain + entity.replace(' ', '+'),entity) for entity in entities]
+        entity_links = [(domain + entity.replace(' ', '+'),entity,entities.index(entity)+1) for entity in entities]
         final_card_links = []
         for item in entity_links:
             # print(url)
             try: 
                 url = item[0]
                 entity = item[1]
+                rank = item[2]
                 session = HTMLSession()
                 response = session.get(url)
                 # print(url, response.status_code)
@@ -536,7 +538,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
                                 'Data' : product_link, 
                                 'Count' : int(product_compare),
                                 'Review Count' : review_num,
-                                'entity': entity
+                                'entity': entity,
+                                'rank': rank
                                 }
                                 output.append(cards)
                                 link_count += 1
@@ -554,7 +557,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
                                 'Data' : product_link, 
                                 'Count' : 0,
                                 'Review Count' : review_num,
-                                'entity': entity
+                                'entity': entity,
+                                'rank': rank
                                 }
                                 output.append(cards)
                             else:
@@ -569,6 +573,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
                                 'Count' : 0,
                                 'Review Count' : 0,
                                 'entity': entity,
+                                'rank': rank
                             }
                     final_card_links.append(card)
                 else:
@@ -610,12 +615,15 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
 
 
-        card_urls = [[card['Data'],card['entity']] for card in final_card_links]
+        card_urls = [[card['Data'],card['entity'],card['rank']] for card in final_card_links]
         # print(card_urls)
         buying_links = []
         review_links = []
         for url in card_urls:
             try:
+                product_url = url[0]
+                card_entity = url[1]
+                card_rank = url[2]
                 session = HTMLSession()
                 response = session.get(url[0])
                 # print(url, response.status_code)
@@ -676,8 +684,9 @@ async def blackwidow(query_input: QueryInput, request: Request):
                         
                     output = {
                         'id': 0,
-                        'product_url': url[0],
-                        'entity': url[1],
+                        'rank': card_rank,
+                        'product_url': product_url,
+                        'entity': card_entity,
                         'product_title' : result.find(css_product_title, first=True).text,
                         'product_description' : prod_desc,
                         'product_rating' : result.find(css_product_rating, first=True).text,
@@ -697,14 +706,12 @@ async def blackwidow(query_input: QueryInput, request: Request):
             
       
         for card in result_of_query['cards']:
-            reddit_mentions = [{'link':item['link']} for item in result_of_query['links']['reddit'] if any(card['entity'] in comment for comment in item['comments'])]
-            affiliate_mentions = [{'link':item['link']} for item in result_of_query['links']['affiliate'] if card['entity'] in item['text']]
+            reddit_mentions = [{'link':item['link'], 'favicon': item['favicon']} for item in result_of_query['links']['reddit'] if any(card['entity'] in comment for comment in item['comments'])]
+            affiliate_mentions = [{'link':item['link'], 'favicon': item['favicon']} for item in result_of_query['links']['affiliate'] if card['entity'] in item['text']]
             youtube_mentions = [{'link':item['link']} for item in result_of_query['links']['youtube'] if card['entity'] in item['text']]
             card['mentions']['reddit'] = reddit_mentions
             card['mentions']['affiliate'] = affiliate_mentions
             card['mentions']['youtube'] = youtube_mentions
-      
-
 
 
         # buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
@@ -719,7 +726,22 @@ async def blackwidow(query_input: QueryInput, request: Request):
                 result = response.html.find(css_identifier_result,first=True)
                 table = result.find("#sh-osd__online-sellers-cont",first=True)
                 rows = table.find("tr div.kPMwsc a")
-                buying_options = list(set([a_tag.attrs['href'].replace('/url?q=','') for a_tag in rows]))
+                
+                # buying_options = list(set([a_tag.attrs['href'].replace('/url?q=','') for a_tag in rows]))
+                if table.find("a.b5ycib, shntl"):
+                    sold_by = list(set([urlparse(distrib.attrs['href'].replace('/url?q=','')).netloc for distrib in table.find("a.b5ycib, shntl")]))
+                else:
+                    sold_by = []
+                for card in result_of_query['cards']:
+                    if card['product_purchasing'] == url:
+                        card['buying_options'] = sold_by
+                    else:
+                        continue
+#                 for card in result_of_query['cards']:
+# `                   if card['product_purchasing'] == url:
+#                         card['buying_options'] = sold_by
+#                     else:
+#                         continue 
                 # for card in result_of_query['cards']:
                 #     if card['product_purchasing'] == url:
                 #         print(card['product_purchasing'])
@@ -730,35 +752,35 @@ async def blackwidow(query_input: QueryInput, request: Request):
             
                 # print(buying_options[:5])
 
-                hello = []
-                for test in buying_options:            
-                    if test[0:5] == 'https':
-                        hello.append(test)
-                    else:
-                        continue
-#
-                resers = []
-                for urler in hello:
-                    res = get_tld(urler,as_object=True)
-                    reser = res.fld
-                    resers.append(reser)
+#                 hello = []
+#                 for test in buying_options:            
+#                     if test[0:5] == 'https':
+#                         hello.append(test)
+#                     else:
+#                         continue
+# #
+#                 resers = []
+#                 for urler in hello:
+#                     res = get_tld(urler,as_object=True)
+#                     reser = res.fld
+#                     resers.append(reser)
 
-                i=0
-                newy = []
-                iland = []
-                for re in resers:
-                    if re not in newy:
-                        newy.append(re)
-                        iland.append(hello[i])
-                    else:
-                        continue
-                    i +=1
+#                 i=0
+#                 newy = []
+#                 iland = []
+#                 for re in resers:
+#                     if re not in newy:
+#                         newy.append(re)
+#                         iland.append(hello[i])
+#                     else:
+#                         continue
+#                     i +=1
 
-                for card in result_of_query['cards']:
-                    if card['product_purchasing'] == url:
-                        card['buying_options'] = iland
-                    else:
-                        continue
+#                 for card in result_of_query['cards']:
+#                     if card['product_purchasing'] == url:
+#                         card['buying_options'] = iland
+#                     else:
+#                         continue
 
             except requests.exceptions.RequestException as e:
                     print(e)
@@ -874,7 +896,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
         except requests.exceptions.RequestException as e:
                         print(e)
 
-####
+# ####
  
     for card in result_of_query['cards']: 
         query ="""INSERT INTO rankidb.product_test
