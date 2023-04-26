@@ -140,45 +140,46 @@ def home():
 #     data = cursor.fetchall()
 #     return {'data': data}
 
-# @app.get('/blackwidow/products/{product}')
-# async def get_products(product: str, connection=Depends(get_connection)):
-#     cursor = connection.cursor(buffered=True)
-#     cursor.execute(f"""SELECT entity, product_img FROM product WHERE entity LIKE '%{product}%';""")
-#     connection.commit()
-#     data = cursor.fetchall()
-#     return data
-
-
-@app.get('/blackwidow/products/{id}')
-async def get_products(id: int,request: Request):
+@app.get('/blackwidow/products/{product}')
+async def get_products(product: str, request: Request):
     connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT * FROM product_test WHERE id={id};""")
-    data = cursor.fetchone()
-    if data is not None:
-        cursor.execute(f"""UPDATE rankidb.product_test SET request_count = request_count + 1 WHERE id = {id};""")
-        connection.commit()
-        cursor.close()
-        return {
-            "id": data[0],
-            "url": data[1],
-            "entity": data[2],
-            "product_title": data[3],
-            "product_description": data[4],
-            "product_rating": data[5],
-            "review_count": data[6],
-            "product_img": data[7],
-            "product_specs": json.loads(data[8]),
-            "all_reviews_link": data[9],
-            "buying_link": data[10],
-            "buying_options": json.loads(data[11]),
-            "reviews": json.loads(data[12]),
-            "mentions": json.loads(data[13]),
-            "request_count": data[14]
-        }
-    else:
+    cursor.execute(f"""SELECT entity, product_img FROM product WHERE entity LIKE '%{product}%';""")
+    connection.commit()
+    data = cursor.fetchall()
+    return data
 
-        return "Product not available"
+
+# @app.get('/blackwidow/products/{id}')
+# async def get_products(id: int,request: Request):
+#     connection = request.state.connection_pool.get_connection()
+#     cursor = connection.cursor(buffered=True)
+#     cursor.execute(f"""SELECT * FROM product_test WHERE id={id};""")
+#     data = cursor.fetchone()
+#     if data is not None:
+#         cursor.execute(f"""UPDATE rankidb.product_test SET request_count = request_count + 1 WHERE id = {id};""")
+#         connection.commit()
+#         cursor.close()
+#         return {
+#             "id": data[0],
+#             "url": data[1],
+#             "entity": data[2],
+#             "product_title": data[3],
+#             "product_description": data[4],
+#             "product_rating": data[5],
+#             "review_count": data[6],
+#             "product_img": data[7],
+#             "product_specs": json.loads(data[8]),
+#             "all_reviews_link": data[9],
+#             "buying_link": data[10],
+#             "buying_options": json.loads(data[11]),
+#             "reviews": json.loads(data[12]),
+#             "mentions": json.loads(data[13]),
+#             "request_count": data[14]
+#         }
+#     else:
+
+#         return "Product not available"
 
 
 @app.get("/blackwidow/trending/products/")
