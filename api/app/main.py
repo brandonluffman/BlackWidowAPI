@@ -181,7 +181,7 @@ async def get_products(input: str,request: Request):
         else:
             return "Product not available"
     else:
-        cursor.execute(f"""SELECT entity, product_img FROM product WHERE entity LIKE '%{input}%';""")
+        cursor.execute(f"""SELECT id, entity, product_img FROM product WHERE entity LIKE '%{input}%';""")
         connection.commit()
         data = cursor.fetchall()
         return data
