@@ -476,21 +476,22 @@ async def blackwidow(query_input: QueryInput, request: Request):
         entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
         cleaned_items = []
         items = [ent.text for ent in doc.ents if ent.label_ == "PRODUCT"]
-        cleaner_item = re.sub(r'\s{2,}|[^\w&\s]', '', item)
-        cleaned_item = cleaner_item.lower()
-        cleaned_items.append(cleaned_item)
+        # cleaner_item = re.sub(r'\s{2,}|[^\w&\s]', '', item)
+        # cleaned_item = cleaner_item.lower()
+        # cleaned_items.append(cleaned_item)
 
-        ello = Counter(cleaned_items).most_common(10)
+        ello = Counter(items).most_common(10)
         ellos = []
         for k,v in ello:
             # print(k,v)
             ellos.append(k)
         
-        print(ellos)
+        # print(ellos)
 
         docs = []
         docs.append(doc)
         entities = [entity for entity in ellos]
+        print("ENTITIES:",entities)
     
         # all_ents = [entity for entity in items]
         # #
@@ -502,8 +503,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
             # print(url)
             try: 
                 url = item[0]
+                rank=item[2]
                 entity = item[1]
-                rank = item[2]
                 session = HTMLSession()
                 response = session.get(url)
                 # print(url, response.status_code)
@@ -612,7 +613,6 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
             except requests.exceptions.RequestException as e:
                     print(e)
-
 
 
         card_urls = [[card['Data'],card['entity'],card['rank']] for card in final_card_links]
@@ -787,7 +787,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
 
 
-        # review_links = ['https://www.google.com/shopping/product/6222956906177139429/reviews?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rate:5,rnum:10,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwiGjJrjr6D-AhWRFlkFHZ9SCFEQn08IWCgA', 'https://www.google.com/shopping/product/127770160929837065/reviews?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rate:5,rnum:10,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwiUtcXjr6D-AhWSMlkFHeU-DzIQn08ITSgA']
+    
+    #review_links = ['https://www.google.com/shopping/product/6222956906177139429/reviews?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rate:5,rnum:10,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwiGjJrjr6D-AhWRFlkFHZ9SCFEQn08IWCgA', 'https://www.google.com/shopping/product/127770160929837065/reviews?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rate:5,rnum:10,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwiUtcXjr6D-AhWSMlkFHeU-DzIQn08ITSgA']
     for url in review_links:
         metrics = {
             'rating_count': {},
@@ -896,7 +897,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
         except requests.exceptions.RequestException as e:
                         print(e)
 
-# ####
+####
  
     for card in result_of_query['cards']: 
         query ="""INSERT INTO rankidb.product_test
