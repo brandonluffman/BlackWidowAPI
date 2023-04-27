@@ -395,7 +395,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
                     except:
                         mod = modified_string
                     
-                    serp_link['text'] = mod.lower()
+                    serp_link['text'] = mod
 
                 except HttpError as e:
                     print('An error occurred: %s' % e)
@@ -419,7 +419,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
                     elif comment.body == '[removed]' or comment.body == '[deleted]' or comment.body[:6] == "Thanks":
                         pass
                     else:
-                        post_comments.append(comment.body.replace('\n', '').replace('\r', '').lower())
+                        post_comments.append(comment.body.replace('\n', '').replace('\r', ''))
                 serp_link['comments'] = post_comments
                 result_of_query['links']['reddit'].append(serp_link)
                 # print(post_comments)
@@ -455,7 +455,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
                             lister.append(new_sentence)
 
                     final_content = " ".join(lister)
-                    serp_link['text'] = final_content.lower()
+                    serp_link['text'] = final_content
                     result_of_query['links']['affiliate'].append(serp_link)
 
                 except requests.exceptions.RequestException as err:
@@ -488,7 +488,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
         items = [ent.text for ent in doc.ents if ent.label_ == "PRODUCT"]
         for item in items:
             cleaner_item = re.sub(r'\s{2,}|[^\w&\s]', '', item)
-            cleaned_item = cleaner_item.lower()
+            cleaned_item = cleaner_item
             cleaned_items.append(cleaned_item)
 
         ello = Counter(cleaned_items).most_common(10)
