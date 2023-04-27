@@ -146,7 +146,7 @@ def home():
 async def get_products(product_id: int, request: Request):
     connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT * FROM rankidb.product_test WHERE id={product_id};""")
+    cursor.execute(f"""SELECT * FROM rankidb.product WHERE id={product_id};""")
     data = cursor.fetchone()
     cursor.close()
     if data is None:
@@ -175,9 +175,9 @@ async def get_products(product_id: int, request: Request):
 async def get_products(input: str,request: Request):
     connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT id, entity, product_img FROM rankidb.product_test WHERE entity LIKE '%{input}%';""")
+    cursor.execute(f"""SELECT id, entity, product_img FROM rankidb.product WHERE entity LIKE '%{input}%';""")
     product_data = cursor.fetchall()
-    cursor.execute(f"""SELECT query FROM rankidb.query_test WHERE query LIKE '%{input}%'""")
+    cursor.execute(f"""SELECT query FROM rankidb.query WHERE query LIKE '%{input}%'""")
     query_data = list(chain(*cursor.fetchall()))
     cursor.close()
     return product_data + query_data
@@ -187,7 +187,7 @@ async def get_products(input: str,request: Request):
 async def get_trending_products(request: Request):
     connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
-    cursor.execute("SELECT * FROM rankidb.product_test ORDER BY request_count DESC")
+    cursor.execute("SELECT * FROM rankidb.product ORDER BY request_count DESC")
     data = cursor.fetchall()
     cursor.close()
     order = []
@@ -216,7 +216,7 @@ async def get_trending_products(request: Request):
 async def get_trending_products(request: Request):
     connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
-    cursor.execute("SELECT * FROM rankidb.query_test ORDER BY request_count DESC")
+    cursor.execute("SELECT * FROM rankidb.query ORDER BY request_count DESC")
     data = cursor.fetchall()
     cursor.close()
     order = []
@@ -297,10 +297,10 @@ async def blackwidow(query_input: QueryInput, request: Request):
         
    
         
-    cursor.execute(f"""SELECT * FROM rankidb.query_test WHERE query = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
-        cursor.execute(f"""UPDATE rankidb.query_test SET request_count = request_count + 1 WHERE query = '{query}' """)
+        cursor.execute(f"""UPDATE rankidb.query SET request_count = request_count + 1 WHERE query = '{query}' """)
         connection.commit()
         cursor.close()
         return {
@@ -391,7 +391,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
                     new_string = re.sub(regex_pattern, '', desc)
                     modified_string = re.sub(r'\s{2,}', '. ', new_string)
                     try:
-                        mod = modified_string[:modified_string.lower().index(disclaimer)]
+                        mod = modified_string[:modified_string.index(disclaimer)]
                     except:
                         mod = modified_string
                     
@@ -439,7 +439,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
                     best = 'best'
                     for heading in soup.find_all(["h2", "h3"]):
                         extract = heading.text.strip()
-                        if len(extract) > 10 and len(extract) < 200 and extract[-1] != '?' and best not in extract.lower():
+                        if len(extract) > 10 and len(extract) < 200 and extract[-1] != '?' and best not in extract:
                             affiliate_content.append(heading.text.strip().replace('\n', ''))
                         else:
                             pass
@@ -911,7 +911,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
 ####
  
     for card in result_of_query['cards']: 
-        query ="""INSERT INTO rankidb.product_test
+        query ="""INSERT INTO rankidb.product
                     (
                         product_url,entity,product_title,product_description,
                         product_rating,review_count,product_img,product_specs,
@@ -941,7 +941,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
         card['id'] = cursor.lastrowid
 
     scraped_data_insert_query = """
-                                    INSERT INTO rankidb.query_test (query,links,cards,request_count) 
+                                    INSERT INTO rankidb.query (query,links,cards,request_count) 
                                     VALUES (%s,%s,%s,%s);
                                 """
     values = (result_of_query['query'],json.dumps(result_of_query['links']),json.dumps(result_of_query['cards']),1)
