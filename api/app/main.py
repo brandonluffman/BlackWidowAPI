@@ -350,7 +350,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
                 
                 if results: 
-                    for result in results[:3]:
+                    for result in results[:8]:
                         serp_link = result.find(css_identifier_link, first=True).attrs['href'] 
                         serp_title = result.find(css_identifier_title, first=True).text
                         if result.find(css_favicon):
@@ -359,7 +359,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
                             serp_favicon = ' -- '
                         serp_links.append({'link':serp_link,'title':serp_title,'favicon':serp_favicon})
                 else:
-                    for youtube_result in youtube_results[:1]:
+                    for youtube_result in youtube_results[:3]:
                         serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
                         serp_title = result.find(css_identifier_title, first=True).text
                         serp_links.append({'link':serp_link,'title':serp_title})
