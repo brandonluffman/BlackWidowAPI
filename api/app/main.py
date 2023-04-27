@@ -25,98 +25,11 @@ import mysql.connector
 from itertools import chain
 from urllib.parse import urlparse
 
-
 app = FastAPI()
-
-# logger = logging.getLogger(__name__)
-# logger.setLevel(logging.DEBUG)
-# handler = logging.FileHandler("requests.log")
-# logger.addHandler(handler)
-
-# 
-
-
-dbconfig = {
-    "host": "rankidb.c39jpvgy5agc.us-east-2.rds.amazonaws.com",
-    "user": "admin",
-    "password": "Phxntom10$!",
-    "database": "rankidb",
-    'pool_size': 1
-}
-
-# connection_pool_two = mysql.connector.connect(pool_name='ranki_pool',pool_size=5,**dbconfig)
-def init_pool():
-    connection_pool = mysql.connector.pooling.MySQLConnectionPool(**dbconfig)
-    return connection_pool
-
-
-@app.middleware("http")
-async def create_pool(request: Request, call_next):
-    request.state.connection_pool = init_pool()
-    reponse = await call_next(request)
-    # request.state.connection_pool.close()
-    return reponse
-
-# def get_connection():
-#     return connection_pool.get_connection()
-
-def get_models():
-    output_path = os.getcwd() + '/output'
-    models = {
-        'product_ner': spacy.load(output_path+'/model-last')
-    }
-    return models
-
-query_counts = {}
-
-# @app.post("/query")
-# async def query(query_type:str):
-#     global query_counts
-#     if query_type in query_counts:
-#         query_counts[query_type] += 1
-#     else:
-#         query_counts[query_type] = 1
-    
-#     return {"message": f"{query_type} query received"}
-
-# @app.get("/counts")
-# async def get_counts():
-#     global query_counts
-#     return {"query_counts": query_counts}
-
-# @app.middleware("http")
-# async def log_requests(request: Request, call_next,connection=get_connection()):
-#     response = await call_next(request)
-#     # logger.info(f'QUERY: {query}')
-#     # data_dict = {k:v for k,v in data.items()}
-#     if request.method == 'POST':
-#         method = request.method
-#         path = request.url.path
-#         body = await request.body()
-#         body_str = body.decode('utf-8')
-#         status_code = response.status_code
-        
-
-#         cursor = connection.cursor(buffered=True)
-#         cursor.execute("INSERT INTO rankidb.request_logs (method, path, status_code, body) VALUES (%s, %s, %s,%s)", (method, path, status_code,body_str))
-#         connection.commit()
-#     return response
-
-# @app.get("/blackwidow/common_requests")
-# async def get_common_requests(connection=Depends(get_connection)):
-#     cursor = connection.cursor(buffered=True)
-#     cursor.execute("SELECT method, path, COUNT(*) as count FROM rankidb.request_logs GROUP BY method, path ORDER BY count DESC LIMIT 10")
-#     rows = cursor.fetchall()
-#     result = [{"method": row[0], "path": row[1], "count": row[2]} for row in rows]
-#     return result
-
-
 # output_path = os.getcwd() + '/output'
-
 # nlp = spacy.load(output_path+'/model-last')
  
 nlp = spacy.load('./output/model-last')
-
 
 origins = ["*"]
 
@@ -131,16 +44,37 @@ app.add_middleware(
 class QueryInput(BaseModel):
     query: str
 
+dbconfig = {
+    "host": "rankidb.c39jpvgy5agc.us-east-2.rds.amazonaws.com",
+    "user": "admin",
+    "password": "Phxntom10$!",
+    "database": "rankidb",
+    'pool_size': 1
+}
+
+def init_pool():
+    connection_pool = mysql.connector.pooling.MySQLConnectionPool(**dbconfig)
+    return connection_pool
+
+
+@app.middleware("http")
+async def create_pool(request: Request, call_next):
+    request.state.connection_pool = init_pool()
+    reponse = await call_next(request)
+    # request.state.connection_pool.close()
+    return reponse
+
+def get_models():
+    output_path = os.getcwd() + '/output'
+    models = {
+        'product_ner': spacy.load(output_path+'/model-last')
+    }
+    return models
+
+
 @app.post('/')
 def home():
     return 'hello'
-
-# @app.get('/blackwidow/{entity}')
-# async def get_entity(entity: str,connection=Depends(get_connection)):
-#     cursor = connection.cursor(buffered=True)
-#     cursor.execute(f"""SELECT * FROM product WHERE entity = '{entity}';""")
-#     data = cursor.fetchall()
-#     return {'data': data}
 
 @app.get('/blackwidow/products/product/{product_id}')
 async def get_products(product_id: int, request: Request):
