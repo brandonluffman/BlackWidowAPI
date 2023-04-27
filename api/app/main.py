@@ -476,11 +476,12 @@ async def blackwidow(query_input: QueryInput, request: Request):
         entities = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
         cleaned_items = []
         items = [ent.text for ent in doc.ents if ent.label_ == "PRODUCT"]
-        # cleaner_item = re.sub(r'\s{2,}|[^\w&\s]', '', item)
-        # cleaned_item = cleaner_item.lower()
-        # cleaned_items.append(cleaned_item)
+        for item in items:
+            cleaner_item = re.sub(r'\s{2,}|[^\w&\s]', '', item)
+            cleaned_item = cleaner_item.lower()
+            cleaned_items.append(cleaned_item)
 
-        ello = Counter(items).most_common(10)
+        ello = Counter(cleaned_items).most_common(10)
         ellos = []
         for k,v in ello:
             # print(k,v)
@@ -488,8 +489,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
         
         # print(ellos)
 
-        docs = []
-        docs.append(doc)
+        # docs = []
+        # docs.append(doc)
         entities = [entity for entity in ellos]
         print("ENTITIES:",entities)
     
@@ -855,7 +856,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
             # print("OUTERPUT", outerput)
             for i in range(len(outerput)):
                 rating = f'{len(outerput) - i} stars' if len(outerput) - i > 1 else  f'{len(outerput) - i} star'
-                review_count = int(outerput[i].replace(',','').replace(' reviews',''))
+                review_count = int(outerput[i].replace(',','').replace(' reviews','').replace(' review', ''))
                 metrics['rating_count'][rating] = review_count
             # reviews.append(outerput)
 
