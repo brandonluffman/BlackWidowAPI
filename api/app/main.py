@@ -333,9 +333,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
             try:
                 session = HTMLSession()
                 response = session.get(url)
-                # print(url, response.status_code)
-
-                
+                print(url, response.status_code)
                 css_identifier_result = ".tF2Cxc"
                 css_identifier_result_youtube = ".dFd2Tb"
                 css_identifier_result = ".tF2Cxc"
@@ -350,7 +348,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
                 
                 if results: 
-                    for result in results[:3]:
+                    for result in results[:8]:
                         serp_link = result.find(css_identifier_link, first=True).attrs['href'] 
                         serp_title = result.find(css_identifier_title, first=True).text
                         if result.find(css_favicon):
@@ -359,7 +357,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
                             serp_favicon = ' -- '
                         serp_links.append({'link':serp_link,'title':serp_title,'favicon':serp_favicon})
                 else:
-                    for youtube_result in youtube_results[:1]:
+                    for youtube_result in youtube_results[:3]:
                         serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
                         serp_title = result.find(css_identifier_title, first=True).text
                         serp_links.append({'link':serp_link,'title':serp_title})
@@ -427,36 +425,48 @@ async def blackwidow(query_input: QueryInput, request: Request):
                 # print(post_comments)
 
             else:
-                headers = {
-                            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                            "Accept-Language": "en",
-                            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
-                } 
-                r = requests.get(serp_link['link'], headers=headers)
-                soup = BeautifulSoup(r.text, 'html.parser')
-                affiliate_content = []
-                best = 'best'
-                for heading in soup.find_all(["h2", "h3"]):
-                    extract = heading.text.strip()
-                    if len(extract) > 10 and len(extract) < 200 and extract[-1] != '?' and best not in extract.lower():
-                        affiliate_content.append(heading.text.strip().replace('\n', ''))
-                    else:
-                        pass
+                try:
+                    headers = {
+                                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                                "Accept-Language": "en",
+                                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+                    } 
+                    r = requests.get(serp_link['link'], headers=headers, timeout=2)
+                    r.raise_for_status()
+                    
+                    soup = BeautifulSoup(r.text, 'html.parser')
+                    affiliate_content = []
+                    best = 'best'
+                    for heading in soup.find_all(["h2", "h3"]):
+                        extract = heading.text.strip()
+                        if len(extract) > 10 and len(extract) < 200 and extract[-1] != '?' and best not in extract.lower():
+                            affiliate_content.append(heading.text.strip().replace('\n', ''))
+                        else:
+                            pass
 
-                lister = []
+                    lister = []
 
-                for sentence in affiliate_content:
-                    if sentence[-1] != '.' and sentence[-1] != '!' and sentence[-1] != '?':
-                        new_sentence = sentence + '.'
-                        lister.append(new_sentence)
-                    else:
-                        new_sentence = sentence
-                        lister.append(new_sentence)
+                    for sentence in affiliate_content:
+                        if sentence[-1] != '.' and sentence[-1] != '!' and sentence[-1] != '?':
+                            new_sentence = sentence + '.'
+                            lister.append(new_sentence)
+                        else:
+                            new_sentence = sentence
+                            lister.append(new_sentence)
 
-                final_content = " ".join(lister)
-                serp_link['text'] = final_content.lower()
-                result_of_query['links']['affiliate'].append(serp_link)
-  
+                    final_content = " ".join(lister)
+                    serp_link['text'] = final_content.lower()
+                    result_of_query['links']['affiliate'].append(serp_link)
+
+                except requests.exceptions.RequestException as err:
+                    print ("OOps: Something Else",err)
+                except requests.exceptions.HTTPError as errh:
+                    print ("Http Error:",errh)
+                except requests.exceptions.ConnectionError as errc:
+                    print ("Error Connecting:",errc)
+                except requests.exceptions.Timeout as errt:
+                    print ("Timeout Error:",errt)
+                
         final_text = []
         sources = list(result_of_query['links'].keys())
         for source in sources:
@@ -468,7 +478,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
                 for link in result_of_query['links'][source]:
                     final_text.append(link['text'])
                     
-        model_text = " ".join(final_text).lower()
+        model_text = " ".join(final_text)
         json_object = json.dumps(model_text)
         doc = nlp(json_object)
         # model = get_models()['product_ner']
