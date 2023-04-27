@@ -3,36 +3,46 @@ import datetime
 from requests_html import HTMLSession
 
 
-query = str(input("search: "))
-orig_input = query
-today = datetime.date.today()
-year = today.year
-match = re.search(f'{year}', query)
+# query = str(input("search: "))
+# orig_input = query
+# today = datetime.date.today()
+# year = today.year
+# match = re.search(f'{year}', query)
 
-if 'best' not in query.lower() and match is None:
-    query = 'best+' + query + '+2023'
-elif match is None:
-    query = query + '+2023'
-elif 'best' not in query.lower():
-    query = 'best+' + query
-else:
-    pass
+# if 'best' not in query.lower() and match is None:
+#     query = 'best+' + query + '+2023'
+# elif match is None:
+#     query = query + '+2023'
+# elif 'best' not in query.lower():
+#     query = 'best+' + query
+# else:
+#     pass
 domain =  "http://google.com/search?q="
 # css_identifier_search_correction_div = 'DdVMXd'
-css_identifier_header_tag = '.O3S9Rb'
-css_identifier_search_correction = '.p64x9c'
-session = HTMLSession()
-response = session.get(domain+query)
+# css_identifier_header_tag = '.O3S9Rb'
+# css_identifier_search_correction = '.p64x9c'
+queries = ['best+headphones+2023','best+headphones+of+2023','best+headphones']
+css_identifier_site = '.VuuXrf'
+query_results = {}
+for query in queries:
+    session = HTMLSession()
+    response = session.get(domain+query)
+    sites = sorted(list(set([elem.text for elem in response.html.find(css_identifier_site)[:15]])))
+    print(sites)
 
-header_tags = response.html.find(css_identifier_header_tag)
 
-if header_tags: 
-    if 'Shopping' in [result.text for result in header_tags[:3]]:
-        print('Valid Product Query')
-    else:
-        print("INVALID PRODUCT QUERY")
-else:
-    print("please enter a valid product")
+
+
+
+# header_tags = response.html.find(css_identifier_header_tag)
+
+# if header_tags: 
+#     if 'Shopping' in [result.text for result in header_tags[:3]]:
+#         print('Valid Product Query')
+#     else:
+#         print("INVALID PRODUCT QUERY")
+# else:
+#     print("please enter a valid product")
       
 # if response.html.find(css_identifier_cat_tag,first=True):
 #     print(response.html.find(css_identifier_cat_tag,first=True).text)
