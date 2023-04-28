@@ -22,7 +22,7 @@ domain =  "http://google.com/search?q="
 # css_identifier_header_tag = '.O3S9Rb'
 # css_identifier_search_correction = '.p64x9c'
 queries = ['best+headphones+2023','best+headphones+of+2023','best+headphones']
-css_identifier_site = '.VuuXrf'
+css_identifier_site = '.LC20lb, MBeuO, DKV0Md'
 query_results = {}
 for query in queries:
     session = HTMLSession()
