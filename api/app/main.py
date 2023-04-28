@@ -56,7 +56,6 @@ def init_pool():
     connection_pool = mysql.connector.pooling.MySQLConnectionPool(**dbconfig)
     return connection_pool
 
-
 @app.middleware("http")
 async def create_pool(request: Request, call_next):
     request.state.connection_pool = init_pool()
@@ -70,11 +69,6 @@ def get_models():
         'product_ner': spacy.load(output_path+'/model-last')
     }
     return models
-
-
-@app.post('/')
-def home():
-    return 'hello'
 
 @app.get('/blackwidow/products/product/{product_id}')
 async def get_products(product_id: int, request: Request):
@@ -165,24 +159,10 @@ async def get_trending_products(request: Request):
     return order
 
 
-
-@app.get("/items/{item_id}")
-async def read_item(item_id):
-    return {"item_id": item_id}
-
-
 @app.post('/blackwidow')
 async def blackwidow(query_input: QueryInput, request: Request):
     connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
-    # return returner
-    # global query_counts
-    # if query_input in query_counts:
-    #     query_counts[query_input] += 1
-    # else:
-    #     query_counts[query_input] = 1
-    
-    # print(f"{query_input} query received")
     import re
 
     query = query_input.query
