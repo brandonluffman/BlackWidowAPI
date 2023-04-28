@@ -261,7 +261,6 @@ async def blackwidow(query_input: QueryInput, request: Request):
             }
         else:
             pass    
-    #     return ("accurate_match", '')
         result_of_query = {
             'query' : query,
             'links' : {
