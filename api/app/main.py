@@ -215,15 +215,11 @@ async def blackwidow(query_input: QueryInput, request: Request):
     session = HTMLSession()
     response = session.get(domain+query)
     header_tags = response.html.find(css_identifier_header_tag)
-    if header_tags: 
-        if 'Shopping' in [result.text for result in header_tags[:3]]:
-            pass
-        else:
-            return "INVALID PRODUCT QUERY"
+    if 'Shopping' in [result.text for result in header_tags[:3]]:
+        pass
     else:
         return "INVALID PRODUCT QUERY"
 
-    
     if response.html.find(css_identifier_search_correction, first=True) is not None:
         correction_p_tag = response.html.find(css_identifier_search_correction, first=True)
         corrections = correction_p_tag.find('a.gL9Hy', first=True)
@@ -232,6 +228,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
         query = correction_text
         print("Correction:", query)
 
+        
     cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
     exact_match = cursor.fetchone()
     if exact_match is not None:
@@ -264,6 +261,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
             }
         else:
             pass    
+    #     return ("accurate_match", '')
         result_of_query = {
             'query' : query,
             'links' : {
@@ -274,7 +272,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
             'cards': [],
         }
 
-
+  
         remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
         domain = "http://google.com/search?q="
         google_query = query
@@ -457,7 +455,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
         # docs.append(doc)
         entities = [entity for entity in ellos]
         print("ENTITIES:",entities)
-
+    
         # all_ents = [entity for entity in items]
         # #
         # entities = ['jabra elite 45h','apple airpods max', 'bose quietcomfort','ksc75','sony wh-1000xm5']
@@ -669,7 +667,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
                     print(e)
 
             
-
+      
         for card in result_of_query['cards']:
             reddit_mentions = [{'link':item['link'], 'favicon': item['favicon']} for item in result_of_query['links']['reddit'] if any(card['entity'] in comment for comment in item['comments'])]
             affiliate_mentions = [{'link':item['link'], 'favicon': item['favicon']} for item in result_of_query['links']['affiliate'] if card['entity'] in item['text']]
@@ -702,11 +700,11 @@ async def blackwidow(query_input: QueryInput, request: Request):
                         card['buying_options'] = sold_by
                     else:
                         continue
-    #                 for card in result_of_query['cards']:
-    # `                   if card['product_purchasing'] == url:
-    #                         card['buying_options'] = sold_by
-    #                     else:
-    #                         continue 
+#                 for card in result_of_query['cards']:
+# `                   if card['product_purchasing'] == url:
+#                         card['buying_options'] = sold_by
+#                     else:
+#                         continue 
                 # for card in result_of_query['cards']:
                 #     if card['product_purchasing'] == url:
                 #         print(card['product_purchasing'])
@@ -717,43 +715,43 @@ async def blackwidow(query_input: QueryInput, request: Request):
             
                 # print(buying_options[:5])
 
-    #                 hello = []
-    #                 for test in buying_options:            
-    #                     if test[0:5] == 'https':
-    #                         hello.append(test)
-    #                     else:
-    #                         continue
-    # #
-    #                 resers = []
-    #                 for urler in hello:
-    #                     res = get_tld(urler,as_object=True)
-    #                     reser = res.fld
-    #                     resers.append(reser)
+#                 hello = []
+#                 for test in buying_options:            
+#                     if test[0:5] == 'https':
+#                         hello.append(test)
+#                     else:
+#                         continue
+# #
+#                 resers = []
+#                 for urler in hello:
+#                     res = get_tld(urler,as_object=True)
+#                     reser = res.fld
+#                     resers.append(reser)
 
-    #                 i=0
-    #                 newy = []
-    #                 iland = []
-    #                 for re in resers:
-    #                     if re not in newy:
-    #                         newy.append(re)
-    #                         iland.append(hello[i])
-    #                     else:
-    #                         continue
-    #                     i +=1
+#                 i=0
+#                 newy = []
+#                 iland = []
+#                 for re in resers:
+#                     if re not in newy:
+#                         newy.append(re)
+#                         iland.append(hello[i])
+#                     else:
+#                         continue
+#                     i +=1
 
-    #                 for card in result_of_query['cards']:
-    #                     if card['product_purchasing'] == url:
-    #                         card['buying_options'] = iland
-    #                     else:
-    #                         continue
+#                 for card in result_of_query['cards']:
+#                     if card['product_purchasing'] == url:
+#                         card['buying_options'] = iland
+#                     else:
+#                         continue
 
             except requests.exceptions.RequestException as e:
                     print(e)
 
 
 
-
-    #review_links = ['https://www.google.com/shopping/product/6222956906177139429/reviews?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rate:5,rnum:10,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwiGjJrjr6D-AhWRFlkFHZ9SCFEQn08IWCgA', 'https://www.google.com/shopping/product/127770160929837065/reviews?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rate:5,rnum:10,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwiUtcXjr6D-AhWSMlkFHeU-DzIQn08ITSgA']
+    
+        #review_links = ['https://www.google.com/shopping/product/6222956906177139429/reviews?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rate:5,rnum:10,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwiGjJrjr6D-AhWRFlkFHZ9SCFEQn08IWCgA', 'https://www.google.com/shopping/product/127770160929837065/reviews?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rate:5,rnum:10,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwiUtcXjr6D-AhWSMlkFHeU-DzIQn08ITSgA']
         for url in review_links:
             metrics = {
                 'rating_count': {},
@@ -862,8 +860,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
             except requests.exceptions.RequestException as e:
                             print(e)
 
-        ####
-
+####
+ 
     for card in result_of_query['cards']: 
         query ="""INSERT INTO rankidb.product
                     (
