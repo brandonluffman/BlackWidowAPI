@@ -212,26 +212,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
     session = HTMLSession()
     response = session.get(domain+query)
     header_tags = response.html.find(css_identifier_header_tag)
-    if header_tags: 
-        if 'Shopping' in [result.text for result in header_tags[:3]]:
-            pass
-        else:
-            return "INVALID PRODUCT QUERY"
-    else:
-        return "INVALID PRODUCT QUERY"
 
-    
-    if response.html.find(css_identifier_search_correction, first=True) is not None:
-        correction_p_tag = response.html.find(css_identifier_search_correction, first=True)
-        corrections = correction_p_tag.find('a.gL9Hy', first=True)
-        correction_text = corrections.text
-        print('Original Input:', query)
-        query = correction_text
-        print("Correction:", query)
-
-        
-   
-        
+          
     cursor.execute(f"""SELECT * FROM rankidb.query_test WHERE query = '{query}';""")
     query_data = cursor.fetchone()
     if query_data is not None:
@@ -253,7 +235,25 @@ async def blackwidow(query_input: QueryInput, request: Request):
                 'youtube': [],
             },
             'cards': [],
-        }
+    }
+
+
+    if header_tags: 
+        if 'Shopping' in [result.text for result in header_tags[:3]]:
+            pass
+        else:
+            return "INVALID PRODUCT QUERY"
+    else:
+        return "INVALID PRODUCT QUERY"
+
+    
+    if response.html.find(css_identifier_search_correction, first=True) is not None:
+        correction_p_tag = response.html.find(css_identifier_search_correction, first=True)
+        corrections = correction_p_tag.find('a.gL9Hy', first=True)
+        correction_text = corrections.text
+        print('Original Input:', query)
+        query = correction_text
+        print("Correction:", query)
 
   
         remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
