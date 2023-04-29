@@ -225,11 +225,20 @@ async def blackwidow(query_input: QueryInput, request: Request):
         # print("KEYWORDS:",keywords)
         match_query = """SELECT * FROM rankidb.query WHERE """
         in_condition = "query LIKE "
-        for i in range(len(keywords)):
-            if i == len(keywords) - 1:
-                match_query = match_query + in_condition + f"'%{keywords[i]}%';"
-            else:
-                match_query = match_query + in_condition + f"'%{keywords[i]}%' AND "
+        # for i in range(len(keywords)):
+        #     if i == len(keywords) - 1:
+        #         match_query = match_query + in_condition + f"'%{keywords[i]}%';"
+        #     else:
+        #         match_query = match_query + in_condition + f"'%{keywords[i]}%' AND "
+
+
+        ### CODE TO MAKE ABOVE MORE EFFICIENT ###
+        conditions = [f"{in_condition}'%{kw}%'" for kw in keywords]
+        match_query = match_query + " AND ".join(conditions) + ";" 
+
+
+
+
         # print(match_query)
         cursor.execute(match_query)
         accurate_match = cursor.fetchone()
@@ -277,25 +286,65 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
     t0 = timer()
 
-    for url in urls:
-        try:
-            session = HTMLSession()
-            response = session.get(url)
-            # print(url, response.status_code)
-            css_identifier_result = ".tF2Cxc"
-            css_identifier_result_youtube = ".dFd2Tb"
-            css_identifier_result = ".tF2Cxc"
-            css_identifier_title = "h3"
-            css_identifier_link = ".yuRUbf a"
-            css_identifier_link_youtube = '.DhN8Cf a'
-            css_identifier_text = ".VwiC3b"
-            css_favicon = '.eqA2re img'
+    # for url in urls:
+    #     try:
+    #         session = HTMLSession()
+    #         response = session.get(url)
+    #         # print(url, response.status_code)
+    #         css_identifier_result = ".tF2Cxc"
+    #         css_identifier_result_youtube = ".dFd2Tb"
+    #         css_identifier_result = ".tF2Cxc"
+    #         css_identifier_title = "h3"
+    #         css_identifier_link = ".yuRUbf a"
+    #         css_identifier_link_youtube = '.DhN8Cf a'
+    #         css_identifier_text = ".VwiC3b"
+    #         css_favicon = '.eqA2re img'
 
-            results = response.html.find(css_identifier_result)
-            youtube_results = response.html.find(css_identifier_result_youtube)
+    #         results = response.html.find(css_identifier_result)
+    #         youtube_results = response.html.find(css_identifier_result_youtube)
 
             
-            if results: 
+    #         if results: 
+    #             for result in results[:8]:
+    #                 serp_link = result.find(css_identifier_link, first=True).attrs['href'] 
+    #                 serp_title = result.find(css_identifier_title, first=True).text
+    #                 if result.find(css_favicon):
+    #                     serp_favicon = result.find(css_favicon, first=True).attrs['src']
+    #                 else:
+    #                     serp_favicon = 'NA'
+    #                 serp_links.append({'link':serp_link,'title':serp_title,'favicon':serp_favicon})
+    #         else:
+    #             for youtube_result in youtube_results[:3]:
+    #                 serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
+    #                 serp_title = result.find(css_identifier_title, first=True).text
+    #                 serp_links.append({'link':serp_link,'title':serp_title})
+
+    #     except requests.exceptions.RequestException as e:
+    #         print(e)
+
+    session = HTMLSession()
+    visited_urls = set()
+
+    try:
+        for url in urls:
+            if url in visited_urls:
+                continue
+
+            try:
+                response = session.get(url)
+                visited_urls.add(url)
+
+                css_identifier_result = ".tF2Cxc"
+                css_identifier_result_youtube = ".dFd2Tb"
+                css_identifier_title = "h3"
+                css_identifier_link = ".yuRUbf a"
+                css_identifier_link_youtube = '.DhN8Cf a'
+                css_identifier_text = ".VwiC3b"
+                css_favicon = '.eqA2re img'
+
+                results = response.html.find(css_identifier_result)
+                youtube_results = response.html.find(css_identifier_result_youtube)
+
                 for result in results[:8]:
                     serp_link = result.find(css_identifier_link, first=True).attrs['href'] 
                     serp_title = result.find(css_identifier_title, first=True).text
@@ -304,14 +353,18 @@ async def blackwidow(query_input: QueryInput, request: Request):
                     else:
                         serp_favicon = 'NA'
                     serp_links.append({'link':serp_link,'title':serp_title,'favicon':serp_favicon})
-            else:
+
                 for youtube_result in youtube_results[:3]:
                     serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
                     serp_title = result.find(css_identifier_title, first=True).text
                     serp_links.append({'link':serp_link,'title':serp_title})
 
-        except requests.exceptions.RequestException as e:
-            print(e)
+            except Exception as e:
+                print(f"Error processing URL: {url}")
+                print(e)
+
+    finally:
+        session.close()
 
     t1 = timer()
     print(f'FINDING LINK TIME -------> {t1 - t0}')
@@ -502,6 +555,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
     t9 = timer()
     print(f'SHOPPINIG CARD LOGIC -------> {t9 - t8}')
+
+    print(final_card_links)
 
     t10 = timer()
 
