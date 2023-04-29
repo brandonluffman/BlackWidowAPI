@@ -6,6 +6,7 @@ spell = SpellChecker()
 # check a string for misspelled words
 text = "Ths is a sentnce with misspeled words."
 misspelled = spell.unknown(text.split())
+print("MISSSPELLED", list(misspelled))
 
 # print suggested corrections for misspelled words
 for word in misspelled:

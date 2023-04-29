@@ -1,71 +1,48 @@
-import re
-import datetime
+# import re
+# import datetime
 from requests_html import HTMLSession
-
-
-# query = str(input("search: "))
-# orig_input = query
-# today = datetime.date.today()
-# year = today.year
-# match = re.search(f'{year}', query)
-
-# if 'best' not in query.lower() and match is None:
-#     query = 'best+' + query + '+2023'
-# elif match is None:
-#     query = query + '+2023'
-# elif 'best' not in query.lower():
-#     query = 'best+' + query
-# else:
-#     pass
-domain =  "http://google.com/search?q="
-# css_identifier_search_correction_div = 'DdVMXd'
-# css_identifier_header_tag = '.O3S9Rb'
-# css_identifier_search_correction = '.p64x9c'
-queries = ['best+headphones+2023','best+headphones+of+2023','best+headphones']
-css_identifier_site = '.LC20lb, MBeuO, DKV0Md'
-query_results = {}
-for query in queries:
-    session = HTMLSession()
-    response = session.get(domain+query)
-    sites = sorted(list(set([elem.text for elem in response.html.find(css_identifier_site)[:15]])))
-    print(sites)
+from tld import get_tld, get_fld
+import requests
 
 
 
 
+buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
 
-# header_tags = response.html.find(css_identifier_header_tag)
+affiliate_domains = []
+for url in buying_links:
+    try:
+        session = HTMLSession()
+        response = session.get(url)
+        # print(url, response.status_code)
 
-# if header_tags: 
-#     if 'Shopping' in [result.text for result in header_tags[:3]]:
-#         print('Valid Product Query')
-#     else:
-#         print("INVALID PRODUCT QUERY")
-# else:
-#     print("please enter a valid product")
-      
-# if response.html.find(css_identifier_cat_tag,first=True):
-#     print(response.html.find(css_identifier_cat_tag,first=True).text)
-#     # if response.html.find(css_identifier_cat_tag,first=True).text == 'Shopping':
-#     #     print("Valid product")
-#     # else:
-#     #     print("please enter a valid product.")
-# else:
-#     print("please enter a valid product")
+        css_identifier_result = ".sg-product__dpdp-c"
+        result = response.html.find(css_identifier_result,first=True)
+        rows = result.find("div.kPMwsc a.b5ycib")
 
-
-
-
+        for row in rows:
+            tlder = row.attrs['href'][7:]
+            if tlder[:1] == 'h':    
+                res = get_fld(tlder)
+                if res not in affiliate_domains:
+                    affiliate_domains.append(res)
+                else:
+                    continue
 
 
-# correction_p_tag = response.html.find(css_identifier_search_correction, first=True)
-# print(correction_p_tag)
-# corrections = correction_p_tag.find('a.gL9Hy b')
-# correction_text = " ".join([tag.text for tag in corrections])
-# print("Original Search:", orig_input)
-# print("Correct Search:", correction_text)
-# query = query.replace(orig_input,correction_text)
-# print("SHOWING RESULTS FOR:", query)
-# print("Correction:", correction)
-# if correction is None:
-#     print('correct')
+    except requests.exceptions.RequestException as e:
+            print(e)
+
+print(affiliate_domains)
+
+
+        # buying_options = list(set([a_tag.attrs['href'].replace('/url?q=','') for a_tag in rows]))
+        # if table.find("a.b5ycib, shntl"):
+        #     sold_by = list(set([urlparse(distrib.attrs['href'].replace('/url?q=','')).netloc for distrib in table.find("a.b5ycib, shntl")]))
+        # else:
+        #     sold_by = []
+        # for card in result_of_query['cards']:
+        #     if card['product_purchasing'] == url:
+        #         card['buying_options'] = sold_by
+        #     else:
+        #         continue
