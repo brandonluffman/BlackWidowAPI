@@ -225,11 +225,20 @@ async def blackwidow(query_input: QueryInput, request: Request):
         # print("KEYWORDS:",keywords)
         match_query = """SELECT * FROM rankidb.query WHERE """
         in_condition = "query LIKE "
-        for i in range(len(keywords)):
-            if i == len(keywords) - 1:
-                match_query = match_query + in_condition + f"'%{keywords[i]}%';"
-            else:
-                match_query = match_query + in_condition + f"'%{keywords[i]}%' AND "
+        # for i in range(len(keywords)):
+        #     if i == len(keywords) - 1:
+        #         match_query = match_query + in_condition + f"'%{keywords[i]}%';"
+        #     else:
+        #         match_query = match_query + in_condition + f"'%{keywords[i]}%' AND "
+
+
+        ### CODE TO MAKE ABOVE MORE EFFICIENT ###
+        conditions = [f"{in_condition}'%{kw}%'" for kw in keywords]
+        match_query = match_query + " AND ".join(conditions) + ";" 
+
+
+
+
         # print(match_query)
         cursor.execute(match_query)
         accurate_match = cursor.fetchone()
@@ -277,25 +286,65 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
     t0 = timer()
 
-    for url in urls:
-        try:
-            session = HTMLSession()
-            response = session.get(url)
-            # print(url, response.status_code)
-            css_identifier_result = ".tF2Cxc"
-            css_identifier_result_youtube = ".dFd2Tb"
-            css_identifier_result = ".tF2Cxc"
-            css_identifier_title = "h3"
-            css_identifier_link = ".yuRUbf a"
-            css_identifier_link_youtube = '.DhN8Cf a'
-            css_identifier_text = ".VwiC3b"
-            css_favicon = '.eqA2re img'
+    # for url in urls:
+    #     try:
+    #         session = HTMLSession()
+    #         response = session.get(url)
+    #         # print(url, response.status_code)
+    #         css_identifier_result = ".tF2Cxc"
+    #         css_identifier_result_youtube = ".dFd2Tb"
+    #         css_identifier_result = ".tF2Cxc"
+    #         css_identifier_title = "h3"
+    #         css_identifier_link = ".yuRUbf a"
+    #         css_identifier_link_youtube = '.DhN8Cf a'
+    #         css_identifier_text = ".VwiC3b"
+    #         css_favicon = '.eqA2re img'
 
-            results = response.html.find(css_identifier_result)
-            youtube_results = response.html.find(css_identifier_result_youtube)
+    #         results = response.html.find(css_identifier_result)
+    #         youtube_results = response.html.find(css_identifier_result_youtube)
 
             
-            if results: 
+    #         if results: 
+    #             for result in results[:8]:
+    #                 serp_link = result.find(css_identifier_link, first=True).attrs['href'] 
+    #                 serp_title = result.find(css_identifier_title, first=True).text
+    #                 if result.find(css_favicon):
+    #                     serp_favicon = result.find(css_favicon, first=True).attrs['src']
+    #                 else:
+    #                     serp_favicon = 'NA'
+    #                 serp_links.append({'link':serp_link,'title':serp_title,'favicon':serp_favicon})
+    #         else:
+    #             for youtube_result in youtube_results[:3]:
+    #                 serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
+    #                 serp_title = result.find(css_identifier_title, first=True).text
+    #                 serp_links.append({'link':serp_link,'title':serp_title})
+
+    #     except requests.exceptions.RequestException as e:
+    #         print(e)
+
+    session = HTMLSession()
+    visited_urls = set()
+
+    try:
+        for url in urls:
+            if url in visited_urls:
+                continue
+
+            try:
+                response = session.get(url)
+                visited_urls.add(url)
+
+                css_identifier_result = ".tF2Cxc"
+                css_identifier_result_youtube = ".dFd2Tb"
+                css_identifier_title = "h3"
+                css_identifier_link = ".yuRUbf a"
+                css_identifier_link_youtube = '.DhN8Cf a'
+                css_identifier_text = ".VwiC3b"
+                css_favicon = '.eqA2re img'
+
+                results = response.html.find(css_identifier_result)
+                youtube_results = response.html.find(css_identifier_result_youtube)
+
                 for result in results[:8]:
                     serp_link = result.find(css_identifier_link, first=True).attrs['href'] 
                     serp_title = result.find(css_identifier_title, first=True).text
@@ -304,14 +353,18 @@ async def blackwidow(query_input: QueryInput, request: Request):
                     else:
                         serp_favicon = 'NA'
                     serp_links.append({'link':serp_link,'title':serp_title,'favicon':serp_favicon})
-            else:
+
                 for youtube_result in youtube_results[:3]:
                     serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
                     serp_title = result.find(css_identifier_title, first=True).text
                     serp_links.append({'link':serp_link,'title':serp_title})
 
-        except requests.exceptions.RequestException as e:
-            print(e)
+            except Exception as e:
+                print(f"Error processing URL: {url}")
+                print(e)
+
+    finally:
+        session.close()
 
     t1 = timer()
     print(f'FINDING LINK TIME -------> {t1 - t0}')
@@ -470,116 +523,32 @@ async def blackwidow(query_input: QueryInput, request: Request):
     domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
     entity_links = [(domain + entity.replace(' ', '+'),entity,entities.index(entity)+1) for entity in entities]
     final_card_links = []
-    for item in entity_links:
-        # print(url)
+    for entity_link in entity_links:
         try: 
-            url = item[0]
-            rank=item[2]
-            entity = item[1]
             session = HTMLSession()
-            response = session.get(url)
-            # print(url, response.status_code)
-            css_identifier_results = ".i0X6df"
-            css_identifier_link = "span a"
-            css_identifier_test_2 = ".Ldx8hd a span"
-            css_product_reviews = ".QIrs8"
-            css_product_title = "span.C7Lkve div.EI11Pd h3.tAxDx"
-            # product_results = [item for item in response.html.find(css_identifier_results) if (item.find(css_product_title, first=True) and all(elem in item.find(css_product_title, first=True).text.lower() for elem in entity.split()))] 
+            response = session.get(entity_link)
+
+            css_identifier_results = ".i0X6df" #card div
             product_results = response.html.find(css_identifier_results)
             output = []
-            link_count = 0
-            ### For Loop Below loops through queries to find Shopping Link and Integer Representing Amounnt of Stores that are linked to that product ###
-            for product_result in product_results[:10]:
-                product_link = 'https://www.google.com' + product_result.find(css_identifier_link, first=True).attrs['href']
-                product_compare = product_result.find(css_identifier_test_2, first=True)
-                product_review_count = product_result.find(css_product_reviews, first=True).text
-    
-                if product_compare:
-                    product_compare = product_compare.text
-
-                    if product_compare.endswith('+'):
-                        product_compare = product_compare[:-1]  
-
-                        if len(product_review_count.split()) > 3:
-                            review_num = int(product_review_count.split()[5].replace(',',''))
-                        else:
-                            review_num = False
-
-                        if link_count < 3 and review_num:
-                            cards = {
-                            'Data' : product_link, 
-                            'Count' : int(product_compare),
-                            'Review Count' : review_num,
-                            'entity': entity,
-                            'rank': rank
-                            }
-                            output.append(cards)
-                            link_count += 1
-                        else:
-                            continue
-                else:
-                    if product_review_count:
-                        # print(product_review_count)
-                        if len(product_review_count.split()) > 3:
-                            review_num = int(product_review_count.split()[5].replace(',',''))
-                        else:
-                            review_num = False
-                        if review_num:
-                            cards = {
-                            'Data' : product_link, 
-                            'Count' : 0,
-                            'Review Count' : review_num,
-                            'entity': entity,
-                            'rank': rank
-                            }
-                            output.append(cards)
-                        else:
-                            continue
-                    else:
-                        continue
-            if not output:
-                product_link = 'https://www.google.com' + product_result.find(css_identifier_link, first=True).attrs['href']
-                card = {
-                            'Data' : product_link, 
-                            'Count' : 0,
-                            'Review Count' : 0,
-                            'entity': entity,
-                            'rank': rank
-                        }
-                final_card_links.append(card)
-            else:
-                counts = []
-                for out in output:
-                    data = [out['Count'], out['Review Count']]
-                    counts.append(data) 
-                # print(counts)
-
-                count_list = []
-                for c in counts:
-                    count_list.append(c[0])
+            i = 0
+            cards_store_count = []
+            card_links = []
+            for product_result in product_results[:3]:
+                card_link = "span a"
+                stores_count = ".Ldx8hd a span"
+                # review_count = ".QIrs8"
+                # product_review_count = product_result.find(review_count, first=True).text
+                product_details_link = 'https://www.google.com' + product_result.find(card_link, first=True).attrs['href']
+                card_links.append(product_details_link)
+                store_count = product_result.find(stores_count, first=True)
+                cards_store_count.append(int(store_count.text) if store_count else 0)
             
-                max_count = max(count_list,default=0)
-                max_indexes = [i for i in range(len(count_list)) if count_list[i] == max_count]         
-                index_len = len(max_indexes)
-                if index_len == 1:
-                    max_index = max_indexes[0]
-
-                max_review_count = []
-                if index_len > 1:
-                    for max_index in max_indexes:
-                        max_review_count.append(counts[max_index][1])
-                    max_review = max(max_review_count)
-                    max_review_index = max_review_count.index(max_review)
-
-                    for count in counts:
-                        if max_review in count:
-                            max_card = count     
-                else:
-                    max_card = counts[max_index]
-
-                indexer = counts.index(max_card)
-                final_card = output[indexer]
-                final_card_links.append(final_card)
+            max_card_index = cards_store_count.index(max(cards_store_count))
+            print(f"MAX: {cards_store_count.index(max(cards_store_count))}")   
+            final_store_link = card_links[max_card_index]
+            print(f"MAX LINK: {final_store_link}")   
+            final_card_links.append(final_store_link)
 
         except requests.exceptions.RequestException as e:
                 print(e)
@@ -587,13 +556,15 @@ async def blackwidow(query_input: QueryInput, request: Request):
     t9 = timer()
     print(f'SHOPPINIG CARD LOGIC -------> {t9 - t8}')
 
+    print(final_card_links)
+
     t10 = timer()
 
-    card_urls = [[card['Data'],card['entity'],card['rank']] for card in final_card_links]
+    # card_urls = [[card['Data'],card['entity'],card['rank']] for card in final_card_links]
     # print(card_urls)
     buying_links = []
     review_links = []
-    for url in card_urls:
+    for url in final_card_links:
         try:
             product_url = url[0]
             card_entity = url[1]
