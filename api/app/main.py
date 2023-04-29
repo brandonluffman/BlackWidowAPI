@@ -28,6 +28,12 @@ import nltk
 from nltk.corpus import stopwords
 from timeit import default_timer as timer
 import time
+### For product descriptions ###
+import asyncio
+import requests_cache
+from lxml import html
+from aiohttp import ClientSession
+
 
 
 
@@ -562,91 +568,144 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
     # card_urls = [[card['Data'],card['entity'],card['rank']] for card in final_card_links]
     # print(card_urls)
+    # buying_links = []
+    # review_links = []
+    # for url in final_card_links:
+    #     try:
+    #         product_url = url[0]
+    #         card_entity = url[1]
+    #         card_rank = url[2]
+    #         session = HTMLSession()
+    #         response = session.get(url[0])
+    #         # print(url, response.status_code)
+    #         css_identifier_result = ".sg-product__dpdp-c"
+    #         css_product_img = ".wTvWSc img"
+    #         css_product_title = ".YVQvvd .BvQan"
+    #         css_product_description = ".Zh8lCd p .sh-ds__full .sh-ds__full-txt"
+    #         css_product_specs = ".lW5xPd .crbkUb"
+    #         css_product_rating = ".QKs7ff .uYNZm"
+    #         css_all_reviews_link = ".k0e9E a"
+    #         css_product_reviews = "#-9110982622418926094-full"
+    #         css_product_reviews_title = ".XBANlb .P3O8Ne"
+    #         css_product_reviews_rating = ".nMkOOb div"
+    #         css_product_review_count = ".QKs7ff .qIEPib"
+    #         css_product_purchasing = ".kPMwsc"
+    #         css_product_specifications = ".lW5xPd"
+    #         css_buying_link = ".dOwBOc a"
+
+
+    #         product_purchasing = ".dOwBOc tbody"
+    #         product_purchase = "a"
+    #         product_desc = "td:nth-of-type(1)"
+    #         product_spec = "td:nth-of-type(2)"
+
+    #         results = response.html.find(css_identifier_result)
+    #         purchasing = response.html.find(css_product_purchasing)
+    #         specifications = response.html.find(css_product_specifications)
+
+    #         purchase_links = []
+    #         for purchase in purchasing:
+    #             link = (purchase.find(product_purchase, first=True).text).replace('Opens in a new window', '')
+    #             purchase_links.append(link)
+
+    #         product_specifications_list = []
+    #         for specification in specifications:
+    #             descs = specification.find(product_desc)
+    #             specs = specification.find(product_spec)
+    #             for spec, desc in zip(specs,descs[1:]):
+    #                 specs_object = {
+    #                     desc.text : spec.text,
+    #                 }
+    #                 product_specifications_list.append(specs_object)
+
+    #         for result in results:
+    #             reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
+    #             buying_link = 'https://google.com' + result.find(css_buying_link, first=True).attrs['href'] if result.find(css_buying_link, first=True).attrs['href'] else ''
+    #             product_title = result.find(css_product_title, first=True).text
+    #             buying_links.append(buying_link)
+    #             review_links.append(reviews_link)
+    #             if result.find(css_product_img, first=True):
+    #                 prod_img = result.find(css_product_img, first=True).attrs['src']
+    #             else:
+    #                 prod_img = 'hello'
+    #             if result.find(css_product_description, first=True):
+    #                 prod_desc = result.find(css_product_description, first=True).text
+    #             else:
+    #                 prod_desc = ' ---- '
+                    
+    #             output = {
+    #                 'id': 0,
+    #                 'rank': card_rank,
+    #                 'product_url': product_url,
+    #                 'entity': card_entity,
+    #                 'product_title' : result.find(css_product_title, first=True).text,
+    #                 'product_description' : prod_desc,
+    #                 'product_rating' : result.find(css_product_rating, first=True).text,
+    #                 'review_count' : int(result.find(css_product_review_count, first=True).text.replace(',','').replace(' reviews','')),
+    #                 'product_img' : prod_img,
+    #                 'product_specs' : product_specifications_list,
+    #                 'all_reviews_link': reviews_link,
+    #                 'product_purchasing' : buying_link,
+    #                 'mentions': {}
+    #             } 
+
+    #             result_of_query['cards'].append(output)
+            
+    #     except requests.exceptions.RequestException as e:
+    #             print(e)
+
+
     buying_links = []
     review_links = []
-    for url in final_card_links:
-        try:
-            product_url = url[0]
-            card_entity = url[1]
-            card_rank = url[2]
-            session = HTMLSession()
-            response = session.get(url[0])
-            # print(url, response.status_code)
-            css_identifier_result = ".sg-product__dpdp-c"
-            css_product_img = ".wTvWSc img"
-            css_product_title = ".YVQvvd .BvQan"
-            css_product_description = ".Zh8lCd p .sh-ds__full .sh-ds__full-txt"
-            css_product_specs = ".lW5xPd .crbkUb"
-            css_product_rating = ".QKs7ff .uYNZm"
-            css_all_reviews_link = ".k0e9E a"
-            css_product_reviews = "#-9110982622418926094-full"
-            css_product_reviews_title = ".XBANlb .P3O8Ne"
-            css_product_reviews_rating = ".nMkOOb div"
-            css_product_review_count = ".QKs7ff .qIEPib"
-            css_product_purchasing = ".kPMwsc"
-            css_product_specifications = ".lW5xPd"
-            css_buying_link = ".dOwBOc a"
+    results = []
 
+    async def fetch(url, session):
+        async with session.get(url) as response:
+            return await response.text()
 
-            product_purchasing = ".dOwBOc tbody"
-            product_purchase = "a"
-            product_desc = "td:nth-of-type(1)"
-            product_spec = "td:nth-of-type(2)"
+    async def scrape_product(session, url):
+        product_url = url[0]
+        card_entity = url[1]
+        card_rank = url[2]
 
-            results = response.html.find(css_identifier_result)
-            purchasing = response.html.find(css_product_purchasing)
-            specifications = response.html.find(css_product_specifications)
+        if product_url in buying_links or product_url in review_links:
+            return
 
-            purchase_links = []
-            for purchase in purchasing:
-                link = (purchase.find(product_purchase, first=True).text).replace('Opens in a new window', '')
-                purchase_links.append(link)
+        response_text = await fetch(product_url, session)
+        tree = html.fromstring(response_text)
 
-            product_specifications_list = []
-            for specification in specifications:
-                descs = specification.find(product_desc)
-                specs = specification.find(product_spec)
-                for spec, desc in zip(specs,descs[1:]):
-                    specs_object = {
-                        desc.text : spec.text,
-                    }
-                    product_specifications_list.append(specs_object)
+        all_reviews_link = tree.cssselect('.k0e9E a')[0].get('href')
+        buying_link = tree.cssselect('.dOwBOc a')[0].get('href', '') if tree.cssselect('.dOwBOc a') else ''
+        product_title = tree.cssselect('.YVQvvd .BvQan')[0].text.strip()
+        product_description = tree.cssselect('.Zh8lCd p .sh-ds__full .sh-ds__full-txt')[0].text.strip()
+        product_rating = tree.cssselect('.QKs7ff .uYNZm')[0].text.strip()
+        review_count = int(tree.cssselect('.QKs7ff .qIEPib')[0].text.replace(',', '').replace(' reviews', ''))
+        product_img = tree.cssselect('.wTvWSc img')[0].get('src', 'hello')
 
-            for result in results:
-                reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
-                buying_link = 'https://google.com' + result.find(css_buying_link, first=True).attrs['href'] if result.find(css_buying_link, first=True).attrs['href'] else ''
-                product_title = result.find(css_product_title, first=True).text
-                buying_links.append(buying_link)
-                review_links.append(reviews_link)
-                if result.find(css_product_img, first=True):
-                    prod_img = result.find(css_product_img, first=True).attrs['src']
-                else:
-                    prod_img = 'hello'
-                if result.find(css_product_description, first=True):
-                    prod_desc = result.find(css_product_description, first=True).text
-                else:
-                    prod_desc = ' ---- '
-                    
-                output = {
-                    'id': 0,
-                    'rank': card_rank,
-                    'product_url': product_url,
-                    'entity': card_entity,
-                    'product_title' : result.find(css_product_title, first=True).text,
-                    'product_description' : prod_desc,
-                    'product_rating' : result.find(css_product_rating, first=True).text,
-                    'review_count' : int(result.find(css_product_review_count, first=True).text.replace(',','').replace(' reviews','')),
-                    'product_img' : prod_img,
-                    'product_specs' : product_specifications_list,
-                    'all_reviews_link': reviews_link,
-                    'product_purchasing' : buying_link,
-                    'mentions': {}
-                } 
+        specs_elements = tree.cssselect('.lW5xPd .crbkUb')
+        product_specs = [
+            {spec.cssselect('td:nth-child(1)')[0].text.strip(): spec.cssselect('td:nth-child(2)')[0].text.strip()}
+            for spec in specs_elements
+        ]
 
-                result_of_query['cards'].append(output)
-            
-        except requests.exceptions.RequestException as e:
-                print(e)
+        output = {
+            'id': 0,
+            'rank': card_rank,
+            'product_url': product_url,
+            'entity': card_entity,
+            'product_title': product_title,
+            'product_description': product_description,
+            'product_rating': product_rating,
+            'review_count': review_count,
+            'product_img': product_img,
+            'product_specs': product_specs,
+            'all_reviews_link': all_reviews_link,
+            'product_purchasing': buying_link,
+            'mentions': {}
+        }
+
+        result_of_query['cards'].append(output)
+
 
     t11 = timer()
     print(f'PRODUCT DESCRIPTION -------> {t11 - t10}')
