@@ -30,9 +30,19 @@ from timeit import default_timer as timer
 import time
 ### For product descriptions ###
 import asyncio
-import requests_cache
 from lxml import html
 from aiohttp import ClientSession
+import aiohttp
+
+import concurrent.futures
+import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+from bs4 import BeautifulSoup
+
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
+import time
 
 
 
@@ -271,11 +281,11 @@ async def blackwidow(query_input: QueryInput, request: Request):
     session = HTMLSession()
     url = domain+query
     response = session.get(url)
-    header_tags = response.html.find(css_identifier_header_tag)
-    if 'Shopping' in [result.text for result in header_tags[:3]]:
-        pass
-    else:
-        return "INVALID PRODUCT QUERY"
+    # header_tags = response.html.find(css_identifier_header_tag)
+    # if 'Shopping' in [result.text for result in header_tags[:3]]:
+    #     pass
+    # else:
+    #     return "INVALID PRODUCT QUERY"
 
     remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
     domain = "http://google.com/search?q="
@@ -292,95 +302,57 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
     t0 = timer()
 
-    # for url in urls:
-    #     try:
-    #         session = HTMLSession()
-    #         response = session.get(url)
-    #         # print(url, response.status_code)
-    #         css_identifier_result = ".tF2Cxc"
-    #         css_identifier_result_youtube = ".dFd2Tb"
-    #         css_identifier_result = ".tF2Cxc"
-    #         css_identifier_title = "h3"
-    #         css_identifier_link = ".yuRUbf a"
-    #         css_identifier_link_youtube = '.DhN8Cf a'
-    #         css_identifier_text = ".VwiC3b"
-    #         css_favicon = '.eqA2re img'
 
-    #         results = response.html.find(css_identifier_result)
-    #         youtube_results = response.html.find(css_identifier_result_youtube)
 
-            
-    #         if results: 
-    #             for result in results[:8]:
-    #                 serp_link = result.find(css_identifier_link, first=True).attrs['href'] 
-    #                 serp_title = result.find(css_identifier_title, first=True).text
-    #                 if result.find(css_favicon):
-    #                     serp_favicon = result.find(css_favicon, first=True).attrs['src']
-    #                 else:
-    #                     serp_favicon = 'NA'
-    #                 serp_links.append({'link':serp_link,'title':serp_title,'favicon':serp_favicon})
-    #         else:
-    #             for youtube_result in youtube_results[:3]:
-    #                 serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
-    #                 serp_title = result.find(css_identifier_title, first=True).text
-    #                 serp_links.append({'link':serp_link,'title':serp_title})
+    serp_links = []
 
-    #     except requests.exceptions.RequestException as e:
-    #         print(e)
+    for url in urls:
+        try:
+            response = session.get(url)
+        except requests.exceptions.RequestException as e:
+            print(e)
+            continue
+        
+        css_identifier_result = ".tF2Cxc"
+        css_identifier_result_youtube = ".dFd2Tb"
+        css_identifier_title = "h3"
+        css_identifier_link = ".yuRUbf a"
+        css_identifier_link_youtube = '.DhN8Cf a'
+        css_identifier_text = ".VwiC3b"
+        css_favicon = '.eqA2re img'
 
-    session = HTMLSession()
-    visited_urls = set()
+        results = response.html.find(css_identifier_result)
+        youtube_results = response.html.find(css_identifier_result_youtube)
 
-    try:
-        for url in urls:
-            if url in visited_urls:
-                continue
-
-            try:
-                response = session.get(url)
-                visited_urls.add(url)
-
-                css_identifier_result = ".tF2Cxc"
-                css_identifier_result_youtube = ".dFd2Tb"
-                css_identifier_title = "h3"
-                css_identifier_link = ".yuRUbf a"
-                css_identifier_link_youtube = '.DhN8Cf a'
-                css_identifier_text = ".VwiC3b"
-                css_favicon = '.eqA2re img'
-
-                results = response.html.find(css_identifier_result)
-                youtube_results = response.html.find(css_identifier_result_youtube)
-
-                for result in results[:8]:
-                    serp_link = result.find(css_identifier_link, first=True).attrs['href'] 
-                    serp_title = result.find(css_identifier_title, first=True).text
-                    if result.find(css_favicon):
-                        serp_favicon = result.find(css_favicon, first=True).attrs['src']
-                    else:
-                        serp_favicon = 'NA'
-                    serp_links.append({'link':serp_link,'title':serp_title,'favicon':serp_favicon})
-
-                for youtube_result in youtube_results[:3]:
-                    serp_link = youtube_result.find(css_identifier_link_youtube, first=True).attrs['href']
-                    serp_title = result.find(css_identifier_title, first=True).text
-                    serp_links.append({'link':serp_link,'title':serp_title})
-
-            except Exception as e:
-                print(f"Error processing URL: {url}")
-                print(e)
-
-    finally:
-        session.close()
+        if results: 
+            serp_links += [{'link':result.find(css_identifier_link, first=True).attrs['href'],
+                            'title':result.find(css_identifier_title, first=True).text,
+                            'favicon':result.find(css_favicon, first=True).attrs['src'] if result.find(css_favicon) else 'NA'}
+                        for result in results[:8]]
+        else:
+            serp_links += [{'link':youtube_result.find(css_identifier_link_youtube, first=True).attrs['href'],
+                            'title':youtube_result.find(css_identifier_title, first=True).text}
+                        for youtube_result in youtube_results[:3]]
 
     t1 = timer()
     print(f'FINDING LINK TIME -------> {t1 - t0}')
 
     t2 = timer()
-    for serp_link in serp_links:
 
-        if 'youtube.com' in serp_link['link']:
+    youtube_serps = [serp_link for serp_link in serp_links if 'youtube.com' in serp_link['link']]
+    reddit_serps = [serp_link for serp_link in serp_links if 'reddit.com' in serp_link['link']]
+    affiliate_serps = [serp_link for serp_link in serp_links if ('reddit.com' not in serp_link['link']) and ('youtube.com' not in serp_link['link'])]
+
+
+    def add_youtube_data(serp_links):
+        links = serp_links
+        if len(serp_links) == 0:
+            # print("YOUTUBE:", result_of_query['youtube'])
+            pass
+        else:
+            serp_link_data = links[0]
             API_KEY = 'AIzaSyC3ElvfankD9Hf6ujrk3MUH1WIm_cu87XI'
-            VIDEO_ID = serp_link['link'].replace('https://www.youtube.com/watch?v=', '')
+            VIDEO_ID = serp_link_data['link'].replace('https://www.youtube.com/watch?v=', '')
             youtube = build('youtube', 'v3', developerKey=API_KEY)
 
             try:
@@ -404,45 +376,70 @@ async def blackwidow(query_input: QueryInput, request: Request):
                 except:
                     mod = modified_string
                 
-                serp_link['text'] = mod
+                serp_link_data['text'] = mod
 
             except HttpError as e:
                 print('An error occurred: %s' % e)
             
-            result_of_query['links']['youtube'].append(serp_link)
-            # print(transcript[:100])
+            result_of_query['links']['youtube'].append(serp_link_data)
+            return add_youtube_data(links[1:])
 
-        elif 'reddit.com' in serp_link['link']:
-            reddit_read_only = praw.Reddit(client_id="6ziqexypJDMGiHf8tYfERA",         # your client id
-                    client_secret="gBa1uvr2syOEbjxKbD8yzPsPo_fAbA",      # your client secret
-                    user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36") 
-            try:
-                submission = reddit_read_only.submission(url=serp_link['link'])
-            except:
-                continue
-            post_comments = []
+    add_youtube_data(youtube_serps)
 
-            for comment in submission.comments[:10]:
-                if type(comment) == MoreComments:
-                    continue
-                elif comment.body == '[removed]' or comment.body == '[deleted]' or comment.body[:6] == "Thanks":
-                    pass
-                else:
-                    post_comments.append(comment.body.replace('\n', '').replace('\r', ''))
-            serp_link['comments'] = post_comments
-            result_of_query['links']['reddit'].append(serp_link)
-            # print(post_comments)
+    t3 = timer()
+    print(f'YOUTUBE RECURSIVE MOTHERFUCKERRRRRR -------> {t3 - t2}')
 
-        else:
+    # def add_reddit_data(serp_links):
+    #     reddit_read_only = praw.Reddit(client_id="6ziqexypJDMGiHf8tYfERA",         # your client id
+    #                         client_secret="gBa1uvr2syOEbjxKbD8yzPsPo_fAbA",      # your client secret
+    #                         user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36") 
+        
+    #     for serp_link_data in serp_links:
+    #         try:
+    #             submission = reddit_read_only.submission(url=serp_link_data['link'])
+    #         except:
+    #             continue
+            
+    #         post_comments = []
+    #         for comment in submission.comments:
+    #             if isinstance(comment, MoreComments):
+    #                 continue
+    #             if comment.body in ('[removed]', '[deleted]') or comment.body.startswith('Thanks'):
+    #                 continue
+    #             post_comments.append(comment.body.replace('\n', '').replace('\r', ''))
+    #             if len(post_comments) == 10:
+    #                 break
+            
+    #         serp_link_data['comments'] = post_comments
+    #         # print(serp_link_data)
+    #         result_of_query['links']['reddit'].append(serp_link_data)
+
+    # add_reddit_data(reddit_serps)
+
+
+    # print("REDDIT", add_reddit_data(reddit_serps))
+
+    t4 = timer()
+    print(f'reddit RECURSIVE MOTHERFUCKERRRRRR -------> {t4 - t3}')
+
+
+    def add_affiliate_data(serp_links):
+        session = requests.Session()
+        retries = Retry(total=1, backoff_factor=1, status_forcelist=[ 500, 502, 503, 504 ])
+        adapter = HTTPAdapter(max_retries=retries)
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+
+        def process_link(serp_link):
             try:
                 headers = {
-                            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                            "Accept-Language": "en",
-                            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
-                } 
-                r = requests.get(serp_link['link'], headers=headers, timeout=2)
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "Accept-Language": "en",
+                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+                }
+                r = session.get(serp_link['link'], headers=headers, timeout=1)
                 r.raise_for_status()
-                
+
                 soup = BeautifulSoup(r.text, 'html.parser')
                 affiliate_content = []
                 best = 'best'
@@ -465,6 +462,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
                 final_content = " ".join(lister)
                 serp_link['text'] = final_content
+                # print(serp_link)
                 result_of_query['links']['affiliate'].append(serp_link)
 
             except requests.exceptions.RequestException as err:
@@ -476,10 +474,20 @@ async def blackwidow(query_input: QueryInput, request: Request):
             except requests.exceptions.Timeout as errt:
                 print ("Timeout Error:",errt)
 
-    t3 = timer()
-    print(f'Grabbing Transcripts -------> {t3 - t2}')
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            futures = []
+            for serp_link in serp_links:
+                futures.append(executor.submit(process_link, serp_link))
+            concurrent.futures.wait(futures)
 
-    t4 = timer()
+    add_affiliate_data(affiliate_serps)
+
+
+    t5 = timer()
+    print(f'GOOGLE RECURSIVE FUNCTION -------> {t5 - t4}')
+    print(f'TOTAL TRANSCRIPT TIME -------> {t5 - t0}')
+
+    t6 = timer()
             
     final_text = []
     sources = list(result_of_query['links'].keys())
@@ -492,10 +500,11 @@ async def blackwidow(query_input: QueryInput, request: Request):
             for link in result_of_query['links'][source]:
                 final_text.append(link['text'])
     
-    t5 = timer()
-    print(f'LOGIC BEFORE MODEL -------> {t5 - t4}')
+    # print(final_text)
+    
+    t7 = timer()
+    print(f'LOGIC BEFORE MODEL -------> {t7 - t6}')
 
-    t6 = timer()
                 
     model_text = " ".join(final_text)
     json_object = json.dumps(model_text)
@@ -516,195 +525,80 @@ async def blackwidow(query_input: QueryInput, request: Request):
         ellos.append(k)
 
     entities = [entity for entity in ellos]
-    # print("ENTITIES:",entities)
-
-    t7 = timer()
-
-    print(f'MODEL -------> {t7 - t6}')
+    print("ENTITIES:",entities)
 
     t8 = timer()
 
-    # all_ents = [entity for entity in items]
-    # entities = ['jabra elite 45h','apple airpods max', 'bose quietcomfort','ksc75','sony wh-1000xm5']
+    print(f'MODEL -------> {t8 - t7}')
+
     domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
-    entity_links = [(domain + entity.replace(' ', '+'),entity,entities.index(entity)+1) for entity in entities]
-    final_card_links = []
-    for entity_link in entity_links:
-        try: 
-            session = HTMLSession()
-            response = session.get(entity_link)
-
-            css_identifier_results = ".i0X6df" #card div
-            product_results = response.html.find(css_identifier_results)
-            output = []
-            i = 0
-            cards_store_count = []
-            card_links = []
-            for product_result in product_results[:3]:
-                card_link = "span a"
-                stores_count = ".Ldx8hd a span"
-                # review_count = ".QIrs8"
-                # product_review_count = product_result.find(review_count, first=True).text
-                product_details_link = 'https://www.google.com' + product_result.find(card_link, first=True).attrs['href']
-                card_links.append(product_details_link)
-                store_count = product_result.find(stores_count, first=True)
-                cards_store_count.append(int(store_count.text) if store_count else 0)
-            
-            max_card_index = cards_store_count.index(max(cards_store_count))
-            print(f"MAX: {cards_store_count.index(max(cards_store_count))}")   
-            final_store_link = card_links[max_card_index]
-            print(f"MAX LINK: {final_store_link}")   
-            final_card_links.append(final_store_link)
-
-        except requests.exceptions.RequestException as e:
-                print(e)
-
-    t9 = timer()
-    print(f'SHOPPINIG CARD LOGIC -------> {t9 - t8}')
-
-    print(final_card_links)
-
+    entity_links = [(domain + entity.replace(' ', '+'),entity) for entity in entities]
+    # print(entity_links)
     t10 = timer()
-
-    # card_urls = [[card['Data'],card['entity'],card['rank']] for card in final_card_links]
-    # print(card_urls)
-    # buying_links = []
-    # review_links = []
-    # for url in final_card_links:
-    #     try:
-    #         product_url = url[0]
-    #         card_entity = url[1]
-    #         card_rank = url[2]
-    #         session = HTMLSession()
-    #         response = session.get(url[0])
-    #         # print(url, response.status_code)
-    #         css_identifier_result = ".sg-product__dpdp-c"
-    #         css_product_img = ".wTvWSc img"
-    #         css_product_title = ".YVQvvd .BvQan"
-    #         css_product_description = ".Zh8lCd p .sh-ds__full .sh-ds__full-txt"
-    #         css_product_specs = ".lW5xPd .crbkUb"
-    #         css_product_rating = ".QKs7ff .uYNZm"
-    #         css_all_reviews_link = ".k0e9E a"
-    #         css_product_reviews = "#-9110982622418926094-full"
-    #         css_product_reviews_title = ".XBANlb .P3O8Ne"
-    #         css_product_reviews_rating = ".nMkOOb div"
-    #         css_product_review_count = ".QKs7ff .qIEPib"
-    #         css_product_purchasing = ".kPMwsc"
-    #         css_product_specifications = ".lW5xPd"
-    #         css_buying_link = ".dOwBOc a"
-
-
-    #         product_purchasing = ".dOwBOc tbody"
-    #         product_purchase = "a"
-    #         product_desc = "td:nth-of-type(1)"
-    #         product_spec = "td:nth-of-type(2)"
-
-    #         results = response.html.find(css_identifier_result)
-    #         purchasing = response.html.find(css_product_purchasing)
-    #         specifications = response.html.find(css_product_specifications)
-
-    #         purchase_links = []
-    #         for purchase in purchasing:
-    #             link = (purchase.find(product_purchase, first=True).text).replace('Opens in a new window', '')
-    #             purchase_links.append(link)
-
-    #         product_specifications_list = []
-    #         for specification in specifications:
-    #             descs = specification.find(product_desc)
-    #             specs = specification.find(product_spec)
-    #             for spec, desc in zip(specs,descs[1:]):
-    #                 specs_object = {
-    #                     desc.text : spec.text,
-    #                 }
-    #                 product_specifications_list.append(specs_object)
-
-    #         for result in results:
-    #             reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href']  
-    #             buying_link = 'https://google.com' + result.find(css_buying_link, first=True).attrs['href'] if result.find(css_buying_link, first=True).attrs['href'] else ''
-    #             product_title = result.find(css_product_title, first=True).text
-    #             buying_links.append(buying_link)
-    #             review_links.append(reviews_link)
-    #             if result.find(css_product_img, first=True):
-    #                 prod_img = result.find(css_product_img, first=True).attrs['src']
-    #             else:
-    #                 prod_img = 'hello'
-    #             if result.find(css_product_description, first=True):
-    #                 prod_desc = result.find(css_product_description, first=True).text
-    #             else:
-    #                 prod_desc = ' ---- '
-                    
-    #             output = {
-    #                 'id': 0,
-    #                 'rank': card_rank,
-    #                 'product_url': product_url,
-    #                 'entity': card_entity,
-    #                 'product_title' : result.find(css_product_title, first=True).text,
-    #                 'product_description' : prod_desc,
-    #                 'product_rating' : result.find(css_product_rating, first=True).text,
-    #                 'review_count' : int(result.find(css_product_review_count, first=True).text.replace(',','').replace(' reviews','')),
-    #                 'product_img' : prod_img,
-    #                 'product_specs' : product_specifications_list,
-    #                 'all_reviews_link': reviews_link,
-    #                 'product_purchasing' : buying_link,
-    #                 'mentions': {}
-    #             } 
-
-    #             result_of_query['cards'].append(output)
-            
-    #     except requests.exceptions.RequestException as e:
-    #             print(e)
-
-
+    session = HTMLSession()
     buying_links = []
-    review_links = []
-    results = []
+    def generate_product_cards(entity_links,rank=1):
+        local_entity_links = entity_links
+        if len(local_entity_links) == 0:
+            pass
+        else:
+            url = local_entity_links[0][0]
+            entity = local_entity_links[0][1]
+            response = session.get(url)
+            card_link = 'https://www.google.com' + response.html.find(".C7Lkve a", first=True).attrs['href']
+            card_rank = rank
+            product_desc_response = session.get(card_link)
+            css_identifier_result = ".sg-product__dpdp-c"
+            css_product_img = ".wTvWSc img"
+            css_product_title = ".YVQvvd .BvQan"
+            css_product_description = ".Zh8lCd p .sh-ds__full .sh-ds__full-txt"
+            css_product_rating = ".QKs7ff .uYNZm"
+            css_all_reviews_link = ".k0e9E a"
+            css_product_review_count = ".QKs7ff .qIEPib"
+            css_buying_link = ".dOwBOc a"
+            results = product_desc_response.html.find(css_identifier_result)
+            def add_results(lis):
+                if len(lis) == 0:
+                    pass
+                else:
+                    result = lis[0]
+                    reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href'] if result.find(css_all_reviews_link, first=True) else ' -- '
+                    buying_link = 'https://google.com' + result.find(css_buying_link, first=True).attrs['href'] if result.find(css_buying_link, first=True).attrs['href'] else ''
+                    product_rating = result.find(css_product_rating, first=True).text if result.find(css_product_rating, first=True) else ''
+                    product_title = result.find(css_product_title, first=True).text if result.find(css_product_title, first=True) else ''
+                    review_count = int(result.find(css_product_review_count, first=True).text.replace(',','').replace(' reviews','').replace(' review', '')) if result.find(css_product_review_count, first=True) else ''
 
-    async def fetch(url, session):
-        async with session.get(url) as response:
-            return await response.text()
-
-    async def scrape_product(session, url):
-        product_url = url[0]
-        card_entity = url[1]
-        card_rank = url[2]
-
-        if product_url in buying_links or product_url in review_links:
-            return
-
-        response_text = await fetch(product_url, session)
-        tree = html.fromstring(response_text)
-
-        all_reviews_link = tree.cssselect('.k0e9E a')[0].get('href')
-        buying_link = tree.cssselect('.dOwBOc a')[0].get('href', '') if tree.cssselect('.dOwBOc a') else ''
-        product_title = tree.cssselect('.YVQvvd .BvQan')[0].text.strip()
-        product_description = tree.cssselect('.Zh8lCd p .sh-ds__full .sh-ds__full-txt')[0].text.strip()
-        product_rating = tree.cssselect('.QKs7ff .uYNZm')[0].text.strip()
-        review_count = int(tree.cssselect('.QKs7ff .qIEPib')[0].text.replace(',', '').replace(' reviews', ''))
-        product_img = tree.cssselect('.wTvWSc img')[0].get('src', 'hello')
-
-        specs_elements = tree.cssselect('.lW5xPd .crbkUb')
-        product_specs = [
-            {spec.cssselect('td:nth-child(1)')[0].text.strip(): spec.cssselect('td:nth-child(2)')[0].text.strip()}
-            for spec in specs_elements
-        ]
-
-        output = {
-            'id': 0,
-            'rank': card_rank,
-            'product_url': product_url,
-            'entity': card_entity,
-            'product_title': product_title,
-            'product_description': product_description,
-            'product_rating': product_rating,
-            'review_count': review_count,
-            'product_img': product_img,
-            'product_specs': product_specs,
-            'all_reviews_link': all_reviews_link,
-            'product_purchasing': buying_link,
-            'mentions': {}
-        }
-
-        result_of_query['cards'].append(output)
+                    buying_links.append(buying_link)
+                    
+                    if result.find(css_product_img, first=True):
+                        prod_img = result.find(css_product_img, first=True).attrs['src']
+                    else:
+                        prod_img = 'hello'
+                    if result.find(css_product_description, first=True):
+                        prod_desc = result.find(css_product_description, first=True).text
+                    else:
+                        prod_desc = ' ---- '
+                        
+                    output = {
+                        'id': 0,
+                        'rank': card_rank,
+                        'entity': entity,
+                        'product_url': url,
+                        'product_title' : product_title,
+                        'product_description' : prod_desc,
+                        'product_rating' : product_rating,
+                        'review_count' : review_count,
+                        'product_img' : prod_img,
+                        # 'product_specs' : product_specifications_list,
+                        'all_reviews_link': reviews_link,
+                        'product_purchasing' : buying_link,
+                        'mentions': {}
+                    } 
+                    result_of_query['cards'].append(output)
+                    return add_results(lis[1:])
+            add_results(results)
+            return generate_product_cards(entity_links=local_entity_links[1:],rank=card_rank+1)
+    generate_product_cards(entity_links)
 
 
     t11 = timer()
@@ -730,124 +624,37 @@ async def blackwidow(query_input: QueryInput, request: Request):
     for url in buying_links:
         try:
             affiliate_domains = []
-            session = HTMLSession()
+            # session = HTMLSession()
             response = session.get(url)
             # print(url, response.status_code)
 
             css_identifier_result = ".sg-product__dpdp-c"
             result = response.html.find(css_identifier_result,first=True)
-            rows = result.find("div.kPMwsc a.b5ycib")
-
-            for row in rows:
-                tlder = row.attrs['href'][7:]
-                if tlder[:1] == 'h':
-                    res = get_fld(tlder)
-                    if res not in affiliate_domains:
-                        affiliate_domains.append(res)
+            rows = result.find("div.kPMwsc a.b5ycib") if result.find("div.kPMwsc a.b5ycib") else ''
+            if rows:
+                for row in rows:
+                    tlder = row.attrs['href'][7:]
+                    if tlder[:1] == 'h':
+                        res = get_fld(tlder)
+                        if res not in affiliate_domains:
+                            affiliate_domains.append(res)
+                        else:
+                            continue
                     else:
                         continue
-                else:
-                    continue
-            for card in result_of_query['cards']:
-                if card['product_purchasing'] == url:
-                    card['buying_options'] = affiliate_domains
-                else:
-                    continue
+                for card in result_of_query['cards']:
+                    if card['product_purchasing'] == url:
+                        card['buying_options'] = affiliate_domains
+                    else:
+                        continue
+            else:
+                continue
 
         except requests.exceptions.RequestException as e:
                 print(e)
 
     t15 = timer()
     print(f'BUYING LINKS -------> {t15 - t14}')
-
-    t16 = timer()
-
-
-###ONLY NEED SOURCES FOR FIRST 10 ###
-    #review_links = ['https://www.google.com/shopping/product/6222956906177139429/reviews?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rate:5,rnum:10,rsk:PC_6093883722684573590&sa=X&ved=0ahUKEwiGjJrjr6D-AhWRFlkFHZ9SCFEQn08IWCgA', 'https://www.google.com/shopping/product/127770160929837065/reviews?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rate:5,rnum:10,rsk:PC_7827190084446473420&sa=X&ved=0ahUKEwiUtcXjr6D-AhWSMlkFHeU-DzIQn08ITSgA']
-    for url in review_links:
-        metrics = {
-            'rating_count': {},
-            'sentiment': [],
-            'reviews': [],
-        }
-        try:
-            import re
-            session = HTMLSession()
-            response = session.get(url)
-            # print(url, response.status_code)
-
-            css_identifier_result = ".z6XoBf"
-            results = response.html.find(css_identifier_result)
-            reviews = []
-            for result in results[:2]:    
-                if result.find('.sPPcBf'):
-                    source = result.find('.sPPcBf span')[1].text
-                else:
-                    source = ' ----- '
-                
-                output = {
-                        'source' : source,
-                } 
-                metrics['reviews'].append(output)
-            metrics['review_sources'] = list(set([item['source'] for item in metrics['reviews']]))
-            css_identifier_result_two = '.aALHge'
-            result_two = response.html.find(css_identifier_result_two)
-            i = 5
-            outerput = []
-            for result in result_two:
-                if result.find('.vL3wxf'):
-                    rating_count = result.find('.vL3wxf', first=True).text
-                    outerput.append(rating_count)
-
-                    i = i - 1
-                else:
-                    rating_count = 'None'
-
-            for i in range(len(outerput)):
-                rating = f'{len(outerput) - i} stars' if len(outerput) - i > 1 else  f'{len(outerput) - i} star'
-                review_count = int(outerput[i].replace(',','').replace(' reviews','').replace(' review', ''))
-                metrics['rating_count'][rating] = review_count
-            # reviews.append(outerput)
-
-            sentimenter = []
-            css_identifier_result_three = '.gKLqZc'
-            result_three = response.html.find(css_identifier_result_three)
-            count = 0
-            for result in result_three[1:]:
-                count+=1
-                if result.find('.QIrs8'):
-                    start_word = 'about '
-                    end_word = '.'
-                    start = 'are '
-                    end = '.'
-                    sentiment_text = result.find('.QIrs8', first=True).text
-                    # print("TEXT", type(sentiment_text))
-                    pattern = r"\d+%|\d+"
-                    matches = re.findall(pattern, sentiment_text)
-                    start_index = sentiment_text.find(start_word)
-                    end_index = sentiment_text.find(end_word, start_index)
-                    result = sentiment_text[start_index+len(start_word):end_index]
-                    starter = sentiment_text.find(start)
-                    ender = sentiment_text.find(end, starter)
-                    resulter = sentiment_text[starter+len(start):ender]
-                    metrics['sentiment'].append({'favor_vote_count':matches[0], 'desc': result, 'favor_rating': matches[1]+' '+resulter})
-                    sentimenter.append([matches[0], result, matches[1]+' '+resulter])
-                else:
-                    sentiment_text = 'None'
-
-            for card in result_of_query['cards']:
-                if card['all_reviews_link'] == url:
-                    card['review_data'] = metrics
-                else:
-                    continue
-        except requests.exceptions.RequestException as e:
-                        print(e)
-
-    t17 = timer()
-    print(f'REVIEWS -------> {t17 - t16}')
-
-    t18 = timer()
 
     for card in result_of_query['cards']: 
         query ="""INSERT INTO rankidb.product
@@ -867,11 +674,13 @@ async def blackwidow(query_input: QueryInput, request: Request):
                     card['product_rating'],
                     card['review_count'],
                     card['product_img'],
-                    json.dumps(card['product_specs']),
+                    "[]",
+                    # json.dumps(card['product_specs']),
                     card['all_reviews_link'],
                     card['product_purchasing'],
                     json.dumps(card['buying_options']),
-                    json.dumps(card['review_data']),
+                    "[]",
+                    # json.dumps(card['review_data']),
                     json.dumps(card['mentions']),
                     0
                 )
@@ -879,10 +688,9 @@ async def blackwidow(query_input: QueryInput, request: Request):
         connection.commit()
         card['id'] = cursor.lastrowid
 
-    t19 = timer()
-    print(f'CARDS INTO DB -------> {t19 - t18}')
+    t17 = timer()
+    print(f'CARDS INTO DB -------> {t17 - t15}')
 
-    t20 = timer()
 
 
     scraped_data_insert_query = """
@@ -893,8 +701,9 @@ async def blackwidow(query_input: QueryInput, request: Request):
     cursor.execute(scraped_data_insert_query,values)
     connection.commit()
     cursor.close()
-    t21 = timer()
-    print(f'SCRAPED DATA INSERT QUERY -------> {t21 - t20}')
+    t18 = timer()
+    print(f'SCRAPED DATA INSERT QUERY -------> {t18 - t17}')
+    print(f'TOTAL TIME -------> {t18 - t0}')
     return result_of_query
 
 
