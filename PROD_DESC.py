@@ -1,85 +1,89 @@
 from requests_html import HTMLSession
 import requests
 from bs4 import BeautifulSoup
-
+import asyncio
 import concurrent.futures
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from timeit import default_timer as timer
-
-
-
 from requests_html import HTMLSession
 from timeit import default_timer as timer
 
-entities = ['jabra elite 75t', 'bose quietcomfort 45']
-domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
-entity_links = [(domain + entity.replace(' ', '+'), entity) for entity in entities]
+result_of_query = {
+    'cards': []
+}
 
-session = HTMLSession()
+# entities = ['jabra elite 75t', 'bose quietcomfort 45']
+# domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
+# css_selector_prod_desc =  ".C7Lkve a"
+# # entity_links = [(domain + entity.replace(' ', '+'), entity,entities.index(entity)+1,'https://www.google.com' + HTMLSession().get(domain+entity.replace(' ','+')).html.find(css_selector_prod_desc,first=True)) for entity in entities]
+# entity_links = [(domain + entity.replace(' ', '+'), entity,entities.index(entity)+1,'https://www.google.com' + HTMLSession().get(domain+entity.replace(' ','+')).html.find(css_selector_prod_desc,first=True).attrs['href']) for entity in entities]
 
-css_identifier_result = ".sg-product__dpdp-c"
-css_product_img = ".wTvWSc img"
-css_product_title = ".YVQvvd .BvQan"
-css_product_description = ".Zh8lCd p .sh-ds__full .sh-ds__full-txt"
-css_product_rating = ".QKs7ff .uYNZm"
-css_all_reviews_link = ".k0e9E a"
-css_product_review_count = ".QKs7ff .qIEPib"
-css_buying_link = ".dOwBOc a"
-
-def generate_product_card(url, entity, rank):
-    response = session.get(url)
-    card_link = 'https://www.google.com' + response.html.find(".C7Lkve a", first=True).attrs['href']
-    product_desc_response = session.get(card_link)
-    
-    result = product_desc_response.html.find(css_identifier_result, first=True)
-    if not result:
-        return None
-    
-    reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href'] if result.find(css_all_reviews_link, first=True) else ' -- '
-    buying_link = 'https://google.com' + result.find(css_buying_link, first=True).attrs['href'] if result.find(css_buying_link, first=True) and 'http' in result.find(css_buying_link, first=True).attrs['href'] else ''
-    product_rating = result.find(css_product_rating, first=True).text if result.find(css_product_rating, first=True) else ''
-    product_title = result.find(css_product_title, first=True).text if result.find(css_product_title, first=True) else ''
-    review_count = int(result.find(css_product_review_count, first=True).text.replace(',','').replace(' reviews','').replace(' review', '')) if result.find(css_product_review_count, first=True) else ''
-
-    buying_links.append(buying_link)
-
-    if result.find(css_product_img, first=True):
-        prod_img = result.find(css_product_img, first=True).attrs['src']
-    else:
-        prod_img = 'hello'
-    if result.find(css_product_description, first=True):
-        prod_desc = result.find(css_product_description, first=True).text
-    else:
-        prod_desc = ' ---- '
-
-    return {
-        'id': 0,
-        'rank': rank,
-        'entity': entity,
-        'product_url': url,
-        'product_title': product_title,
-        'product_description': prod_desc,
-        'product_rating': product_rating,
-        'review_count': review_count,
-        'product_img': prod_img,
-        'all_reviews_link': reviews_link,
-        'product_purchasing': buying_link,
-        'mentions': {}
-    }
-
-def generate_product_cards(entity_links):
-    local_entity_links = entity_links[:]
-    rank = 1
-    for url, entity in local_entity_links:
-        card = generate_product_card(url, entity, rank)
-        if card is not None:
-            yield card
-        rank += 1
+# session_two = HTMLSession()
 
 t10 = timer()
-buying_links = []
-product_cards = list(generate_product_cards(entity_links))
+
+css_selector_prod_desc =  ".C7Lkve a"
+domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
+entity_links = [(domain + entity.replace(' ', '+'), entity,entities.index(entity)+1,'https://www.google.com' + HTMLSession().get(domain+entity.replace(' ','+')).html.find(css_selector_prod_desc,first=True).attrs['href']) for entity in entities]
+# print(entity_links)
+async def get_final_card(entity_links):
+    url = entity_links[0]
+    entity = entity_links[1]
+    card_rank = entity_links[2]
+    # session = entity_links[3]
+    # entity_link_response = session
+    # card_link = 'https://www.google.com' + entity_link_response.html.find(".C7Lkve a", first=True).attrs['href']
+    try:
+        product_desc_response = session.get(entity_links[3])
+        
+        result = product_desc_response.html.find(".sg-product__dpdp-c", first=True)
+        product_rating = result.find(".QKs7ff .uYNZm", first=True).text if result.find(".QKs7ff .uYNZm", first=True) is not None else ''
+        product_title = result.find(".YVQvvd .BvQan", first=True).text if result.find(".YVQvvd .BvQan", first=True) else ''
+        review_count = int(result.find(".QKs7ff .qIEPib", first=True).text.replace(',','').replace(' reviews','').replace(' review', '')) if result.find(".QKs7ff .qIEPib", first=True) else ''
+        prod_img = result.find(".wTvWSc img", first=True).attrs['src'] if result.find(".wTvWSc img", first=True) else 'hello'
+        prod_desc = result.find(".Zh8lCd p .sh-ds__full .sh-ds__full-txt", first=True).text if result.find(".Zh8lCd p .sh-ds__full .sh-ds__full-txt", first=True) else ' ---- '
+        final_card =  {
+            'id': 0,
+            'rank': card_rank,
+            'entity': entity,
+            'product_url': url,
+            'product_title': product_title,
+            'product_description': prod_desc,
+            'product_rating': product_rating,
+            'review_count': review_count,
+            'product_img': prod_img,
+            'all_reviews_link': ' --- ',
+            'product_purchasing': '---',
+            'mentions': {}
+        }
+        return final_card
+    except:
+        final_card = {
+            'id': -1,
+            'rank': '',
+            'entity': '',
+            'product_url': '',
+            'product_title': '',
+            'product_description': '',
+            'product_rating': '',
+            'review_count': '',
+            'product_img': '',
+            'all_reviews_link': ' --- ',
+            'product_purchasing': '---',
+            'mentions': {}
+        }
+
+        return final_card
+async def get_final_cards(entity_links):
+    inputs = entity_links
+    tasks = [asyncio.create_task(get_final_card(input)) for input in inputs]
+    results = await asyncio.gather(*tasks)
+    result_of_query['cards'] = results
+
+await get_final_cards(entity_links=entity_links)
+
 t11 = timer()
-print(f"Elapsed time: {t11 - t10}")
+print(f'PRODUCT DESCRIPTION -------> {t11 - t10}')
+

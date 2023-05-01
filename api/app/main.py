@@ -431,30 +431,34 @@ async def blackwidow(query_input: QueryInput, request: Request):
     print(f'REDDIT -------> {t4 - t3}')
 
     async def get_affiliate_content(session, serp_obj):
-        async with session.get(serp_obj['link']) as response:
-            content = await response.text()
-            soup = BeautifulSoup(content, 'html.parser')
-            affiliate_content = []
-            best = 'best'
-            for heading in soup.find_all(["h2", "h3"]):
-                extract = heading.text.strip()
-                if len(extract) > 10 and len(extract) < 200 and extract[-1] != '?' and best not in extract:
-                    affiliate_content.append(heading.text.strip().replace('\n', ''))
-                else:
-                    pass
+        try:
+            async with session.get(serp_obj['link']) as response:
+                content = await response.text()
+                soup = BeautifulSoup(content, 'html.parser')
+                affiliate_content = []
+                best = 'best'
+                for heading in soup.find_all(["h2", "h3"]):
+                    extract = heading.text.strip()
+                    if len(extract) > 10 and len(extract) < 200 and extract[-1] != '?' and best not in extract:
+                        affiliate_content.append(heading.text.strip().replace('\n', ''))
+                    else:
+                        pass
 
-            lister = []
+                lister = []
 
-            for sentence in affiliate_content:
-                if sentence[-1] != '.' and sentence[-1] != '!' and sentence[-1] != '?':
-                    new_sentence = sentence + '.'
-                    lister.append(new_sentence)
-                else:
-                    new_sentence = sentence
-                    lister.append(new_sentence)
+                for sentence in affiliate_content:
+                    if sentence[-1] != '.' and sentence[-1] != '!' and sentence[-1] != '?':
+                        new_sentence = sentence + '.'
+                        lister.append(new_sentence)
+                    else:
+                        new_sentence = sentence
+                        lister.append(new_sentence)
 
-            final_content = " ".join(lister)
-            serp_obj['text'] = final_content
+                final_content = " ".join(lister)
+                serp_obj['text'] = final_content
+                return serp_obj
+        except:
+            serp_obj['text'] = ''
             return serp_obj
 
     async def google_main(affiliate_serps):
@@ -473,7 +477,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
     await google_main(affiliate_serps=affiliate_serps)
 
     t5 = timer()
-    print(f'RESULT OF QUERY ------> {result_of_query}')
+    # print(f'RESULT OF QUERY ------> {result_of_query}')
     print(f'GOOGLE -------> {t5 - t4}')
     print(f'TOTAL TRANSCRIPT TIME -------> {t5 - t0}')
 
@@ -484,9 +488,9 @@ async def blackwidow(query_input: QueryInput, request: Request):
     for source in sources:
         if source == 'reddit':
             for link in result_of_query['links'][source]:
-                print(link)
+                # print(link)
                 if link:
-                    print(link['comments'])
+                    # print(link['comments'])
                     for comment in link['comments']:
                         final_text.append(comment)
                 else:
@@ -500,7 +504,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
     t7 = timer()
     print(f'LOGIC BEFORE MODEL -------> {t7 - t6}')
 
-    print(final_text)    
+    # print(final_text)    
     model_text = " ".join(final_text)
     json_object = json.dumps(model_text)
     doc = nlp(json_object)
@@ -520,81 +524,72 @@ async def blackwidow(query_input: QueryInput, request: Request):
         ellos.append(k)
 
     entities = [entity for entity in ellos]
-    print("ENTITIES:",entities)
+    # print("ENTITIES:",entities)
 
     t8 = timer()
 
     print(f'MODEL -------> {t8 - t7}')
-
-    domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
-    entity_links = [(domain + entity.replace(' ', '+'),entity) for entity in entities]
-    # print(entity_links)
     t10 = timer()
-    session = HTMLSession()
-    buying_links = []
-    def generate_product_cards(entity_links,rank=1):
-        local_entity_links = entity_links
-        if len(local_entity_links) == 0:
-            pass
-        else:
-            url = local_entity_links[0][0]
-            entity = local_entity_links[0][1]
-            response = session.get(url)
-            card_link = 'https://www.google.com' + response.html.find(".C7Lkve a", first=True).attrs['href']
-            card_rank = rank
-            product_desc_response = session.get(card_link)
-            css_identifier_result = ".sg-product__dpdp-c"
-            css_product_img = ".wTvWSc img"
-            css_product_title = ".YVQvvd .BvQan"
-            css_product_description = ".Zh8lCd p .sh-ds__full .sh-ds__full-txt"
-            css_product_rating = ".QKs7ff .uYNZm"
-            css_all_reviews_link = ".k0e9E a"
-            css_product_review_count = ".QKs7ff .qIEPib"
-            css_buying_link = ".dOwBOc a"
-            results = product_desc_response.html.find(css_identifier_result)
-            def add_results(lis):
-                if len(lis) == 0:
-                    pass
-                else:
-                    result = lis[0]
-                    reviews_link = 'https://google.com' + result.find(css_all_reviews_link, first=True).attrs['href'] if result.find(css_all_reviews_link, first=True) else ' -- '
-                    buying_link = 'https://google.com' + result.find(css_buying_link, first=True).attrs['href'] if result.find(css_buying_link, first=True).attrs['href'] else ''
-                    product_rating = result.find(css_product_rating, first=True).text if result.find(css_product_rating, first=True) else ''
-                    product_title = result.find(css_product_title, first=True).text if result.find(css_product_title, first=True) else ''
-                    review_count = int(result.find(css_product_review_count, first=True).text.replace(',','').replace(' reviews','').replace(' review', '')) if result.find(css_product_review_count, first=True) else ''
 
-                    buying_links.append(buying_link)
-                    
-                    if result.find(css_product_img, first=True):
-                        prod_img = result.find(css_product_img, first=True).attrs['src']
-                    else:
-                        prod_img = 'hello'
-                    if result.find(css_product_description, first=True):
-                        prod_desc = result.find(css_product_description, first=True).text
-                    else:
-                        prod_desc = ' ---- '
-                        
-                    output = {
-                        'id': 0,
-                        'rank': card_rank,
-                        'entity': entity,
-                        'product_url': url,
-                        'product_title' : product_title,
-                        'product_description' : prod_desc,
-                        'product_rating' : product_rating,
-                        'review_count' : review_count,
-                        'product_img' : prod_img,
-                        # 'product_specs' : product_specifications_list,
-                        'all_reviews_link': reviews_link,
-                        'product_purchasing' : buying_link,
-                        'mentions': {}
-                    } 
-                    result_of_query['cards'].append(output)
-                    return add_results(lis[1:])
-            add_results(results)
-            return generate_product_cards(entity_links=local_entity_links[1:],rank=card_rank+1)
-    generate_product_cards(entity_links)
+    css_selector_prod_desc =  ".C7Lkve a"
+    domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
+    entity_links = [(domain + entity.replace(' ', '+'), entity,entities.index(entity)+1,'https://www.google.com' + HTMLSession().get(domain+entity.replace(' ','+')).html.find(css_selector_prod_desc,first=True).attrs['href']) for entity in entities]
+    # print(entity_links)
+    async def get_final_card(entity_links):
+        url = entity_links[0]
+        entity = entity_links[1]
+        card_rank = entity_links[2]
+        # session = entity_links[3]
+        # entity_link_response = session
+        # card_link = 'https://www.google.com' + entity_link_response.html.find(".C7Lkve a", first=True).attrs['href']
+        try:
+            product_desc_response = session.get(entity_links[3])
+            
+            result = product_desc_response.html.find(".sg-product__dpdp-c", first=True)
+            product_rating = result.find(".QKs7ff .uYNZm", first=True).text if result.find(".QKs7ff .uYNZm", first=True) is not None else ''
+            product_title = result.find(".YVQvvd .BvQan", first=True).text if result.find(".YVQvvd .BvQan", first=True) else ''
+            review_count = int(result.find(".QKs7ff .qIEPib", first=True).text.replace(',','').replace(' reviews','').replace(' review', '')) if result.find(".QKs7ff .qIEPib", first=True) else ''
+            prod_img = result.find(".wTvWSc img", first=True).attrs['src'] if result.find(".wTvWSc img", first=True) else 'hello'
+            prod_desc = result.find(".Zh8lCd p .sh-ds__full .sh-ds__full-txt", first=True).text if result.find(".Zh8lCd p .sh-ds__full .sh-ds__full-txt", first=True) else ' ---- '
+            final_card =  {
+                'id': 0,
+                'rank': card_rank,
+                'entity': entity,
+                'product_url': url,
+                'product_title': product_title,
+                'product_description': prod_desc,
+                'product_rating': product_rating,
+                'review_count': review_count,
+                'product_img': prod_img,
+                'all_reviews_link': ' --- ',
+                'product_purchasing': '---',
+                'mentions': {}
+            }
+            return final_card
+        except:
+            final_card = {
+                'id': -1,
+                'rank': '',
+                'entity': '',
+                'product_url': '',
+                'product_title': '',
+                'product_description': '',
+                'product_rating': '',
+                'review_count': '',
+                'product_img': '',
+                'all_reviews_link': ' --- ',
+                'product_purchasing': '---',
+                'mentions': {}
+            }
 
+            return final_card
+    async def get_final_cards(entity_links):
+        inputs = entity_links
+        tasks = [asyncio.create_task(get_final_card(input)) for input in inputs]
+        results = await asyncio.gather(*tasks)
+        result_of_query['cards'] = results
+
+    await get_final_cards(entity_links=entity_links)
 
     t11 = timer()
     print(f'PRODUCT DESCRIPTION -------> {t11 - t10}')
@@ -634,8 +629,10 @@ async def blackwidow(query_input: QueryInput, request: Request):
                     card['product_img'],
                     "[]",
                     # json.dumps(card['product_specs']),
-                    card['all_reviews_link'],
-                    card['product_purchasing'],
+                    # card['all_reviews_link'],
+                    '',
+                    '',
+                    # card['product_purchasing'],
                     # json.dumps(card['buying_options']),
                     "[]",
                     "[]",
