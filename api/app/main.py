@@ -33,16 +33,20 @@ import asyncio
 from lxml import html
 from aiohttp import ClientSession
 import aiohttp
+import asyncio
+import asyncpraw
 
 import concurrent.futures
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
-
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 import time
+from asyncio import run
+from queue import Queue
+
 
 
 
@@ -77,9 +81,9 @@ def init_pool():
     return connection_pool
 
 @app.middleware("http")
-async def create_pool(request: Request, call_next):
+def create_pool(request: Request, call_next):
     request.state.connection_pool = init_pool()
-    reponse = await call_next(request)
+    reponse = call_next(request)
     # request.state.connection_pool.close()
     return reponse
 
@@ -265,16 +269,18 @@ async def blackwidow(query_input: QueryInput, request: Request):
                 "cards": json.loads(accurate_match[3])      
             }
         else:
-            pass    
-        result_of_query = {
-            'query' : query,
-            'links' : {
-                'affiliate': [],
-                'reddit': [],
-                'youtube': [],
-            },
-            'cards': [],
-        }
+            pass  
+        
+          
+    result_of_query = {
+        'query' : query,
+        'links' : {
+            'affiliate': [],
+            'reddit': [],
+            'youtube': [],
+        },
+        'cards': [],
+    }
 
     domain =  "http://google.com/search?q="
     css_identifier_header_tag = '.O3S9Rb'
@@ -301,17 +307,13 @@ async def blackwidow(query_input: QueryInput, request: Request):
     print(f'BEGINNINNG CHECKING -------> {t101 - t100}')
 
     t0 = timer()
-
-
-
     serp_links = []
-
-    for url in urls:
+    def fetch_results(url):
         try:
             response = session.get(url)
         except requests.exceptions.RequestException as e:
             print(e)
-            continue
+            return []
         
         css_identifier_result = ".tF2Cxc"
         css_identifier_result_youtube = ".dFd2Tb"
@@ -325,23 +327,34 @@ async def blackwidow(query_input: QueryInput, request: Request):
         youtube_results = response.html.find(css_identifier_result_youtube)
 
         if results: 
-            serp_links += [{'link':result.find(css_identifier_link, first=True).attrs['href'],
-                            'title':result.find(css_identifier_title, first=True).text,
-                            'favicon':result.find(css_favicon, first=True).attrs['src'] if result.find(css_favicon) else 'NA'}
-                        for result in results[:8]]
+            return [{'link':result.find(css_identifier_link, first=True).attrs['href'],
+                    'title':result.find(css_identifier_title, first=True).text,
+                    'favicon':result.find(css_favicon, first=True).attrs['src'] if result.find(css_favicon) else 'NA'}
+                    for result in results[:8]]
         else:
-            serp_links += [{'link':youtube_result.find(css_identifier_link_youtube, first=True).attrs['href'],
-                            'title':youtube_result.find(css_identifier_title, first=True).text}
-                        for youtube_result in youtube_results[:3]]
+            return [{'link':youtube_result.find(css_identifier_link_youtube, first=True).attrs['href'],
+                    'title':youtube_result.find(css_identifier_title, first=True).text}
+                    for youtube_result in youtube_results[:3]]
+
+    t0 = timer()
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        results = list(executor.map(fetch_results, urls))
+
+    serp_links = [result for sublist in results for result in sublist]
+    # print(serp_links)
+
 
     t1 = timer()
     print(f'FINDING LINK TIME -------> {t1 - t0}')
-
     t2 = timer()
 
     youtube_serps = [serp_link for serp_link in serp_links if 'youtube.com' in serp_link['link']]
     reddit_serps = [serp_link for serp_link in serp_links if 'reddit.com' in serp_link['link']]
     affiliate_serps = [serp_link for serp_link in serp_links if ('reddit.com' not in serp_link['link']) and ('youtube.com' not in serp_link['link'])]
+    reddit_links = [reddit_serp['link'] for reddit_serp in reddit_serps if reddit_serp['link'].count('/') == 8]
+    affiliate_links = [serp_link['link'] for serp_link in serp_links if ('reddit.com' not in serp_link['link']) and ('youtube.com' not in serp_link['link'])]
+    # print(reddit_links)
+    # print(affiliate_links)
 
 
     def add_youtube_data(serp_links):
@@ -387,104 +400,81 @@ async def blackwidow(query_input: QueryInput, request: Request):
     add_youtube_data(youtube_serps)
 
     t3 = timer()
-    print(f'YOUTUBE RECURSIVE MOTHERFUCKERRRRRR -------> {t3 - t2}')
-
-    # def add_reddit_data(serp_links):
-    #     reddit_read_only = praw.Reddit(client_id="6ziqexypJDMGiHf8tYfERA",         # your client id
-    #                         client_secret="gBa1uvr2syOEbjxKbD8yzPsPo_fAbA",      # your client secret
-    #                         user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36") 
-        
-    #     for serp_link_data in serp_links:
-    #         try:
-    #             submission = reddit_read_only.submission(url=serp_link_data['link'])
-    #         except:
-    #             continue
-            
-    #         post_comments = []
-    #         for comment in submission.comments:
-    #             if isinstance(comment, MoreComments):
-    #                 continue
-    #             if comment.body in ('[removed]', '[deleted]') or comment.body.startswith('Thanks'):
-    #                 continue
-    #             post_comments.append(comment.body.replace('\n', '').replace('\r', ''))
-    #             if len(post_comments) == 10:
-    #                 break
-            
-    #         serp_link_data['comments'] = post_comments
-    #         # print(serp_link_data)
-    #         result_of_query['links']['reddit'].append(serp_link_data)
-
-    # add_reddit_data(reddit_serps)
+    print(f'YOUTUBE -------> {t3 - t2}')
 
 
-    # print("REDDIT", add_reddit_data(reddit_serps))
+    async def get_comments(serp_obj):
+        async with asyncpraw.Reddit(client_id="6ziqexypJDMGiHf8tYfERA",
+                                    client_secret="gBa1uvr2syOEbjxKbD8yzPsPo_fAbA",
+                                    user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+                                    check_for_async=True
+        ) as reddit:
+            try:
+                submission = await reddit.submission(url=serp_obj['link'])
+                comments = submission.comments[:10]
+                serp_obj['comments'] = [comment.body for comment in comments]
+                return serp_obj
+            except:
+                serp_obj['comments'] = []
+                return serp_obj
+
+    async def get_results(reddit_serps):
+        inputs = reddit_serps
+        tasks = [asyncio.create_task(get_comments(serp_obj)) for serp_obj in inputs]
+        results = await asyncio.gather(*tasks)
+        result_of_query['links']['reddit'] = results
+
+    await get_results(reddit_serps=reddit_serps)
+
 
     t4 = timer()
-    print(f'reddit RECURSIVE MOTHERFUCKERRRRRR -------> {t4 - t3}')
+    print(f'REDDIT -------> {t4 - t3}')
 
+    async def get_affiliate_content(session, serp_obj):
+        async with session.get(serp_obj['link']) as response:
+            content = await response.text()
+            soup = BeautifulSoup(content, 'html.parser')
+            affiliate_content = []
+            best = 'best'
+            for heading in soup.find_all(["h2", "h3"]):
+                extract = heading.text.strip()
+                if len(extract) > 10 and len(extract) < 200 and extract[-1] != '?' and best not in extract:
+                    affiliate_content.append(heading.text.strip().replace('\n', ''))
+                else:
+                    pass
 
-    def add_affiliate_data(serp_links):
-        session = requests.Session()
-        retries = Retry(total=1, backoff_factor=1, status_forcelist=[ 500, 502, 503, 504 ])
-        adapter = HTTPAdapter(max_retries=retries)
-        session.mount('http://', adapter)
-        session.mount('https://', adapter)
+            lister = []
 
-        def process_link(serp_link):
-            try:
-                headers = {
-                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                    "Accept-Language": "en",
-                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
-                }
-                r = session.get(serp_link['link'], headers=headers, timeout=1)
-                r.raise_for_status()
+            for sentence in affiliate_content:
+                if sentence[-1] != '.' and sentence[-1] != '!' and sentence[-1] != '?':
+                    new_sentence = sentence + '.'
+                    lister.append(new_sentence)
+                else:
+                    new_sentence = sentence
+                    lister.append(new_sentence)
 
-                soup = BeautifulSoup(r.text, 'html.parser')
-                affiliate_content = []
-                best = 'best'
-                for heading in soup.find_all(["h2", "h3"]):
-                    extract = heading.text.strip()
-                    if len(extract) > 10 and len(extract) < 200 and extract[-1] != '?' and best not in extract:
-                        affiliate_content.append(heading.text.strip().replace('\n', ''))
-                    else:
-                        pass
+            final_content = " ".join(lister)
+            serp_obj['text'] = final_content
+            return serp_obj
 
-                lister = []
+    async def google_main(affiliate_serps):
+        inputs = affiliate_serps
+        headers = {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+        }
+        async with aiohttp.ClientSession(headers=headers) as session:
+            tasks = [asyncio.create_task(get_affiliate_content(session=session, serp_obj=input)) for input in inputs]
+            results = await asyncio.gather(*tasks)
+            result_of_query['links']['affiliate'] = results
+            # print(results)
 
-                for sentence in affiliate_content:
-                    if sentence[-1] != '.' and sentence[-1] != '!' and sentence[-1] != '?':
-                        new_sentence = sentence + '.'
-                        lister.append(new_sentence)
-                    else:
-                        new_sentence = sentence
-                        lister.append(new_sentence)
-
-                final_content = " ".join(lister)
-                serp_link['text'] = final_content
-                # print(serp_link)
-                result_of_query['links']['affiliate'].append(serp_link)
-
-            except requests.exceptions.RequestException as err:
-                print ("OOps: Something Else",err)
-            except requests.exceptions.HTTPError as errh:
-                print ("Http Error:",errh)
-            except requests.exceptions.ConnectionError as errc:
-                print ("Error Connecting:",errc)
-            except requests.exceptions.Timeout as errt:
-                print ("Timeout Error:",errt)
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            futures = []
-            for serp_link in serp_links:
-                futures.append(executor.submit(process_link, serp_link))
-            concurrent.futures.wait(futures)
-
-    add_affiliate_data(affiliate_serps)
-
+    await google_main(affiliate_serps=affiliate_serps)
 
     t5 = timer()
-    print(f'GOOGLE RECURSIVE FUNCTION -------> {t5 - t4}')
+    print(f'RESULT OF QUERY ------> {result_of_query}')
+    print(f'GOOGLE -------> {t5 - t4}')
     print(f'TOTAL TRANSCRIPT TIME -------> {t5 - t0}')
 
     t6 = timer()
@@ -494,8 +484,13 @@ async def blackwidow(query_input: QueryInput, request: Request):
     for source in sources:
         if source == 'reddit':
             for link in result_of_query['links'][source]:
-                for comment in link['comments']:
-                    final_text.append(comment)
+                print(link)
+                if link:
+                    print(link['comments'])
+                    for comment in link['comments']:
+                        final_text.append(comment)
+                else:
+                    continue
         else:
             for link in result_of_query['links'][source]:
                 final_text.append(link['text'])
@@ -505,7 +500,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
     t7 = timer()
     print(f'LOGIC BEFORE MODEL -------> {t7 - t6}')
 
-                
+    print(final_text)    
     model_text = " ".join(final_text)
     json_object = json.dumps(model_text)
     doc = nlp(json_object)
@@ -619,43 +614,6 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
     t14 = timer()
 
-    # buying_links = ['https://google.com/shopping/product/6222956906177139429/offers?hl=en&q=bose+quietcomfort+45&prds=eto:3668158928628930488_0,pid:3011142393657177064,rsk:PC_6093883722684573590,scoring:p&sa=X&ved=0ahUKEwjw2p6YsaD-AhWIFlkFHcQDCqkQtKsGCHQ', 'https://google.com/shopping/product/127770160929837065/offers?hl=en&q=apple+airpods+max&prds=eto:487205171537148384_0,pid:1942015860405678420,rsk:PC_7827190084446473420,scoring:p&sa=X&ved=0ahUKEwi1htCYsaD-AhWHGVkFHWXtARsQtKsGCGw']
-
-    for url in buying_links:
-        try:
-            affiliate_domains = []
-            # session = HTMLSession()
-            response = session.get(url)
-            # print(url, response.status_code)
-
-            css_identifier_result = ".sg-product__dpdp-c"
-            result = response.html.find(css_identifier_result,first=True)
-            rows = result.find("div.kPMwsc a.b5ycib") if result.find("div.kPMwsc a.b5ycib") else ''
-            if rows:
-                for row in rows:
-                    tlder = row.attrs['href'][7:]
-                    if tlder[:1] == 'h':
-                        res = get_fld(tlder)
-                        if res not in affiliate_domains:
-                            affiliate_domains.append(res)
-                        else:
-                            continue
-                    else:
-                        continue
-                for card in result_of_query['cards']:
-                    if card['product_purchasing'] == url:
-                        card['buying_options'] = affiliate_domains
-                    else:
-                        continue
-            else:
-                continue
-
-        except requests.exceptions.RequestException as e:
-                print(e)
-
-    t15 = timer()
-    print(f'BUYING LINKS -------> {t15 - t14}')
-
     for card in result_of_query['cards']: 
         query ="""INSERT INTO rankidb.product
                     (
@@ -678,7 +636,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
                     # json.dumps(card['product_specs']),
                     card['all_reviews_link'],
                     card['product_purchasing'],
-                    json.dumps(card['buying_options']),
+                    # json.dumps(card['buying_options']),
+                    "[]",
                     "[]",
                     # json.dumps(card['review_data']),
                     json.dumps(card['mentions']),
@@ -689,7 +648,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
         card['id'] = cursor.lastrowid
 
     t17 = timer()
-    print(f'CARDS INTO DB -------> {t17 - t15}')
+    print(f'CARDS INTO DB -------> {t17 - t14}')
 
 
 
@@ -705,22 +664,3 @@ async def blackwidow(query_input: QueryInput, request: Request):
     print(f'SCRAPED DATA INSERT QUERY -------> {t18 - t17}')
     print(f'TOTAL TIME -------> {t18 - t0}')
     return result_of_query
-
-
-
-
-
-
-
-# # # # if 'youtube.com' in serp_link['link']:
-# # # #     # print('Youtube Link')
-# # # #     id = serp_link['link'].replace('https://www.youtube.com/watch?v=', '')
-# # # #     try:
-# # # #         transcript = YouTubeTranscriptApi.get_transcript(id)
-# # # #     except:
-# # # #         continue
-# # # #     text = ''
-# # # #     for i in transcript:
-# # # #         text = text + i['text'] + ' '
-# # # #     transcript = text
-# # # #     serp_link['text'] = transcript
