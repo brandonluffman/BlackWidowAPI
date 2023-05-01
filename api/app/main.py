@@ -26,7 +26,6 @@ from itertools import chain
 from urllib.parse import urlparse
 import nltk
 from nltk.corpus import stopwords
-from timeit import default_timer as timer
 import time
 ### For product descriptions ###
 import asyncio
@@ -188,6 +187,8 @@ async def get_trending_products(request: Request):
             }
         order.append(structure)
     return order
+
+from timeit import default_timer as timer
 
 ### BLACKWIDOW ###
 @app.post('/blackwidow')
@@ -477,7 +478,6 @@ async def blackwidow(query_input: QueryInput, request: Request):
     await google_main(affiliate_serps=affiliate_serps)
 
     t5 = timer()
-    # print(f'RESULT OF QUERY ------> {result_of_query}')
     print(f'GOOGLE -------> {t5 - t4}')
     print(f'TOTAL TRANSCRIPT TIME -------> {t5 - t0}')
 
@@ -498,8 +498,6 @@ async def blackwidow(query_input: QueryInput, request: Request):
         else:
             for link in result_of_query['links'][source]:
                 final_text.append(link['text'])
-    
-    # print(final_text)
     
     t7 = timer()
     print(f'LOGIC BEFORE MODEL -------> {t7 - t6}')
@@ -527,69 +525,86 @@ async def blackwidow(query_input: QueryInput, request: Request):
     # print("ENTITIES:",entities)
 
     t8 = timer()
-
     print(f'MODEL -------> {t8 - t7}')
     t10 = timer()
 
-    css_selector_prod_desc =  ".C7Lkve a"
-    domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
-    entity_links = [(domain + entity.replace(' ', '+'), entity,entities.index(entity)+1,'https://www.google.com' + HTMLSession().get(domain+entity.replace(' ','+')).html.find(css_selector_prod_desc,first=True).attrs['href']) for entity in entities]
-    # print(entity_links)
-    async def get_final_card(entity_links):
-        url = entity_links[0]
-        entity = entity_links[1]
-        card_rank = entity_links[2]
-        # session = entity_links[3]
-        # entity_link_response = session
-        # card_link = 'https://www.google.com' + entity_link_response.html.find(".C7Lkve a", first=True).attrs['href']
-        try:
-            product_desc_response = session.get(entity_links[3])
-            
-            result = product_desc_response.html.find(".sg-product__dpdp-c", first=True)
-            product_rating = result.find(".QKs7ff .uYNZm", first=True).text if result.find(".QKs7ff .uYNZm", first=True) is not None else ''
-            product_title = result.find(".YVQvvd .BvQan", first=True).text if result.find(".YVQvvd .BvQan", first=True) else ''
-            review_count = int(result.find(".QKs7ff .qIEPib", first=True).text.replace(',','').replace(' reviews','').replace(' review', '')) if result.find(".QKs7ff .qIEPib", first=True) else ''
-            prod_img = result.find(".wTvWSc img", first=True).attrs['src'] if result.find(".wTvWSc img", first=True) else 'hello'
-            prod_desc = result.find(".Zh8lCd p .sh-ds__full .sh-ds__full-txt", first=True).text if result.find(".Zh8lCd p .sh-ds__full .sh-ds__full-txt", first=True) else ' ---- '
-            final_card =  {
-                'id': 0,
-                'rank': card_rank,
-                'entity': entity,
-                'product_url': url,
-                'product_title': product_title,
-                'product_description': prod_desc,
-                'product_rating': product_rating,
-                'review_count': review_count,
-                'product_img': prod_img,
-                'all_reviews_link': ' --- ',
-                'product_purchasing': '---',
-                'mentions': {}
-            }
-            return final_card
-        except:
-            final_card = {
-                'id': -1,
-                'rank': '',
-                'entity': '',
-                'product_url': '',
-                'product_title': '',
-                'product_description': '',
-                'product_rating': '',
-                'review_count': '',
-                'product_img': '',
-                'all_reviews_link': ' --- ',
-                'product_purchasing': '---',
-                'mentions': {}
-            }
+    # headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"}
+    # domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
+    # domain_trunc = 'https://www.google.com'
 
-            return final_card
-    async def get_final_cards(entity_links):
-        inputs = entity_links
-        tasks = [asyncio.create_task(get_final_card(input)) for input in inputs]
-        results = await asyncio.gather(*tasks)
-        result_of_query['cards'] = results
+    # async def scrape(url):
+    #     async with aiohttp.ClientSession(headers=headers) as session:
+    #         async with session.get(url) as resp:
+    #             body = await resp.text()
+    #             soup = BeautifulSoup(body, 'html.parser')
+    #             card_link = soup.find("a", class_="Lq5OHe").attrs['href']
+    #             # print(card_link)
+    #             return card_link
 
-    await get_final_cards(entity_links=entity_links)
+
+    # async def scrape_product(url):
+    #     async with aiohttp.ClientSession(headers=headers) as session:
+    #         async with session.get(url) as resp:
+    #             body = await resp.text()
+    #             # body = body.decode('utf-8')
+    #             soup = BeautifulSoup(body, 'html.parser')
+    #             # title = soup.title
+    #             # print(title)
+    #             # print(product_title)
+    #             # result = soup.find('div', class_='sg-product__dpdp-c')
+    #             prod_img = soup.find('img', class_='TL92Hc').attrs['src'] if soup.find('img', class_='TL92Hc') else 'hello'
+    #             product_rating = soup.find('div', class_='UzThIf').attrs.get('aria-label') if soup.find('div', class_='UzThIf') else ''
+    #             product_title = soup.find('span', class_='BvQan').text if soup.find('span', class_='BvQan') else ''
+    #             review_count = soup.find('span', class_='HiT7Id').text.replace('(', '').replace(')', '') if soup.find('span', class_='HiT7Id') else ''
+    #             prod_desc = soup.find("span", class_="sh-ds__full-txt").text if soup.find("span", class_="sh-ds__full-txt") else ''
+    #             final_card = {
+    #                 'id': 0,
+    #                 # 'rank': card_rank,
+    #                 # 'entity': entity,
+    #                 'product_url': url,
+    #                 'product_title': product_title,
+    #                 'product_description': prod_desc,
+    #                 'product_rating': product_rating,
+    #                 'review_count': review_count,
+    #                 'product_img': prod_img,
+    #                 'all_reviews_link': '---',
+    #                 'product_purchasing': '---',
+    #                 'mentions': {}
+    #             } 
+    #             return final_card
+
+    # async def prod_desc_main():
+    #     print('Saving the output of extracted information')
+    #     tasks = []
+    #     for entity in entities:
+    #         url = f'https://www.google.com/search?tbm=shop&hl=en&q={entity}'
+    #         ent = entity
+    #         task = asyncio.create_task(scrape(url))
+    #         tasks.append(task)
+    #     card_links = await asyncio.gather(*tasks)
+    #     # print(card_links)
+    #     taskers=[]
+    #     shop_cards = [domain_trunc + card for card in card_links]
+    #     # print(shop_cards)
+    #     for card in shop_cards:
+    #         task = asyncio.create_task(scrape_product(card))
+    #         taskers.append(task)
+    #     final_cards = await asyncio.gather(*taskers)
+    #     result_of_query['cards'] = final_cards
+    #     for card, entity in zip(result_of_query['cards'],entities):
+    #         card['entity'] = entity
+    #         card['rank'] = entities.index(entity)+18
+    #     # print(final_cards)
+    #     print('done')
+
+    # # t0 = timer()
+    # # loop = asyncio.get_event_loop()
+    # # loop.run_until_complete(prod_desc_main())
+    # await prod_desc_main()
+
+    # t1 = timer()
+    # timer = t1 - t0
+    # print(f"TIME ----> {timer}")
 
     t11 = timer()
     print(f'PRODUCT DESCRIPTION -------> {t11 - t10}')
