@@ -68,7 +68,7 @@ class QueryInput(BaseModel):
     query: str
 
 dbconfig = {
-    "host": "rankidb.c39jpvgy5agc.us-east-2.rds.amazonaws.com",
+    "host": "dbranki.c39jpvgy5agc.us-east-2.rds.amazonaws.com",
     "user": "admin",
     "password": "Phxntom10$!",
     "database": "rankidb",
@@ -246,7 +246,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
     #     # print("Correction:", query)
 
         
-    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}';""")
+    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}' """)
     exact_match = cursor.fetchone()
     if exact_match is not None:
         cursor.execute(f"""UPDATE rankidb.query SET request_count = request_count + 1 WHERE query = '{query}' """)
@@ -267,6 +267,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
         accurate_match = cursor.fetchone()
         if accurate_match is not None:
             cursor.execute(f"""UPDATE rankidb.query SET request_count = request_count + 1 WHERE query = '{accurate_match[1]}' """)
+            connection.commit()
             cursor.close()
             return {
                 "query": accurate_match[1],
@@ -349,8 +350,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
     youtube_serps = [serp_link for serp_link in serp_links if 'youtube.com' in serp_link['link']]
     reddit_serps = [serp_link for serp_link in serp_links if 'reddit.com' in serp_link['link']]
     affiliate_serps = [serp_link for serp_link in serp_links if ('reddit.com' not in serp_link['link']) and ('youtube.com' not in serp_link['link'])]
-    reddit_links = [reddit_serp['link'] for reddit_serp in reddit_serps if reddit_serp['link'].count('/') == 8]
-    affiliate_links = [serp_link['link'] for serp_link in serp_links if ('reddit.com' not in serp_link['link']) and ('youtube.com' not in serp_link['link'])]
+    # reddit_links = [reddit_serp['link'] for reddit_serp in reddit_serps if reddit_serp['link'].count('/') == 8]
+    # affiliate_links = [serp_link['link'] for serp_link in serp_links if ('reddit.com' not in serp_link['link']) and ('youtube.com' not in serp_link['link'])]
     # print(reddit_links)
     # print(affiliate_links)
 
@@ -594,7 +595,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
         result_of_query['cards'] = final_cards
         for card, entity in zip(result_of_query['cards'],entities):
             card['entity'] = entity
-            card['rank'] = entities.index(entity)+18
+            card['rank'] = entities.index(entity)+1
         # print(final_cards)
         print('done')
 
