@@ -193,17 +193,15 @@ from timeit import default_timer as timer
 ### BLACKWIDOW ###
 @app.post('/blackwidow')
 async def blackwidow(query_input: QueryInput, request: Request):
+    from timeit import default_timer as timer
     t100 = timer()
     connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
     import re
+    session = HTMLSession()
 
-    query = query_input.query
-   
-    today = datetime.date.today()
-    year = today.year
-    match = re.search(f'{year}', query)
-    
+    query = query_input.query.lower()
+
     headers={
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36",
         "Accept-Language": "en-gb",
@@ -211,15 +209,29 @@ async def blackwidow(query_input: QueryInput, request: Request):
         "Accept": "test/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     }
 
-    if 'best' not in query.lower() and match is None:
+    if 'best' not in query:
         query = 'best ' + query
-    elif match is None:
-        query = query
-    elif 'best' not in query.lower():
-        query = 'best ' + query
+
+    domain = 'https://www.google.com/search?q='
+    response = session.get(domain, params={'q': query})
+    div_element = response.html.find('a.gL9Hy', first=True)
+    header_tags = response.html.find('.O3S9Rb')
+    first_header_tags = [tag.text for tag in header_tags[:3]]
+
+    if div_element is not None:
+        correct_query = div_element.text
+        query = correct_query
+        print(f'CORRECTED QUERY: {query}')
+        if 'Shopping' in first_header_tags:
+            print("VALID QUERY")
+        else:
+            print("INVALID QUERY")
+
     else:
-        pass
-    
+        if 'Shopping' in first_header_tags:
+            print("VALID QUERY")
+        else:
+            print("INVALID QUERY")
     # css_identifier_search_correction = '.p64x9c'
     # if response.html.find(css_identifier_search_correction, first=True) is not None:
     #     correction_p_tag = response.html.find(css_identifier_search_correction, first=True)
@@ -243,24 +255,10 @@ async def blackwidow(query_input: QueryInput, request: Request):
             }    
     else:
         keywords = [word for word in query.replace('best ','').replace(' 2023','').split() if word not in set(stopwords.words('english'))] 
-        # print("KEYWORDS:",keywords)
         match_query = """SELECT * FROM rankidb.query WHERE """
         in_condition = "query LIKE "
-        # for i in range(len(keywords)):
-        #     if i == len(keywords) - 1:
-        #         match_query = match_query + in_condition + f"'%{keywords[i]}%';"
-        #     else:
-        #         match_query = match_query + in_condition + f"'%{keywords[i]}%' AND "
-
-
-        ### CODE TO MAKE ABOVE MORE EFFICIENT ###
         conditions = [f"{in_condition}'%{kw}%'" for kw in keywords]
         match_query = match_query + " AND ".join(conditions) + ";" 
-
-
-
-
-        # print(match_query)
         cursor.execute(match_query)
         accurate_match = cursor.fetchone()
         if accurate_match is not None:
@@ -288,17 +286,10 @@ async def blackwidow(query_input: QueryInput, request: Request):
     session = HTMLSession()
     url = domain+query
     response = session.get(url)
-    # header_tags = response.html.find(css_identifier_header_tag)
-    # if 'Shopping' in [result.text for result in header_tags[:3]]:
-    #     pass
-    # else:
-    #     return "INVALID PRODUCT QUERY"
-
-    remove = re.sub('(\A|[^0-9])([0-9]{4,6})([^0-9]|$)', '', query)
     domain = "http://google.com/search?q="
     google_query = query
-    reddit_query = (remove + '+reddit')
-    youtube_query = (query + '+youtube') 
+    reddit_query = (query + ' reddit')
+    youtube_query = (query + ' youtube') 
     queries = [google_query, reddit_query, youtube_query]
     urls = [domain + query for query in queries]
     serp_links = []
@@ -528,83 +519,85 @@ async def blackwidow(query_input: QueryInput, request: Request):
     print(f'MODEL -------> {t8 - t7}')
     t10 = timer()
 
-    # headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"}
-    # domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
-    # domain_trunc = 'https://www.google.com'
+    headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"}
+    domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
+    domain_trunc = 'https://www.google.com'
 
-    # async def scrape(url):
-    #     async with aiohttp.ClientSession(headers=headers) as session:
-    #         async with session.get(url) as resp:
-    #             body = await resp.text()
-    #             soup = BeautifulSoup(body, 'html.parser')
-    #             card_link = soup.find("a", class_="Lq5OHe").attrs['href']
-    #             # print(card_link)
-    #             return card_link
+    async def scrape(url):
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.get(url) as resp:
+                body = await resp.text()
+                soup = BeautifulSoup(body, 'html.parser')
+                card_link = soup.find("a", class_="Lq5OHe").attrs['href']
+                # print(card_link)
+                return card_link
 
 
-    # async def scrape_product(url):
-    #     async with aiohttp.ClientSession(headers=headers) as session:
-    #         async with session.get(url) as resp:
-    #             body = await resp.text()
-    #             # body = body.decode('utf-8')
-    #             soup = BeautifulSoup(body, 'html.parser')
-    #             # title = soup.title
-    #             # print(title)
-    #             # print(product_title)
-    #             # result = soup.find('div', class_='sg-product__dpdp-c')
-    #             prod_img = soup.find('img', class_='TL92Hc').attrs['src'] if soup.find('img', class_='TL92Hc') else 'hello'
-    #             product_rating = soup.find('div', class_='UzThIf').attrs.get('aria-label') if soup.find('div', class_='UzThIf') else ''
-    #             product_title = soup.find('span', class_='BvQan').text if soup.find('span', class_='BvQan') else ''
-    #             review_count = soup.find('span', class_='HiT7Id').text.replace('(', '').replace(')', '') if soup.find('span', class_='HiT7Id') else ''
-    #             prod_desc = soup.find("span", class_="sh-ds__full-txt").text if soup.find("span", class_="sh-ds__full-txt") else ''
-    #             final_card = {
-    #                 'id': 0,
-    #                 # 'rank': card_rank,
-    #                 # 'entity': entity,
-    #                 'product_url': url,
-    #                 'product_title': product_title,
-    #                 'product_description': prod_desc,
-    #                 'product_rating': product_rating,
-    #                 'review_count': review_count,
-    #                 'product_img': prod_img,
-    #                 'all_reviews_link': '---',
-    #                 'product_purchasing': '---',
-    #                 'mentions': {}
-    #             } 
-    #             return final_card
+    async def scrape_product(url):
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.get(url) as resp:
+                body = await resp.text()
+                print(url)
+                # body = body.decode('utf-8')
+                soup = BeautifulSoup(body, 'html.parser')
+                # title = soup.title
+                # print(title)
+                # print(product_title)
+                # result = soup.find('div', class_='sg-product__dpdp-c')
+                # prod_img = soup.find('div', class_='Xkiaqc').find('img', recursive=False).attrs['src']
+                
+                prod_img = soup.find('img', class_='sh-div__image').attrs['src'] if soup.find('img', class_='sh-div__image') else 'hello'
+                product_rating = soup.find('div', class_='UzThIf').attrs.get('aria-label') if soup.find('div', class_='UzThIf') else ''
+                product_title = soup.find('span', class_='BvQan').text if soup.find('span', class_='BvQan') else ''
+                review_count = soup.find('span', class_='HiT7Id').text.replace('(', '').replace(')', '') if soup.find('span', class_='HiT7Id') else ''
+                prod_desc = soup.find("span", class_="sh-ds__full-txt").text if soup.find("span", class_="sh-ds__full-txt") else ''
+                final_card = {
+                    'id': 0,
+                    # 'rank': card_rank,
+                    # 'entity': entity,
+                    'product_url': url,
+                    'product_title': product_title,
+                    'product_description': prod_desc,
+                    'product_rating': product_rating,
+                    'review_count': review_count,
+                    'product_img': prod_img,
+                    'all_reviews_link': '---',
+                    'product_purchasing': '---',
+                    'mentions': {}
+                } 
+                # print(final_card)
+                return final_card
 
-    # async def prod_desc_main():
-    #     print('Saving the output of extracted information')
-    #     tasks = []
-    #     for entity in entities:
-    #         url = f'https://www.google.com/search?tbm=shop&hl=en&q={entity}'
-    #         ent = entity
-    #         task = asyncio.create_task(scrape(url))
-    #         tasks.append(task)
-    #     card_links = await asyncio.gather(*tasks)
-    #     # print(card_links)
-    #     taskers=[]
-    #     shop_cards = [domain_trunc + card for card in card_links]
-    #     # print(shop_cards)
-    #     for card in shop_cards:
-    #         task = asyncio.create_task(scrape_product(card))
-    #         taskers.append(task)
-    #     final_cards = await asyncio.gather(*taskers)
-    #     result_of_query['cards'] = final_cards
-    #     for card, entity in zip(result_of_query['cards'],entities):
-    #         card['entity'] = entity
-    #         card['rank'] = entities.index(entity)+18
-    #     # print(final_cards)
-    #     print('done')
+    async def prod_desc_main():
+        print('Saving the output of extracted information')
+        tasks = []
+        for entity in entities:
+            url = f'https://www.google.com/search?tbm=shop&hl=en&q={entity}'
+            ent = entity
+            task = asyncio.create_task(scrape(url))
+            tasks.append(task)
+        card_links = await asyncio.gather(*tasks)
+        # print(card_links)
+        taskers=[]
+        shop_cards = [domain_trunc + card for card in card_links]
+        # print(shop_cards)
+        for card in shop_cards:
+            task = asyncio.create_task(scrape_product(card))
+            taskers.append(task)
+        final_cards = await asyncio.gather(*taskers)
+        result_of_query['cards'] = final_cards
+        for card, entity in zip(result_of_query['cards'],entities):
+            card['entity'] = entity
+            card['rank'] = entities.index(entity)+18
+        # print(final_cards)
+        print('done')
 
-    # # t0 = timer()
-    # # loop = asyncio.get_event_loop()
-    # # loop.run_until_complete(prod_desc_main())
-    # await prod_desc_main()
+    t1a = timer()
+    await prod_desc_main()
 
-    # t1 = timer()
-    # timer = t1 - t0
-    # print(f"TIME ----> {timer}")
+    t1b = timer()
+    tim = t1a - t1b
+    print(f"TIME ----> {tim}")
 
     t11 = timer()
     print(f'PRODUCT DESCRIPTION -------> {t11 - t10}')
