@@ -147,7 +147,7 @@ async def get_products(input: str,request: Request):
 async def get_trending_products(request: Request):
     connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
-    cursor.execute("SELECT * FROM rankidb.product ORDER BY request_count DESC")
+    cursor.execute("SELECT * FROM rankidb.product ORDER BY request_count DESC LIMIT 10")
     data = cursor.fetchall()
     cursor.close()
     order = []
@@ -178,7 +178,7 @@ async def get_trending_products(request: Request):
 async def get_trending_products(request: Request):
     connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
-    cursor.execute("SELECT * FROM rankidb.query ORDER BY request_count DESC")
+    cursor.execute("SELECT * FROM rankidb.query ORDER BY request_count DESC LIMIT 10")
     data = cursor.fetchall()
     cursor.close()
     order = []
