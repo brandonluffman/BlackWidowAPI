@@ -198,12 +198,10 @@ from timeit import default_timer as timer
 @app.post('/blackwidow')
 async def blackwidow(query_input: QueryInput, request: Request):
     from timeit import default_timer as timer
-    t100 = timer()
+    import re
     connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
-    import re
     session = HTMLSession()
-
     query = query_input.query.lower()
 
     headers={
@@ -213,11 +211,13 @@ async def blackwidow(query_input: QueryInput, request: Request):
         "Accept": "test/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     }
 
+    t1 = timer()
+
     if 'best' not in query:
         query = 'best ' + query
 
     domain = 'https://www.google.com/search?q='
-    response = session.get(domain, params={'q': query})
+    response = session.get(domain, params={'q': query}, headers=headers)
     div_element = response.html.find('a.gL9Hy', first=True)
     header_tags = response.html.find('.O3S9Rb')
     first_header_tags = [tag.text for tag in header_tags[:3]]
@@ -230,22 +230,15 @@ async def blackwidow(query_input: QueryInput, request: Request):
             print("VALID QUERY")
         else:
             print("INVALID QUERY")
+            query = 'INVALID'
 
     else:
         if 'Shopping' in first_header_tags:
             print("VALID QUERY")
         else:
             print("INVALID QUERY")
-    # css_identifier_search_correction = '.p64x9c'
-    # if response.html.find(css_identifier_search_correction, first=True) is not None:
-    #     correction_p_tag = response.html.find(css_identifier_search_correction, first=True)
-    #     corrections = correction_p_tag.find('a.gL9Hy', first=True)
-    #     correction_text = corrections.text
-    #     # print('Original Input:', query)
-    #     query = correction_text
-    #     # print("Correction:", query)
+            query = 'INVALID'
 
-        
     cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}' """)
     exact_match = cursor.fetchone()
     if exact_match is not None:
@@ -256,7 +249,9 @@ async def blackwidow(query_input: QueryInput, request: Request):
                 "query": exact_match[1],
                 "links": json.loads(exact_match[2]),
                 "cards": json.loads(exact_match[3])      
-            }    
+            }  
+    elif query == 'INVALID':
+        return 'INVALID QUERY, PLEASE TRY SOMETHING ELSE'
     else:
         keywords = [word for word in query.replace('best ','').replace(' 2023','').split() if word not in set(stopwords.words('english'))] 
         match_query = """SELECT * FROM rankidb.query WHERE """
@@ -301,11 +296,9 @@ async def blackwidow(query_input: QueryInput, request: Request):
     urls = [domain + query for query in queries]
     serp_links = []
 
-    # t101 = timer()
+    t2 = timer()
+    print(f'BEGINNINNG CHECKING -------> {t2 - t1}')
 
-    # print(f'BEGINNINNG CHECKING -------> {t101 - t100}')
-
-    # t0 = timer()
     serp_links = []
     def fetch_results(url):
         try:
@@ -343,9 +336,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
     # print(serp_links)
 
 
-    # t1 = timer()
-    # print(f'FINDING LINK TIME -------> {t1 - t0}')
-    # t2 = timer()
+    t3 = timer()
+    print(f'FINDING LINK TIME -------> {t3 - t2}')
 
     youtube_serps = [serp_link for serp_link in serp_links if 'youtube.com' in serp_link['link']]
     reddit_serps = [serp_link for serp_link in serp_links if 'reddit.com' in serp_link['link']]
@@ -359,7 +351,6 @@ async def blackwidow(query_input: QueryInput, request: Request):
     def add_youtube_data(serp_links):
         links = serp_links
         if len(serp_links) == 0:
-            # print("YOUTUBE:", result_of_query['youtube'])
             pass
         else:
             serp_link_data = links[0]
@@ -398,9 +389,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
     add_youtube_data(youtube_serps)
 
-    # t3 = timer()
-    # print(f'YOUTUBE -------> {t3 - t2}')
-
+    t4 = timer()
+    print(f'YOUTUBE -------> {t4 - t3}')
 
     async def get_comments(serp_obj):
         async with asyncpraw.Reddit(client_id="6ziqexypJDMGiHf8tYfERA",
@@ -425,9 +415,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
     await get_results(reddit_serps=reddit_serps)
 
-
-    # t4 = timer()
-    # print(f'REDDIT -------> {t4 - t3}')
+    t5 = timer()
+    print(f'REDDIT -------> {t5 - t4}')
 
     async def get_affiliate_content(session, serp_obj):
         try:
@@ -475,11 +464,9 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
     await google_main(affiliate_serps=affiliate_serps)
 
-    # t5 = timer()
-    # print(f'GOOGLE -------> {t5 - t4}')
-    # print(f'TOTAL TRANSCRIPT TIME -------> {t5 - t0}')
-
-    # t6 = timer()
+    t6 = timer()
+    print(f'GOOGLE -------> {t6 - t5}')
+    print(f'TOTAL TRANSCRIPT TIME -------> {t6 - t3}')
             
     final_text = []
     sources = list(result_of_query['links'].keys())
@@ -497,10 +484,10 @@ async def blackwidow(query_input: QueryInput, request: Request):
             for link in result_of_query['links'][source]:
                 final_text.append(link['text'])
     
-    # t7 = timer()
-    # print(f'LOGIC BEFORE MODEL -------> {t7 - t6}')
+    t7 = timer()
+    print(f'LOGIC BEFORE MODEL -------> {t7 - t6}')
 
-    # print(final_text)    
+  
     model_text = " ".join(final_text)
     json_object = json.dumps(model_text)
     doc = nlp(json_object)
@@ -520,11 +507,9 @@ async def blackwidow(query_input: QueryInput, request: Request):
         ellos.append(k)
 
     entities = [entity for entity in ellos]
-    # print("ENTITIES:",entities)
 
-    # t8 = timer()
-    # print(f'MODEL -------> {t8 - t7}')
-    # t10 = timer()
+    t8 = timer()
+    print(f'MODEL -------> {t8 - t7}')
 
     headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"}
     domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
@@ -535,8 +520,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
             async with session.get(url) as resp:
                 body = await resp.text()
                 soup = BeautifulSoup(body, 'html.parser')
-                card_link = soup.find("a", class_="Lq5OHe").attrs['href']
-                # print(card_link)
+                card_link = soup.find("a", class_="Lq5OHe").attrs['href'] if soup.find("a", class_="Lq5OHe") else ''
                 return card_link
 
 
@@ -544,17 +528,10 @@ async def blackwidow(query_input: QueryInput, request: Request):
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.get(url) as resp:
                 body = await resp.text()
-                print(url)
-                # body = body.decode('utf-8')
                 soup = BeautifulSoup(body, 'html.parser')
-                # title = soup.title
-                # print(title)
-                # print(product_title)
-                # result = soup.find('div', class_='sg-product__dpdp-c')
-                # prod_img = soup.find('div', class_='Xkiaqc').find('img', recursive=False).attrs['src']
-                
-                prod_img = soup.find('img', class_='sh-div__image').attrs['src'] if soup.find('img', class_='sh-div__image') else 'hello'
-                product_rating = soup.find('div', class_='UzThIf').attrs.get('aria-label') if soup.find('div', class_='UzThIf') else ''
+                img_div = soup.find('div', class_='Xkiaqc') if soup.find('div', class_='Xkiaqc') else ''
+                prod_img = img_div.find_all('img')[0].attrs['src'] if img_div.find('img') else 'hello'
+                product_rating = soup.find('div', class_='uYNZm').text if soup.find('div', class_='uYNZm') else ''
                 product_title = soup.find('span', class_='BvQan').text if soup.find('span', class_='BvQan') else ''
                 review_count = soup.find('span', class_='HiT7Id').text.replace('(', '').replace(')', '') if soup.find('span', class_='HiT7Id') else ''
                 prod_desc = soup.find("span", class_="sh-ds__full-txt").text if soup.find("span", class_="sh-ds__full-txt") else ''
@@ -580,7 +557,6 @@ async def blackwidow(query_input: QueryInput, request: Request):
         tasks = []
         for entity in entities:
             url = f'https://www.google.com/search?tbm=shop&hl=en&q={entity}'
-            ent = entity
             task = asyncio.create_task(scrape(url))
             tasks.append(task)
         card_links = await asyncio.gather(*tasks)
@@ -599,17 +575,11 @@ async def blackwidow(query_input: QueryInput, request: Request):
         # print(final_cards)
         print('done')
 
-    t1a = timer()
     await prod_desc_main()
 
-    t1b = timer()
-    tim = t1a - t1b
-    print(f"TIME ----> {tim}")
 
-    # t11 = timer()
-    # print(f'PRODUCT DESCRIPTION -------> {t11 - t10}')
-    
-    # t12 = timer()
+    t9 = timer()
+    print(f'PRODUCT DESCRIPTION -------> {t9 - t8}')
     
     for card in result_of_query['cards']:
         reddit_mentions = [{'link':item['link'], 'favicon': item['favicon']} for item in result_of_query['links']['reddit'] if any(card['entity'] in comment for comment in item['comments'])]
@@ -619,10 +589,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
         card['mentions']['affiliate'] = affiliate_mentions
         card['mentions']['youtube'] = youtube_mentions
     
-    # t13 = timer()
-    # print(f'MENTIONS -------> {t13 - t12}')
-
-    # t14 = timer()
+    t10 = timer()
+    print(f'MENTIONS -------> {t10 - t9}')
 
     for card in result_of_query['cards']: 
         query ="""INSERT INTO rankidb.product
@@ -659,10 +627,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
         connection.commit()
         card['id'] = cursor.lastrowid
 
-    # t17 = timer()
-    # print(f'CARDS INTO DB -------> {t17 - t14}')
-
-
+    t11 = timer()
+    print(f'CARDS INTO DB -------> {t11 - t10}')
 
     scraped_data_insert_query = """
                                     INSERT INTO rankidb.query (query,links,cards,request_count) 
@@ -672,7 +638,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
     cursor.execute(scraped_data_insert_query,values)
     connection.commit()
     cursor.close()
-    # t18 = timer()
-    # print(f'SCRAPED DATA INSERT QUERY -------> {t18 - t17}')
-    # print(f'TOTAL TIME -------> {t18 - t0}')
+    t12 = timer()
+    print(f'SCRAPED DATA INSERT QUERY -------> {t12 - t11}')
+    print(f'TOTAL TIME -------> {t12 - t1}')
     return result_of_query
