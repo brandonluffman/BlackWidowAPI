@@ -11,7 +11,8 @@ response = requests.get(url, headers=headers)
 print(response, response.url, response.status_code)
 soup = BeautifulSoup(response.text, 'html.parser')
 img_div = soup.find('div', class_='Xkiaqc') if soup.find('div', class_='Xkiaqc') else ''
-prod_img = img_div.find_all('img')[0].attrs['src'] if img_div.find('img') else 'hello'
+prod_imgs = img_div.find_all('img') if img_div != '' else ''
+prod_img = prod_imgs[0].attrs['src'] if prod_imgs != '' else 'hello'
 # prod_img = prod_img[0].attrs['src']
 product_rating = soup.find('div', class_='uYNZm').text if soup.find('div', class_='uYNZm') else ''
 product_title = soup.find('span', class_='BvQan').text if soup.find('span', class_='BvQan') else ''
