@@ -102,10 +102,14 @@ async def get_products(product_id: int, request: Request):
     cursor = connection.cursor(buffered=True)
     cursor.execute(f"""SELECT * FROM rankidb.product WHERE id={product_id};""")
     data = cursor.fetchone()
-    cursor.close()
+    # cursor.close()
     if data is None:
+        cursor.close()
         return "PRODUCT NOT AVAILABLE"
     else: 
+        cursor.execute(f"""UPDATE rankidb.product SET request_count = request_count + 1 WHERE id={product_id}""")
+        connection.commit()
+        cursor.close()
         return {
             "id": data[0],
             "url": data[1],
@@ -262,6 +266,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
         cursor.execute(match_query)
         accurate_match = cursor.fetchone()
         if accurate_match is not None:
+            cursor.execute(f"""UPDATE rankidb.query SET request_count = request_count + 1 WHERE query = '{accurate_match[1]}' """)
+            cursor.close()
             return {
                 "query": accurate_match[1],
                 "links": json.loads(accurate_match[2]),
@@ -270,7 +276,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
         else:
             pass  
         
-          
+
     result_of_query = {
         'query' : query,
         'links' : {
@@ -294,11 +300,11 @@ async def blackwidow(query_input: QueryInput, request: Request):
     urls = [domain + query for query in queries]
     serp_links = []
 
-    t101 = timer()
+    # t101 = timer()
 
-    print(f'BEGINNINNG CHECKING -------> {t101 - t100}')
+    # print(f'BEGINNINNG CHECKING -------> {t101 - t100}')
 
-    t0 = timer()
+    # t0 = timer()
     serp_links = []
     def fetch_results(url):
         try:
@@ -328,7 +334,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
                     'title':youtube_result.find(css_identifier_title, first=True).text}
                     for youtube_result in youtube_results[:3]]
 
-    t0 = timer()
+    # t0 = timer()
     with ThreadPoolExecutor(max_workers=3) as executor:
         results = list(executor.map(fetch_results, urls))
 
@@ -336,9 +342,9 @@ async def blackwidow(query_input: QueryInput, request: Request):
     # print(serp_links)
 
 
-    t1 = timer()
-    print(f'FINDING LINK TIME -------> {t1 - t0}')
-    t2 = timer()
+    # t1 = timer()
+    # print(f'FINDING LINK TIME -------> {t1 - t0}')
+    # t2 = timer()
 
     youtube_serps = [serp_link for serp_link in serp_links if 'youtube.com' in serp_link['link']]
     reddit_serps = [serp_link for serp_link in serp_links if 'reddit.com' in serp_link['link']]
@@ -391,8 +397,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
     add_youtube_data(youtube_serps)
 
-    t3 = timer()
-    print(f'YOUTUBE -------> {t3 - t2}')
+    # t3 = timer()
+    # print(f'YOUTUBE -------> {t3 - t2}')
 
 
     async def get_comments(serp_obj):
@@ -419,8 +425,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
     await get_results(reddit_serps=reddit_serps)
 
 
-    t4 = timer()
-    print(f'REDDIT -------> {t4 - t3}')
+    # t4 = timer()
+    # print(f'REDDIT -------> {t4 - t3}')
 
     async def get_affiliate_content(session, serp_obj):
         try:
@@ -468,11 +474,11 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
     await google_main(affiliate_serps=affiliate_serps)
 
-    t5 = timer()
-    print(f'GOOGLE -------> {t5 - t4}')
-    print(f'TOTAL TRANSCRIPT TIME -------> {t5 - t0}')
+    # t5 = timer()
+    # print(f'GOOGLE -------> {t5 - t4}')
+    # print(f'TOTAL TRANSCRIPT TIME -------> {t5 - t0}')
 
-    t6 = timer()
+    # t6 = timer()
             
     final_text = []
     sources = list(result_of_query['links'].keys())
@@ -490,8 +496,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
             for link in result_of_query['links'][source]:
                 final_text.append(link['text'])
     
-    t7 = timer()
-    print(f'LOGIC BEFORE MODEL -------> {t7 - t6}')
+    # t7 = timer()
+    # print(f'LOGIC BEFORE MODEL -------> {t7 - t6}')
 
     # print(final_text)    
     model_text = " ".join(final_text)
@@ -515,9 +521,9 @@ async def blackwidow(query_input: QueryInput, request: Request):
     entities = [entity for entity in ellos]
     # print("ENTITIES:",entities)
 
-    t8 = timer()
-    print(f'MODEL -------> {t8 - t7}')
-    t10 = timer()
+    # t8 = timer()
+    # print(f'MODEL -------> {t8 - t7}')
+    # t10 = timer()
 
     headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"}
     domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
@@ -599,10 +605,10 @@ async def blackwidow(query_input: QueryInput, request: Request):
     tim = t1a - t1b
     print(f"TIME ----> {tim}")
 
-    t11 = timer()
-    print(f'PRODUCT DESCRIPTION -------> {t11 - t10}')
+    # t11 = timer()
+    # print(f'PRODUCT DESCRIPTION -------> {t11 - t10}')
     
-    t12 = timer()
+    # t12 = timer()
     
     for card in result_of_query['cards']:
         reddit_mentions = [{'link':item['link'], 'favicon': item['favicon']} for item in result_of_query['links']['reddit'] if any(card['entity'] in comment for comment in item['comments'])]
@@ -612,10 +618,10 @@ async def blackwidow(query_input: QueryInput, request: Request):
         card['mentions']['affiliate'] = affiliate_mentions
         card['mentions']['youtube'] = youtube_mentions
     
-    t13 = timer()
-    print(f'MENTIONS -------> {t13 - t12}')
+    # t13 = timer()
+    # print(f'MENTIONS -------> {t13 - t12}')
 
-    t14 = timer()
+    # t14 = timer()
 
     for card in result_of_query['cards']: 
         query ="""INSERT INTO rankidb.product
@@ -652,8 +658,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
         connection.commit()
         card['id'] = cursor.lastrowid
 
-    t17 = timer()
-    print(f'CARDS INTO DB -------> {t17 - t14}')
+    # t17 = timer()
+    # print(f'CARDS INTO DB -------> {t17 - t14}')
 
 
 
@@ -665,7 +671,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
     cursor.execute(scraped_data_insert_query,values)
     connection.commit()
     cursor.close()
-    t18 = timer()
-    print(f'SCRAPED DATA INSERT QUERY -------> {t18 - t17}')
-    print(f'TOTAL TIME -------> {t18 - t0}')
+    # t18 = timer()
+    # print(f'SCRAPED DATA INSERT QUERY -------> {t18 - t17}')
+    # print(f'TOTAL TIME -------> {t18 - t0}')
     return result_of_query
