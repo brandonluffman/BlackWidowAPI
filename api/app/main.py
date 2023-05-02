@@ -100,7 +100,7 @@ def get_models():
 async def get_products(product_id: int, request: Request):
     connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT * FROM rankidb.product_test WHERE id={product_id};""")
+    cursor.execute(f"""SELECT * FROM rankidb.product WHERE id={product_id};""")
     data = cursor.fetchone()
     cursor.close()
     if data is None:
@@ -130,9 +130,9 @@ async def get_products(product_id: int, request: Request):
 async def get_products(input: str,request: Request):
     connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
-    cursor.execute(f"""SELECT id, entity, product_img FROM rankidb.product_test WHERE entity LIKE '%{input}%';""")
+    cursor.execute(f"""SELECT id, entity, product_img FROM rankidb.product WHERE entity LIKE '%{input}%';""")
     product_data = cursor.fetchall()
-    cursor.execute(f"""SELECT query FROM rankidb.query_test WHERE query LIKE '%{input}%'""")
+    cursor.execute(f"""SELECT query FROM rankidb.query WHERE query LIKE '%{input}%'""")
     query_data = list(chain(*cursor.fetchall()))
     cursor.close()
     return product_data + query_data
@@ -143,7 +143,7 @@ async def get_products(input: str,request: Request):
 async def get_trending_products(request: Request):
     connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
-    cursor.execute("SELECT * FROM rankidb.product ORDER BY request_count DESC")
+    cursor.execute("SELECT * FROM rankidb.product ORDER BY request_count DESC LIMIT 10")
     data = cursor.fetchall()
     cursor.close()
     order = []
@@ -174,7 +174,7 @@ async def get_trending_products(request: Request):
 async def get_trending_products(request: Request):
     connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
-    cursor.execute("SELECT * FROM rankidb.query ORDER BY request_count DESC")
+    cursor.execute("SELECT * FROM rankidb.query ORDER BY request_count DESC LIMIT 10")
     data = cursor.fetchall()
     cursor.close()
     order = []
