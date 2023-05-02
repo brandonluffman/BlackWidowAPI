@@ -245,11 +245,11 @@ async def blackwidow(query_input: QueryInput, request: Request):
     #     query = correction_text
     #     # print("Correction:", query)
 
-        
-    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = '{query}' """)
+    print(query)
+    cursor.execute(f"""SELECT * FROM rankidb.query WHERE query = "{query}" """)
     exact_match = cursor.fetchone()
     if exact_match is not None:
-        cursor.execute(f"""UPDATE rankidb.query SET request_count = request_count + 1 WHERE query = '{query}' """)
+        cursor.execute(f"""UPDATE rankidb.query SET request_count = request_count + 1 WHERE query = "{query}" """)
         connection.commit()
         cursor.close()
         return {
@@ -261,7 +261,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
         keywords = [word for word in query.replace('best ','').replace(' 2023','').split() if word not in set(stopwords.words('english'))] 
         match_query = """SELECT * FROM rankidb.query WHERE """
         in_condition = "query LIKE "
-        conditions = [f"{in_condition}'%{kw}%'" for kw in keywords]
+        conditions = [f'{in_condition}"%{kw}%" ' for kw in keywords]
         match_query = match_query + " AND ".join(conditions) + ";" 
         cursor.execute(match_query)
         accurate_match = cursor.fetchone()
