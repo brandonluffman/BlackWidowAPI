@@ -193,7 +193,7 @@ from timeit import default_timer as timer
 ### BLACKWIDOW ###
 @app.post('/blackwidow')
 async def blackwidow(query_input: QueryInput, request: Request):
-    t100 = timer()
+    # t100 = timer() 
     connection = request.state.connection_pool.get_connection()
     cursor = connection.cursor(buffered=True)
     import re
@@ -272,7 +272,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
         else:
             pass  
         
-          
+
     result_of_query = {
         'query' : query,
         'links' : {
@@ -303,11 +303,11 @@ async def blackwidow(query_input: QueryInput, request: Request):
     urls = [domain + query for query in queries]
     serp_links = []
 
-    t101 = timer()
+    # t101 = timer()
 
-    print(f'BEGINNINNG CHECKING -------> {t101 - t100}')
+    # print(f'BEGINNINNG CHECKING -------> {t101 - t100}')
 
-    t0 = timer()
+    # t0 = timer()
     serp_links = []
     def fetch_results(url):
         try:
@@ -337,7 +337,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
                     'title':youtube_result.find(css_identifier_title, first=True).text}
                     for youtube_result in youtube_results[:3]]
 
-    t0 = timer()
+    # t0 = timer()
     with ThreadPoolExecutor(max_workers=3) as executor:
         results = list(executor.map(fetch_results, urls))
 
@@ -345,9 +345,9 @@ async def blackwidow(query_input: QueryInput, request: Request):
     # print(serp_links)
 
 
-    t1 = timer()
-    print(f'FINDING LINK TIME -------> {t1 - t0}')
-    t2 = timer()
+    # t1 = timer()
+    # print(f'FINDING LINK TIME -------> {t1 - t0}')
+    # t2 = timer()
 
     youtube_serps = [serp_link for serp_link in serp_links if 'youtube.com' in serp_link['link']]
     reddit_serps = [serp_link for serp_link in serp_links if 'reddit.com' in serp_link['link']]
@@ -400,8 +400,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
     add_youtube_data(youtube_serps)
 
-    t3 = timer()
-    print(f'YOUTUBE -------> {t3 - t2}')
+    # t3 = timer()
+    # print(f'YOUTUBE -------> {t3 - t2}')
 
 
     async def get_comments(serp_obj):
@@ -428,8 +428,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
     await get_results(reddit_serps=reddit_serps)
 
 
-    t4 = timer()
-    print(f'REDDIT -------> {t4 - t3}')
+    # t4 = timer()
+    # print(f'REDDIT -------> {t4 - t3}')
 
     async def get_affiliate_content(session, serp_obj):
         try:
@@ -477,11 +477,11 @@ async def blackwidow(query_input: QueryInput, request: Request):
 
     await google_main(affiliate_serps=affiliate_serps)
 
-    t5 = timer()
-    print(f'GOOGLE -------> {t5 - t4}')
-    print(f'TOTAL TRANSCRIPT TIME -------> {t5 - t0}')
+    # t5 = timer()
+    # print(f'GOOGLE -------> {t5 - t4}')
+    # print(f'TOTAL TRANSCRIPT TIME -------> {t5 - t0}')
 
-    t6 = timer()
+    # t6 = timer()
             
     final_text = []
     sources = list(result_of_query['links'].keys())
@@ -499,8 +499,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
             for link in result_of_query['links'][source]:
                 final_text.append(link['text'])
     
-    t7 = timer()
-    print(f'LOGIC BEFORE MODEL -------> {t7 - t6}')
+    # t7 = timer()
+    # print(f'LOGIC BEFORE MODEL -------> {t7 - t6}')
 
     # print(final_text)    
     model_text = " ".join(final_text)
@@ -524,92 +524,92 @@ async def blackwidow(query_input: QueryInput, request: Request):
     entities = [entity for entity in ellos]
     # print("ENTITIES:",entities)
 
-    t8 = timer()
-    print(f'MODEL -------> {t8 - t7}')
-    t10 = timer()
+    # t8 = timer()
+    # print(f'MODEL -------> {t8 - t7}')
+    # t10 = timer()
 
-    # headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"}
-    # domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
-    # domain_trunc = 'https://www.google.com'
+    headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"}
+    domain = 'https://www.google.com/search?tbm=shop&hl=en&q='
+    domain_trunc = 'https://www.google.com'
 
-    # async def scrape(url):
-    #     async with aiohttp.ClientSession(headers=headers) as session:
-    #         async with session.get(url) as resp:
-    #             body = await resp.text()
-    #             soup = BeautifulSoup(body, 'html.parser')
-    #             card_link = soup.find("a", class_="Lq5OHe").attrs['href']
-    #             # print(card_link)
-    #             return card_link
+    async def scrape(url):
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.get(url) as resp:
+                body = await resp.text()
+                soup = BeautifulSoup(body, 'html.parser')
+                card_link = soup.find("a", class_="Lq5OHe").attrs['href']
+                # print(card_link)
+                return card_link
 
 
-    # async def scrape_product(url):
-    #     async with aiohttp.ClientSession(headers=headers) as session:
-    #         async with session.get(url) as resp:
-    #             body = await resp.text()
-    #             # body = body.decode('utf-8')
-    #             soup = BeautifulSoup(body, 'html.parser')
-    #             # title = soup.title
-    #             # print(title)
-    #             # print(product_title)
-    #             # result = soup.find('div', class_='sg-product__dpdp-c')
-    #             prod_img = soup.find('img', class_='TL92Hc').attrs['src'] if soup.find('img', class_='TL92Hc') else 'hello'
-    #             product_rating = soup.find('div', class_='UzThIf').attrs.get('aria-label') if soup.find('div', class_='UzThIf') else ''
-    #             product_title = soup.find('span', class_='BvQan').text if soup.find('span', class_='BvQan') else ''
-    #             review_count = soup.find('span', class_='HiT7Id').text.replace('(', '').replace(')', '') if soup.find('span', class_='HiT7Id') else ''
-    #             prod_desc = soup.find("span", class_="sh-ds__full-txt").text if soup.find("span", class_="sh-ds__full-txt") else ''
-    #             final_card = {
-    #                 'id': 0,
-    #                 # 'rank': card_rank,
-    #                 # 'entity': entity,
-    #                 'product_url': url,
-    #                 'product_title': product_title,
-    #                 'product_description': prod_desc,
-    #                 'product_rating': product_rating,
-    #                 'review_count': review_count,
-    #                 'product_img': prod_img,
-    #                 'all_reviews_link': '---',
-    #                 'product_purchasing': '---',
-    #                 'mentions': {}
-    #             } 
-    #             return final_card
+    async def scrape_product(url):
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.get(url) as resp:
+                body = await resp.text()
+                # body = body.decode('utf-8')
+                soup = BeautifulSoup(body, 'html.parser')
+                # title = soup.title
+                # print(title)
+                # print(product_title)
+                # result = soup.find('div', class_='sg-product__dpdp-c')
+                prod_img = soup.find('img', class_='TL92Hc').attrs['src'] if soup.find('img', class_='TL92Hc') else 'hello'
+                product_rating = soup.find('div', class_='UzThIf').attrs.get('aria-label') if soup.find('div', class_='UzThIf') else ''
+                product_title = soup.find('span', class_='BvQan').text if soup.find('span', class_='BvQan') else ''
+                review_count = soup.find('span', class_='HiT7Id').text.replace('(', '').replace(')', '') if soup.find('span', class_='HiT7Id') else ''
+                prod_desc = soup.find("span", class_="sh-ds__full-txt").text if soup.find("span", class_="sh-ds__full-txt") else ''
+                final_card = {
+                    'id': 0,
+                    # 'rank': card_rank,
+                    # 'entity': entity,
+                    'product_url': url,
+                    'product_title': product_title,
+                    'product_description': prod_desc,
+                    'product_rating': product_rating,
+                    'review_count': review_count,
+                    'product_img': prod_img,
+                    'all_reviews_link': '---',
+                    'product_purchasing': '---',
+                    'mentions': {}
+                } 
+                return final_card
 
-    # async def prod_desc_main():
-    #     print('Saving the output of extracted information')
-    #     tasks = []
-    #     for entity in entities:
-    #         url = f'https://www.google.com/search?tbm=shop&hl=en&q={entity}'
-    #         ent = entity
-    #         task = asyncio.create_task(scrape(url))
-    #         tasks.append(task)
-    #     card_links = await asyncio.gather(*tasks)
-    #     # print(card_links)
-    #     taskers=[]
-    #     shop_cards = [domain_trunc + card for card in card_links]
-    #     # print(shop_cards)
-    #     for card in shop_cards:
-    #         task = asyncio.create_task(scrape_product(card))
-    #         taskers.append(task)
-    #     final_cards = await asyncio.gather(*taskers)
-    #     result_of_query['cards'] = final_cards
-    #     for card, entity in zip(result_of_query['cards'],entities):
-    #         card['entity'] = entity
-    #         card['rank'] = entities.index(entity)+18
-    #     # print(final_cards)
-    #     print('done')
+    async def prod_desc_main():
+        print('Saving the output of extracted information')
+        tasks = []
+        for entity in entities:
+            url = f'https://www.google.com/search?tbm=shop&hl=en&q={entity}'
+            ent = entity
+            task = asyncio.create_task(scrape(url))
+            tasks.append(task)
+        card_links = await asyncio.gather(*tasks)
+        # print(card_links)
+        taskers=[]
+        shop_cards = [domain_trunc + card for card in card_links]
+        # print(shop_cards)
+        for card in shop_cards:
+            task = asyncio.create_task(scrape_product(card))
+            taskers.append(task)
+        final_cards = await asyncio.gather(*taskers)
+        result_of_query['cards'] = final_cards
+        for card, entity in zip(result_of_query['cards'],entities):
+            card['entity'] = entity
+            card['rank'] = entities.index(entity)+18
+        # print(final_cards)
+        print('done')
 
-    # # t0 = timer()
-    # # loop = asyncio.get_event_loop()
-    # # loop.run_until_complete(prod_desc_main())
-    # await prod_desc_main()
+    # t0 = timer()
+    # loop = asyncio.get_event_loop()
+    # loop.run_until_complete(prod_desc_main())
+    await prod_desc_main()
 
     # t1 = timer()
     # timer = t1 - t0
     # print(f"TIME ----> {timer}")
 
-    t11 = timer()
-    print(f'PRODUCT DESCRIPTION -------> {t11 - t10}')
+    # t11 = timer()
+    # print(f'PRODUCT DESCRIPTION -------> {t11 - t10}')
     
-    t12 = timer()
+    # t12 = timer()
     
     for card in result_of_query['cards']:
         reddit_mentions = [{'link':item['link'], 'favicon': item['favicon']} for item in result_of_query['links']['reddit'] if any(card['entity'] in comment for comment in item['comments'])]
@@ -619,10 +619,10 @@ async def blackwidow(query_input: QueryInput, request: Request):
         card['mentions']['affiliate'] = affiliate_mentions
         card['mentions']['youtube'] = youtube_mentions
     
-    t13 = timer()
-    print(f'MENTIONS -------> {t13 - t12}')
+    # t13 = timer()
+    # print(f'MENTIONS -------> {t13 - t12}')
 
-    t14 = timer()
+    # t14 = timer()
 
     for card in result_of_query['cards']: 
         query ="""INSERT INTO rankidb.product
@@ -659,8 +659,8 @@ async def blackwidow(query_input: QueryInput, request: Request):
         connection.commit()
         card['id'] = cursor.lastrowid
 
-    t17 = timer()
-    print(f'CARDS INTO DB -------> {t17 - t14}')
+    # t17 = timer()
+    # print(f'CARDS INTO DB -------> {t17 - t14}')
 
 
 
@@ -672,7 +672,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
     cursor.execute(scraped_data_insert_query,values)
     connection.commit()
     cursor.close()
-    t18 = timer()
-    print(f'SCRAPED DATA INSERT QUERY -------> {t18 - t17}')
-    print(f'TOTAL TIME -------> {t18 - t0}')
+    # t18 = timer()
+    # print(f'SCRAPED DATA INSERT QUERY -------> {t18 - t17}')
+    # print(f'TOTAL TIME -------> {t18 - t0}')
     return result_of_query

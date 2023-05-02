@@ -15,9 +15,9 @@ import re
 # cats = ["Over Ear Headphones", "Earbuds", "Smartphones", "Tablets", "Routers", "Cameras", "TV", "Laptop", "Bluetooth Speakers", "Smart Watches", "Home Security System", "Mens Jeans", "Womens Leggings", "Mens Cardigans", "Bras", "Womens Underwear", "Mens Underwear", "Mens Gym Shorts", "Mens gym shirts"]
 #cats = ["Blender", "Toaster", "Water Bottle", "Crock Pot", "Food Scale", "Skillet", "Grill", "Smoker", "Pellet Grills", "Food Storage Containers", "Beauty & Personal Care", "Sunscreen", "Body Lotion", "Face Lotion", "Deodorant", "Perfume", "Cologne", "Mens Razors", "Womens Razors", "Makeup Remover", "Mascara", "Lipstick", "Chapstick", "Nail Polish", "Blow Dryer", "Mens Electric Razor", "Exfoliator", "Men's Body Wash", "Women's Body Wash", "Womens Shampoo", "Men's Shampoo", "Womens Conditioner", "Mens Conditioner"]
 #cats = ["Water Bottle"]
-cats = ["Sunscreen", "Body Lotion", "Face Lotion", "Deodorant", "Perfume", "Cologne", "Mens Razors", "Womens Razors", "Makeup Remover", "Mascara", "Lipstick", "Chapstick", "Nail Polish", "Blow Dryer", "Mens Electric Razor", "Exfoliator", "Men's Body Wash", "Women's Body Wash", "Womens Shampoo", "Men's Shampoo", "Womens Conditioner", "Mens Conditioner", "Blender", "Toaster", "Water Bottle", "Crock Pot", "Food Scale", "Skillet", "Grill", "Smoker", "Pellet Grills", "Food Storage Containers", "beanies", "wallets", "mens hats", "womens hats", "womens necklaces", "mens chains", "mens bracelets", "womens bracelets", "womens earrings", "mens earrings", "mens rings", "womens rings", "Air Fryer", "Humidifier", "Comforter"]
-cats = ["Over Ear Headphones", "Earbuds", "Smartphones", "Tablets", "Routers", "Cameras", "TV", "Laptop", "Bluetooth Speakers", "Smart Watches", "Home Security System", "Mens Jeans", "Womens Leggings", "Mens Cardigans", "Bras", "Womens Underwear", "Mens Underwear", "Mens Gym Shorts", "Mens gym shirts"]
-# cats = ["Blender", "Toaster", "Water Bottle", "Crock Pot", "Food Scale", "Skillet", "Grill", "Smoker", "Pellet Grills", "Food Storage Containers", "Beauty & Personal Care", "Sunscreen", "Body Lotion", "Face Lotion", "Deodorant", "Perfume", "Cologne", "Mens Razors", "Womens Razors", "Makeup Remover", "Mascara", "Lipstick", "Chapstick", "Nail Polish", "Blow Dryer", "Mens Electric Razor", "Exfoliator", "Men's Body Wash", "Women's Body Wash", "Womens Shampoo", "Men's Shampoo", "Womens Conditioner", "Mens Conditioner"]
+# cats = ["Sunscreen", "Body Lotion", "Face Lotion", "Deodorant", "Perfume", "Cologne", "Mens Razors", "Womens Razors", "Makeup Remover", "Mascara", "Lipstick", "Chapstick", "Nail Polish", "Blow Dryer", "Mens Electric Razor", "Exfoliator", "Men's Body Wash", "Women's Body Wash", "Womens Shampoo", "Men's Shampoo", "Womens Conditioner", "Mens Conditioner", "Blender", "Toaster", "Water Bottle", "Crock Pot", "Food Scale", "Skillet", "Grill", "Smoker", "Pellet Grills", "Food Storage Containers", "beanies", "wallets", "mens hats", "womens hats", "womens necklaces", "mens chains", "mens bracelets", "womens bracelets", "womens earrings", "mens earrings", "mens rings", "womens rings", "Air Fryer", "Humidifier", "Comforter"]
+# cats = ["Over Ear Headphones", "Earbuds", "Smartphones", "Tablets", "Routers", "Cameras", "TV", "Laptop", "Bluetooth Speakers", "Smart Watches", "Home Security System", "Mens Jeans", "Womens Leggings", "Mens Cardigans", "Bras", "Womens Underwear", "Mens Underwear", "Mens Gym Shorts", "Mens gym shirts"]
+cats = ["Blender", "Toaster", "Water Bottle", "Crock Pot", "Food Scale", "Skillet", "Grill", "Smoker", "Pellet Grills", "Food Storage Containers", "Beauty & Personal Care", "Sunscreen", "Body Lotion", "Face Lotion", "Deodorant", "Perfume", "Cologne", "Mens Razors", "Womens Razors", "Makeup Remover", "Mascara", "Lipstick", "Chapstick", "Nail Polish", "Blow Dryer", "Mens Electric Razor", "Exfoliator", "Men's Body Wash", "Women's Body Wash", "Womens Shampoo", "Men's Shampoo", "Womens Conditioner", "Mens Conditioner"]
 # cats = ["Water Bottle"]
 
 queries = ['best+' + cat.replace(' ', '+') for cat in cats]
@@ -112,31 +112,34 @@ for query in queries:
 
 
         elif 'reddit.com' in serp_link['link']:
-            reddit_read_only = praw.Reddit(client_id="6ziqexypJDMGiHf8tYfERA",         # your client id
-                    client_secret="gBa1uvr2syOEbjxKbD8yzPsPo_fAbA",      # your client secret
-                    user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36") 
-            submission = reddit_read_only.submission(url=serp_link['link'])
-                
-            post_comments = []
-
-            for comment in submission.comments[:5]:
-                if type(comment) == MoreComments:
-                    continue
-                elif comment.body == '[removed]' or comment.body == '[deleted]' or comment.body[:6] == "Thanks":
-                    pass
-                else:
-                    cbody = comment.body.replace('\n', '').replace('\r', '')
-                    regex_pattern = r'http\S+|https\S+'
-                    new_comment = re.sub(regex_pattern, '', cbody)
-                    post_comments.append(new_comment)
-                             
+            try:
+                reddit_read_only = praw.Reddit(client_id="6ziqexypJDMGiHf8tYfERA",         # your client id
+                        client_secret="gBa1uvr2syOEbjxKbD8yzPsPo_fAbA",      # your client secret
+                        user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36") 
+                submission = reddit_read_only.submission(url=serp_link['link'])
                     
+                post_comments = []
 
-            post = " ".join(post_comments)
-            with open('annotation2.txt', "a",encoding='utf-8') as f:
-                        f.write(post)
-                        f.write('\n')
-            final.append(post)
+                for comment in submission.comments[:5]:
+                    if type(comment) == MoreComments:
+                        continue
+                    elif comment.body == '[removed]' or comment.body == '[deleted]' or comment.body[:6] == "Thanks":
+                        pass
+                    else:
+                        cbody = comment.body.replace('\n', '').replace('\r', '')
+                        regex_pattern = r'http\S+|https\S+'
+                        new_comment = re.sub(regex_pattern, '', cbody)
+                        post_comments.append(new_comment)
+                                
+                        
+
+                post = " ".join(post_comments)
+                with open('annotation2.txt', "a",encoding='utf-8') as f:
+                            f.write(post)
+                            f.write('\n')
+                final.append(post)
+            except:
+                continue
 
         else:
             headers = {
