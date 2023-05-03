@@ -520,41 +520,62 @@ async def blackwidow(query_input: QueryInput, request: Request):
             async with session.get(url) as resp:
                 body = await resp.text()
                 soup = BeautifulSoup(body, 'html.parser')
-                card_link = soup.find("a", class_="Lq5OHe").attrs['href'] if soup.find("a", class_="Lq5OHe") else ''
+                cards = soup.find_all('div', class_='sh-dgr__gr-auto', limit=3)
+                links = [domain_trunc+card.find('a', class_='Lq5OHe').attrs['href'] for card in cards if card.find('a', class_='iXEZD') and card.find('a', class_='Lq5OHe')]  
+                card_link = links[0] if links else soup.find("a", class_="Lq5OHe").attrs['href'] if soup.find("a", class_="Lq5OHe") else ''
+                # card_link = soup.find("a", class_="Lq5OHe").attrs['href'] if soup.find("a", class_="Lq5OHe") else ''
                 return card_link
-
 
     async def scrape_product(url):
         async with aiohttp.ClientSession(headers=headers) as session:
-            async with session.get(url) as resp:
-                body = await resp.text()
-                soup = BeautifulSoup(body, 'html.parser')
-                img_div = soup.find('div', class_='Xkiaqc') if soup.find('div', class_='Xkiaqc') else ''
-                prod_imgs = img_div.find_all('img') if img_div != '' else ''
-                prod_img = prod_imgs[0].attrs['src'] if prod_imgs != '' else 'hello'
-                product_rating = soup.find('div', class_='uYNZm').text if soup.find('div', class_='uYNZm') else ''
-                product_title = soup.find('span', class_='BvQan').text if soup.find('span', class_='BvQan') else ''
-                review_count = soup.find('span', class_='HiT7Id').text.replace('(', '').replace(')', '') if soup.find('span', class_='HiT7Id') else ''
-                prod_desc = soup.find("span", class_="sh-ds__full-txt").text if soup.find("span", class_="sh-ds__full-txt") else ''
+            try:
+                async with session.get(url) as resp:
+                    body = await resp.text()
+                    # print(url)
+                    soup = BeautifulSoup(body, 'html.parser')
+                    # img_div = soup.find('div', class_='Xkiaqc') if soup.find('div', class_='Xkiaqc') else soup.find('div', class_='TiQ3Vc') if soup.find('div', class_='TiQ3Vc') else ''
+                    img_div = soup.find('div', class_='HRKRR') if soup.find('div', class_='HRKRR') else ''
+                    prod_imgs = img_div.find_all('img') if img_div != '' else ''
+                    prod_img = prod_imgs[0].attrs['src'] if prod_imgs != '' else 'hello'
+                    product_rating = soup.find('div', class_='uYNZm').text if soup.find('div', class_='uYNZm') else ''
+                    product_title = soup.find('span', class_='BvQan').text if soup.find('span', class_='BvQan') else ''
+                    review_count = soup.find('span', class_='HiT7Id').text.replace('(', '').replace(')', '') if soup.find('span', class_='HiT7Id') else ''
+                    prod_desc = soup.find("span", class_="sh-ds__full-txt").text if soup.find("span", class_="sh-ds__full-txt") else ''
+                    final_card = {
+                        'id': 0,
+                        # 'rank': card_rank,
+                        # 'entity': entity,
+                        'product_url': url,
+                        'product_title': product_title,
+                        'product_description': prod_desc,
+                        'product_rating': product_rating,
+                        'review_count': review_count,
+                        'product_img': prod_img,
+                        'all_reviews_link': '---',
+                        'product_purchasing': '---',
+                        'mentions': {}
+                    } 
+                    # print(final_card)
+                    return final_card
+            except:   
                 final_card = {
-                    'id': 0,
+                    'id': -1,
                     # 'rank': card_rank,
                     # 'entity': entity,
                     'product_url': url,
-                    'product_title': product_title,
-                    'product_description': prod_desc,
-                    'product_rating': product_rating,
-                    'review_count': review_count,
-                    'product_img': prod_img,
+                    'product_title': '',
+                    'product_description': '',
+                    'product_rating': '',
+                    'review_count': '',
+                    'product_img': 'hello',
                     'all_reviews_link': '---',
                     'product_purchasing': '---',
                     'mentions': {}
                 } 
                 # print(final_card)
                 return final_card
-
+        
     async def prod_desc_main():
-        print('Saving the output of extracted information')
         tasks = []
         for entity in entities:
             url = f'https://www.google.com/search?tbm=shop&hl=en&q={entity}'
@@ -563,7 +584,7 @@ async def blackwidow(query_input: QueryInput, request: Request):
         card_links = await asyncio.gather(*tasks)
         # print(card_links)
         taskers=[]
-        shop_cards = [domain_trunc + card for card in card_links]
+        shop_cards = [card for card in card_links]
         # print(shop_cards)
         for card in shop_cards:
             task = asyncio.create_task(scrape_product(card))
